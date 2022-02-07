@@ -10,27 +10,27 @@ use std::error::Error;
 use std::marker::PhantomData;
 use std::sync::Arc;
 use std::{fmt, io};
-use tokio::runtime::Runtime;
+use tokio::runtime::Handle;
 use tokio::sync::broadcast;
 use tokio::sync::broadcast::error::SendError;
 use tokio::sync::broadcast::error::{RecvError, TryRecvError};
 use tokio::sync::broadcast::{Receiver, Sender};
 
-/// An async receiver, which is made sync via blocking on the tokio runtime.
+/// An async receiver, which is made sync via blocking on a handle to the tokio runtime.
 #[cfg_attr(feature = "derives", derive(Debug))]
 pub struct BlockingReceiver<T> {
     receiver: Receiver<T>,
-    runtime: Arc<Runtime>,
+    handle: Handle,
 }
 
 impl<T: Clone> BlockingReceiver<T> {
-    pub(crate) fn new(receiver: Receiver<T>, runtime: Arc<Runtime>) -> Self {
-        Self { receiver, runtime }
+    pub(crate) fn new(receiver: Receiver<T>, handle: Handle) -> Self {
+        Self { receiver, handle }
     }
 
     /// Receive a message from the channel, blocking until one is available.
     pub fn recv(&mut self) -> Result<T, RecvError> {
-        self.runtime.block_on(self.receiver.recv())
+        self.handle.block_on(self.receiver.recv())
     }
 
     /// Try to receive a message from the channel, without blocking.
@@ -79,27 +79,25 @@ impl private::Sealed for NeedsReceivers {}
 #[cfg_attr(feature = "derives", derive(Debug, Clone))]
 pub struct BroadcastDropStrategy<M: Mode> {
     sender: Sender<ArcError>,
-    runtime: Arc<Runtime>,
+    handle: Handle,
     _mode: PhantomData<M>,
 }
 
 impl<M: Mode> BroadcastDropStrategy<M> {
-    /// Create a new broadcast drop strategy.
-    #[cfg(feature = "ds-broadcast-new")]
+    /// Create a new broadcast drop strategy from a handle to the current tokio runtime.
     pub fn new(capacity: usize) -> io::Result<(Self, BlockingReceiver<ArcError>)> {
-        Ok(Self::new_with(capacity, Runtime::new()?))
+        Ok(Self::new_with(capacity, Handle::current()))
     }
 
-    /// Create a new broadcast drop strategy, with a runtime.
-    pub fn new_with(capacity: usize, runtime: Runtime) -> (Self, BlockingReceiver<ArcError>) {
+    /// Create a new broadcast drop strategy, with a handle to a tokio runtime.
+    pub fn new_with(capacity: usize, handle: Handle) -> (Self, BlockingReceiver<ArcError>) {
         let (sender, receiver) = broadcast::channel(capacity);
-        let runtime = Arc::new(runtime);
-        let receiver = BlockingReceiver::new(receiver, Arc::clone(&runtime));
+        let receiver = BlockingReceiver::new(receiver, handle.clone());
 
         (
             Self {
                 sender,
-                runtime,
+                handle,
                 _mode: PhantomData,
             },
             receiver,
@@ -108,7 +106,7 @@ impl<M: Mode> BroadcastDropStrategy<M> {
 
     /// Subscribe to this drop strategy, receiving new errors.
     pub fn subscribe(&self) -> BlockingReceiver<ArcError> {
-        BlockingReceiver::new(self.sender.subscribe(), Arc::clone(&self.runtime))
+        BlockingReceiver::new(self.sender.subscribe(), self.handle.clone())
     }
 }
 
