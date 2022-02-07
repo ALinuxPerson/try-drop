@@ -1,4 +1,4 @@
-use try_drop::{DoubleDropStrategy, FallibleTryDropStrategy, SpecificTryDrop, TryDrop};
+use try_drop::prelude::*;
 use std::convert::Infallible as StdInfallible;
 use std::marker::PhantomData;
 use std::println;
@@ -122,15 +122,15 @@ impl<D: FallibleTryDropStrategy, DD: DoubleDropStrategy> SpecificTryDrop
 for ErrorsOnDrop<Infallible, Given<D, DD>>
 {
     type Error = StdInfallible;
-    type DropStrategy = D;
     type DoubleDropStrategy = DD;
-
-    fn drop_strategy(&self) -> &Self::DropStrategy {
-        &self.try_drop_types.fallible_try_drop_strategy
-    }
+    type DropStrategy = D;
 
     fn double_drop_strategy(&self) -> &Self::DoubleDropStrategy {
         &self.try_drop_types.double_drop_strategy
+    }
+
+    fn drop_strategy(&self) -> &Self::DropStrategy {
+        &self.try_drop_types.fallible_try_drop_strategy
     }
 
     unsafe fn try_drop(&mut self) -> Result<(), Self::Error> {
@@ -152,15 +152,15 @@ impl<D: FallibleTryDropStrategy, DD: DoubleDropStrategy> SpecificTryDrop
 for ErrorsOnDrop<Fallible, Given<D, DD>>
 {
     type Error = try_drop::Error;
-    type DropStrategy = D;
     type DoubleDropStrategy = DD;
-
-    fn drop_strategy(&self) -> &Self::DropStrategy {
-        &self.try_drop_types.fallible_try_drop_strategy
-    }
+    type DropStrategy = D;
 
     fn double_drop_strategy(&self) -> &Self::DoubleDropStrategy {
         &self.try_drop_types.double_drop_strategy
+    }
+
+    fn drop_strategy(&self) -> &Self::DropStrategy {
+        &self.try_drop_types.fallible_try_drop_strategy
     }
 
     unsafe fn try_drop(&mut self) -> Result<(), Self::Error> {
@@ -188,15 +188,15 @@ impl<D: FallibleTryDropStrategy, DD: DoubleDropStrategy> SpecificTryDrop
 for ErrorsOnDrop<Random, Given<D, DD>>
 {
     type Error = try_drop::Error;
-    type DropStrategy = D;
     type DoubleDropStrategy = DD;
-
-    fn drop_strategy(&self) -> &Self::DropStrategy {
-        &self.try_drop_types.fallible_try_drop_strategy
-    }
+    type DropStrategy = D;
 
     fn double_drop_strategy(&self) -> &Self::DoubleDropStrategy {
         &self.try_drop_types.double_drop_strategy
+    }
+
+    fn drop_strategy(&self) -> &Self::DropStrategy {
+        &self.try_drop_types.fallible_try_drop_strategy
     }
 
     unsafe fn try_drop(&mut self) -> Result<(), Self::Error> {
