@@ -3,7 +3,7 @@ pub use crate::global::GlobalDropStrategyHandler;
 use crate::prelude::*;
 use std::boxed::Box;
 
-impl<TD: TryDrop> SpecificTryDrop for TD {
+impl<TD: TryDrop> PureTryDrop for TD {
     type Error = TD::Error;
     type DoubleDropStrategy = GlobalDoubleDropStrategyHandler;
     type DropStrategy = GlobalDropStrategyHandler;

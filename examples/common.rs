@@ -118,7 +118,7 @@ impl TryDrop for ErrorsOnDrop<Infallible, NotGiven> {
     }
 }
 
-impl<D: FallibleTryDropStrategy, DD: DoubleDropStrategy> SpecificTryDrop
+impl<D: FallibleTryDropStrategy, DD: DoubleDropStrategy> PureTryDrop
     for ErrorsOnDrop<Infallible, Given<D, DD>>
 {
     type Error = StdInfallible;
@@ -148,7 +148,7 @@ impl TryDrop for ErrorsOnDrop<Fallible, NotGiven> {
     }
 }
 
-impl<D: FallibleTryDropStrategy, DD: DoubleDropStrategy> SpecificTryDrop
+impl<D: FallibleTryDropStrategy, DD: DoubleDropStrategy> PureTryDrop
     for ErrorsOnDrop<Fallible, Given<D, DD>>
 {
     type Error = try_drop::Error;
@@ -184,7 +184,7 @@ impl TryDrop for ErrorsOnDrop<Random, NotGiven> {
     }
 }
 
-impl<D: FallibleTryDropStrategy, DD: DoubleDropStrategy> SpecificTryDrop
+impl<D: FallibleTryDropStrategy, DD: DoubleDropStrategy> PureTryDrop
     for ErrorsOnDrop<Random, Given<D, DD>>
 {
     type Error = try_drop::Error;

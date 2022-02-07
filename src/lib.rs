@@ -36,9 +36,9 @@ mod global_crate_root;
 pub use global_crate_root::*;
 
 #[cfg(not(feature = "global"))]
-pub use self::SpecificTryDrop as TryDrop;
+pub use self::PureTryDrop as TryDrop;
 
-pub trait SpecificTryDrop {
+pub trait PureTryDrop {
     type Error: Into<anyhow::Error>;
     type DoubleDropStrategy: DoubleDropStrategy;
     type DropStrategy: FallibleTryDropStrategy;
