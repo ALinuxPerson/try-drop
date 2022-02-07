@@ -13,7 +13,8 @@ pub struct PanicDropStrategy {
 }
 
 impl PanicDropStrategy {
-    const DEFAULT: Self = Self::with_static_message("error occurred when dropping an object");
+    /// The default panic drop strategy.
+    pub const DEFAULT: Self = Self::with_static_message("error occurred when dropping an object");
 
     /// Creates a new panic drop strategy with the given message.
     pub fn with_message(message: impl Into<Cow<'static, str>>) -> Self {
