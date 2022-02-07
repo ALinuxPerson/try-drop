@@ -1,4 +1,4 @@
-use crate::{DoubleDropStrategy, FallibleTryDropStrategy, SpecificTryDrop, TryDrop};
+use try_drop::{DoubleDropStrategy, FallibleTryDropStrategy, SpecificTryDrop, TryDrop};
 use std::convert::Infallible as StdInfallible;
 use std::marker::PhantomData;
 use std::println;
@@ -88,10 +88,10 @@ impl<M: Mode> ErrorsOnDrop<M, NotGiven> {
 }
 
 impl<M, D, DD> ErrorsOnDrop<M, Given<D, DD>>
-where
-    M: Mode,
-    D: FallibleTryDropStrategy,
-    DD: DoubleDropStrategy,
+    where
+        M: Mode,
+        D: FallibleTryDropStrategy,
+        DD: DoubleDropStrategy,
 {
     pub fn given(fallible_try_drop_strategy: D, double_drop_strategy: DD) -> Self {
         Self {
@@ -119,7 +119,7 @@ impl TryDrop for ErrorsOnDrop<Infallible, NotGiven> {
 }
 
 impl<D: FallibleTryDropStrategy, DD: DoubleDropStrategy> SpecificTryDrop
-    for ErrorsOnDrop<Infallible, Given<D, DD>>
+for ErrorsOnDrop<Infallible, Given<D, DD>>
 {
     type Error = StdInfallible;
     type DropStrategy = D;
@@ -140,7 +140,7 @@ impl<D: FallibleTryDropStrategy, DD: DoubleDropStrategy> SpecificTryDrop
 }
 
 impl TryDrop for ErrorsOnDrop<Fallible, NotGiven> {
-    type Error = crate::Error;
+    type Error = try_drop::Error;
 
     unsafe fn try_drop(&mut self) -> Result<(), Self::Error> {
         self.try_drop_check();
@@ -149,9 +149,9 @@ impl TryDrop for ErrorsOnDrop<Fallible, NotGiven> {
 }
 
 impl<D: FallibleTryDropStrategy, DD: DoubleDropStrategy> SpecificTryDrop
-    for ErrorsOnDrop<Fallible, Given<D, DD>>
+for ErrorsOnDrop<Fallible, Given<D, DD>>
 {
-    type Error = crate::Error;
+    type Error = try_drop::Error;
     type DropStrategy = D;
     type DoubleDropStrategy = DD;
 
@@ -170,7 +170,7 @@ impl<D: FallibleTryDropStrategy, DD: DoubleDropStrategy> SpecificTryDrop
 }
 
 impl TryDrop for ErrorsOnDrop<Random, NotGiven> {
-    type Error = crate::Error;
+    type Error = try_drop::Error;
 
     unsafe fn try_drop(&mut self) -> Result<(), Self::Error> {
         self.try_drop_check();
@@ -185,9 +185,9 @@ impl TryDrop for ErrorsOnDrop<Random, NotGiven> {
 }
 
 impl<D: FallibleTryDropStrategy, DD: DoubleDropStrategy> SpecificTryDrop
-    for ErrorsOnDrop<Random, Given<D, DD>>
+for ErrorsOnDrop<Random, Given<D, DD>>
 {
-    type Error = crate::Error;
+    type Error = try_drop::Error;
     type DropStrategy = D;
     type DoubleDropStrategy = DD;
 
@@ -210,3 +210,5 @@ impl<D: FallibleTryDropStrategy, DD: DoubleDropStrategy> SpecificTryDrop
         }
     }
 }
+
+fn main() {}
