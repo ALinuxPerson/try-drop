@@ -1,22 +1,22 @@
 //! Numerous strategies for handling drop errors.
 
 #[cfg(feature = "ds-abort")]
-pub mod abort;
+mod abort;
 
 #[cfg(feature = "ds-broadcast")]
-pub mod broadcast;
+mod broadcast;
 
 #[cfg(feature = "ds-exit")]
-pub mod exit;
+mod exit;
 
 #[cfg(feature = "ds-noop")]
-pub mod noop;
+mod noop;
 
 #[cfg(feature = "ds-panic")]
-pub mod panic;
+mod panic;
 
 #[cfg(feature = "ds-write")]
-pub mod write;
+mod write;
 
 #[cfg(feature = "ds-abort")]
 pub use abort::AbortDropStrategy;
