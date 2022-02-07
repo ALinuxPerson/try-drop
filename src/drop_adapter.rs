@@ -13,7 +13,7 @@ impl<TD: PureTryDrop> Drop for DropAdapter<TD> {
         if let Err(error) = result {
             let handler = FallbackTryDropStrategyHandler::new(
                 FallbackTryDropStrategyRef(self.0.fallback_try_drop_strategy()),
-                FallibleTryDropStrategyRef(self.0.drop_strategy()),
+                FallibleTryDropStrategyRef(self.0.try_drop_strategy()),
             );
 
             handler.handle_error(error.into())

@@ -48,10 +48,10 @@ pub use self::ImpureTryDrop as TryDrop;
 pub trait PureTryDrop {
     type Error: Into<anyhow::Error>;
     type FallbackTryDropStrategy: FallbackTryDropStrategy;
-    type DropStrategy: FallibleTryDropStrategy;
+    type TryDropStrategy: FallibleTryDropStrategy;
 
     fn fallback_try_drop_strategy(&self) -> &Self::FallbackTryDropStrategy;
-    fn drop_strategy(&self) -> &Self::DropStrategy;
+    fn try_drop_strategy(&self) -> &Self::TryDropStrategy;
 
     /// Execute the fallible destructor for this type. This function is unsafe because if this is
     /// called outside of a [`Drop::drop`] context, once the scope of the object implementing trait

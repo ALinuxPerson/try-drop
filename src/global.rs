@@ -10,9 +10,9 @@ static DROP_STRATEGY: OnceCell<RwLock<Box<dyn GlobalDynFallibleTryDropStrategy>>
     feature = "derives",
     derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
 )]
-pub struct GlobalDropStrategyHandler;
+pub struct GlobalTryDropStrategyHandler;
 
-impl FallibleTryDropStrategy for GlobalDropStrategyHandler {
+impl FallibleTryDropStrategy for GlobalTryDropStrategyHandler {
     type Error = anyhow::Error;
 
     fn try_handle_error(&self, error: Error) -> Result<(), Self::Error> {

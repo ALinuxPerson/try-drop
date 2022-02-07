@@ -123,13 +123,13 @@ impl<D: FallibleTryDropStrategy, DD: FallbackTryDropStrategy> PureTryDrop
 {
     type Error = StdInfallible;
     type FallbackTryDropStrategy = DD;
-    type DropStrategy = D;
+    type TryDropStrategy = D;
 
     fn fallback_try_drop_strategy(&self) -> &Self::FallbackTryDropStrategy {
         &self.try_drop_types.double_drop_strategy
     }
 
-    fn drop_strategy(&self) -> &Self::DropStrategy {
+    fn try_drop_strategy(&self) -> &Self::TryDropStrategy {
         &self.try_drop_types.fallible_try_drop_strategy
     }
 
@@ -153,13 +153,13 @@ impl<D: FallibleTryDropStrategy, DD: FallbackTryDropStrategy> PureTryDrop
 {
     type Error = try_drop::Error;
     type FallbackTryDropStrategy = DD;
-    type DropStrategy = D;
+    type TryDropStrategy = D;
 
     fn fallback_try_drop_strategy(&self) -> &Self::FallbackTryDropStrategy {
         &self.try_drop_types.double_drop_strategy
     }
 
-    fn drop_strategy(&self) -> &Self::DropStrategy {
+    fn try_drop_strategy(&self) -> &Self::TryDropStrategy {
         &self.try_drop_types.fallible_try_drop_strategy
     }
 
@@ -189,13 +189,13 @@ impl<D: FallibleTryDropStrategy, DD: FallbackTryDropStrategy> PureTryDrop
 {
     type Error = try_drop::Error;
     type FallbackTryDropStrategy = DD;
-    type DropStrategy = D;
+    type TryDropStrategy = D;
 
     fn fallback_try_drop_strategy(&self) -> &Self::FallbackTryDropStrategy {
         &self.try_drop_types.double_drop_strategy
     }
 
-    fn drop_strategy(&self) -> &Self::DropStrategy {
+    fn try_drop_strategy(&self) -> &Self::TryDropStrategy {
         &self.try_drop_types.fallible_try_drop_strategy
     }
 
