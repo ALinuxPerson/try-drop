@@ -16,7 +16,33 @@ pub mod abort {
 pub mod broadcast {}
 
 #[cfg(feature = "ds-exit")]
-pub mod exit {}
+pub mod exit {
+    use std::process;
+
+    pub struct ExitDropStrategy {
+        pub exit_code: i32,
+    }
+
+    impl ExitDropStrategy {
+        pub const DEFAULT: Self = Self::new(1);
+
+        pub const fn new(exit_code: i32) -> Self {
+            Self { exit_code }
+        }
+    }
+
+    impl Default for ExitDropStrategy {
+        fn default() -> Self {
+            Self::DEFAULT
+        }
+    }
+
+    impl TryDropStrategy for ExitDropStrategy {
+        fn handle_error(&self, _error: crate::Error) {
+            process::exit(self.exit_code)
+        }
+    }
+}
 
 #[cfg(feature = "ds-noop")]
 pub mod noop {}
