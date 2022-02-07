@@ -1,6 +1,7 @@
 #[cfg(feature = "ds-abort")]
 pub mod abort {
     use std::process;
+    use crate::TryDropStrategy;
 
     #[cfg_attr(feature = "derives", derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default))]
     pub struct AbortDropStrategy;
@@ -18,6 +19,7 @@ pub mod broadcast {}
 #[cfg(feature = "ds-exit")]
 pub mod exit {
     use std::process;
+    use crate::TryDropStrategy;
 
     #[cfg_attr(feature = "derives", derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash))]
     pub struct ExitDropStrategy {
@@ -47,6 +49,8 @@ pub mod exit {
 
 #[cfg(feature = "ds-noop")]
 pub mod noop {
+    use crate::TryDropStrategy;
+
     #[cfg_attr(feature = "derives", derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default))]
     pub struct NoOpDropStrategy;
 
@@ -58,6 +62,7 @@ pub mod noop {
 #[cfg(feature = "ds-panic")]
 pub mod panic {
     use std::borrow::Cow;
+    use std::string::String;
     use crate::{Error, TryDropStrategy};
 
     #[cfg_attr(feature = "derives", derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash))]
