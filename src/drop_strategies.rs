@@ -65,7 +65,7 @@ pub mod panic {
     use std::string::String;
     use crate::{Error, TryDropStrategy};
 
-    #[cfg_attr(feature = "derives", derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash))]
+    #[cfg_attr(feature = "derives", derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash))]
     pub struct PanicDropStrategy {
         pub message: Cow<'static, str>,
     }
@@ -109,7 +109,7 @@ pub mod write {
     use crate::FallibleTryDropStrategy;
     use std::vec::Vec;
 
-    #[cfg_attr(feature = "derives", derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash))]
+    #[cfg_attr(feature = "derives", derive(Debug))]
     pub struct WriteDropStrategy<W: Write> {
         pub writer: Mutex<W>,
         pub new_line: bool,
