@@ -1,3 +1,5 @@
+//! Numerous strategies for handling drop errors.
+
 #[cfg(feature = "ds-abort")]
 pub mod abort;
 
