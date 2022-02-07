@@ -1,7 +1,7 @@
 mod common;
 
 use crate::common::{ErrorsOnDrop, Random};
-use try_drop::drop_adapter::DropAdapter;
+use try_drop::DropAdapter;
 use try_drop::drop_strategies::{PanicDropStrategy, WriteDropStrategy};
 
 fn main() {

@@ -3,14 +3,14 @@ mod common;
 use common::{ErrorsOnDrop, Random};
 use std::thread;
 use std::time::Duration;
-use try_drop::drop_adapter::DropAdapter;
+use try_drop::DropAdapter;
 use try_drop::drop_strategies::broadcast::OkIfAlone;
 use try_drop::drop_strategies::{BroadcastDropStrategy, PanicDropStrategy};
 
 fn main() -> Result<(), try_drop::Error> {
     let (strategy, mut r1) = BroadcastDropStrategy::<OkIfAlone>::new(16)?;
     let mut r2 = strategy.subscribe();
-    try_drop::install(strategy, PanicDropStrategy::new());
+    try_drop::install(strategy, PanicDropStrategy::DEFAULT);
     let errors = DropAdapter(ErrorsOnDrop::<Random, _>::not_given());
 
     thread::spawn(move || {
