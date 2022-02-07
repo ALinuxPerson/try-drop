@@ -41,6 +41,10 @@ pub use self::PureTryDrop as TryDrop;
 #[cfg(feature = "global")]
 pub use self::ImpureTryDrop as TryDrop;
 
+/// A trait for types which can be dropped, but which may fail to do so.
+///
+/// This is a pure version of try drop, meaning that the drop strategies have to be explicitly
+/// specified, which means it does not depend on a global try drop strategy.
 pub trait PureTryDrop {
     type Error: Into<anyhow::Error>;
     type DoubleDropStrategy: DoubleDropStrategy;
@@ -60,6 +64,9 @@ pub trait PureTryDrop {
     unsafe fn try_drop(&mut self) -> Result<(), Self::Error>;
 }
 
+/// A trait for types which can be dropped, but which may fail to do so.
+///
+/// This is an impure version of try drop, meaning that it depends on the global try drop strategy.
 #[cfg(feature = "global")]
 pub trait ImpureTryDrop {
     type Error: Into<anyhow::Error>;
