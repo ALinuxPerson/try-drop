@@ -14,8 +14,15 @@ rand = { version = "0.8.4", optional = true, default-features = false, features 
 shrinkwraprs = { version = "0.3.0", default-features = false, optional = true }
 
 [features]
-default = ["global", "downcast-rs", "std", "shrinkwraprs", "derives"]
+default = ["global", "downcast-rs", "std", "shrinkwraprs", "derives", "drop-strategies"]
 global = ["std", "once_cell", "parking_lot"]
 debugging = ["rand"]
 std = ["anyhow/std"]
 derives = []
+drop-strategies = ["ds-abort", "ds-broadcast", "ds-exit", "ds-noop", "ds-panic", "ds-write"]
+ds-abort = []
+ds-broadcast = []
+ds-exit = []
+ds-noop = []
+ds-panic = []
+ds-write = []

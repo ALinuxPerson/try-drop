@@ -23,6 +23,8 @@ pub mod prelude;
 #[cfg(feature = "debugging")]
 pub mod debugging;
 
+pub mod drop_strategies;
+
 mod infallible;
 
 use crate::double::DoubleDropStrategy;
