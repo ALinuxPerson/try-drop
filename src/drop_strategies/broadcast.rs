@@ -1,4 +1,5 @@
-//! Types and traits for the broadcast drop strategy.
+//! Types and traits for the broadcast drop strategy. This is built on top of the tokio broadcast
+//! channel.
 
 mod private {
     pub trait Sealed {}
