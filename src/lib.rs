@@ -38,6 +38,9 @@ pub use global_crate_root::*;
 #[cfg(not(feature = "global"))]
 pub use self::PureTryDrop as TryDrop;
 
+#[cfg(feature = "global")]
+pub use self::ImpureTryDrop as TryDrop;
+
 pub trait PureTryDrop {
     type Error: Into<anyhow::Error>;
     type DoubleDropStrategy: DoubleDropStrategy;
