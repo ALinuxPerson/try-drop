@@ -19,6 +19,7 @@ pub mod broadcast {}
 pub mod exit {
     use std::process;
 
+    #[cfg_attr(feature = "derives", derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash))]
     pub struct ExitDropStrategy {
         pub exit_code: i32,
     }
@@ -46,6 +47,7 @@ pub mod exit {
 
 #[cfg(feature = "ds-noop")]
 pub mod noop {
+    #[cfg_attr(feature = "derives", derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default))]
     pub struct NoOpDropStrategy;
 
     impl TryDropStrategy for NoOpDropStrategy {
