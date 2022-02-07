@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="RUST_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/abort-drop-strategy/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/drop-strategies/abort/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/drop-strategies/broadcast/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/drop-strategies/broadcast/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/drop-strategies/bus/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/drop-strategies/bus/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/drop-strategies/channel/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/drop-strategies/exit/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/drop-strategies/noop/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/drop-strategies/panic/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/drop-strategies/write/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/exit-drop-strategy/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/write-drop-strategy/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/drop-strategies/abort/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/drop-strategies/channel/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/drop-strategies/exit/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/drop-strategies/noop/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/drop-strategies/panic/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/drop-strategies/write/examples" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/target" />
+      <excludeFolder url="file://$MODULE_DIR$/write-drop-strategy/target" />
+      <excludeFolder url="file://$MODULE_DIR$/exit-drop-strategy/target" />
+      <excludeFolder url="file://$MODULE_DIR$/abort-drop-strategy/target" />
+      <excludeFolder url="file://$MODULE_DIR$/drop-strategies/panic/target" />
+      <excludeFolder url="file://$MODULE_DIR$/drop-strategies/channel/target" />
+      <excludeFolder url="file://$MODULE_DIR$/drop-strategies/bus/target" />
+      <excludeFolder url="file://$MODULE_DIR$/drop-strategies/noop/target" />
+      <excludeFolder url="file://$MODULE_DIR$/drop-strategies/write/target" />
+      <excludeFolder url="file://$MODULE_DIR$/drop-strategies/exit/target" />
+      <excludeFolder url="file://$MODULE_DIR$/drop-strategies/abort/target" />
+      <excludeFolder url="file://$MODULE_DIR$/drop-strategies/broadcast/target" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>
