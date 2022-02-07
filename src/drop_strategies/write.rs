@@ -1,8 +1,8 @@
+use crate::FallibleTryDropStrategy;
+use parking_lot::Mutex;
 use std::io;
 use std::io::Write;
 use std::string::ToString;
-use parking_lot::Mutex;
-use crate::FallibleTryDropStrategy;
 use std::vec::Vec;
 
 #[cfg_attr(feature = "derives", derive(Debug))]

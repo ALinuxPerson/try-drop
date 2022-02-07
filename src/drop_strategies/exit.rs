@@ -1,7 +1,10 @@
-use std::process;
 use crate::TryDropStrategy;
+use std::process;
 
-#[cfg_attr(feature = "derives", derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash))]
+#[cfg_attr(
+    feature = "derives",
+    derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
+)]
 pub struct ExitDropStrategy {
     pub exit_code: i32,
 }

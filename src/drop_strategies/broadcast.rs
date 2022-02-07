@@ -2,16 +2,16 @@ mod private {
     pub trait Sealed {}
 }
 
-use tokio::sync::broadcast::error::{RecvError, TryRecvError};
+use crate::{FallibleTryDropStrategy, TryDropStrategy};
 use std::error::Error;
-use std::{fmt, io};
 use std::marker::PhantomData;
 use std::sync::Arc;
+use std::{fmt, io};
 use tokio::runtime::Runtime;
 use tokio::sync::broadcast;
-use tokio::sync::broadcast::{Receiver, Sender};
 use tokio::sync::broadcast::error::SendError;
-use crate::{FallibleTryDropStrategy, TryDropStrategy};
+use tokio::sync::broadcast::error::{RecvError, TryRecvError};
+use tokio::sync::broadcast::{Receiver, Sender};
 
 #[cfg_attr(feature = "derives", derive(Debug))]
 pub struct BlockingReceiver<T> {
@@ -21,10 +21,7 @@ pub struct BlockingReceiver<T> {
 
 impl<T: Clone> BlockingReceiver<T> {
     pub(crate) fn new(receiver: Receiver<T>, runtime: Arc<Runtime>) -> Self {
-        Self {
-            receiver,
-            runtime,
-        }
+        Self { receiver, runtime }
     }
 
     pub fn recv(&mut self) -> Result<T, RecvError> {
@@ -85,7 +82,14 @@ impl<M: Mode> BroadcastDropStrategy<M> {
         let runtime = Arc::new(runtime);
         let receiver = BlockingReceiver::new(receiver, Arc::clone(&runtime));
 
-        (Self { sender, runtime, _mode: PhantomData }, receiver)
+        (
+            Self {
+                sender,
+                runtime,
+                _mode: PhantomData,
+            },
+            receiver,
+        )
     }
 
     pub fn subscribe(&self) -> BlockingReceiver<ArcError> {

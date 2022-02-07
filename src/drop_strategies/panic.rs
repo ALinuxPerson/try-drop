@@ -1,8 +1,11 @@
+use crate::{Error, TryDropStrategy};
 use std::borrow::Cow;
 use std::string::String;
-use crate::{Error, TryDropStrategy};
 
-#[cfg_attr(feature = "derives", derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash))]
+#[cfg_attr(
+    feature = "derives",
+    derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
+)]
 pub struct PanicDropStrategy {
     pub message: Cow<'static, str>,
 }
@@ -13,15 +16,21 @@ impl PanicDropStrategy {
     }
 
     pub fn with_message(message: impl Into<Cow<'static, str>>) -> Self {
-        Self { message: message.into() }
+        Self {
+            message: message.into(),
+        }
     }
 
     pub const fn with_static_message(message: &'static str) -> Self {
-        Self { message: Cow::Borrowed(message) }
+        Self {
+            message: Cow::Borrowed(message),
+        }
     }
 
     pub const fn with_dynamic_message(message: String) -> Self {
-        Self { message: Cow::Owned(message) }
+        Self {
+            message: Cow::Owned(message),
+        }
     }
 }
 
