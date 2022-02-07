@@ -45,7 +45,13 @@ pub mod exit {
 }
 
 #[cfg(feature = "ds-noop")]
-pub mod noop {}
+pub mod noop {
+    pub struct NoOpDropStrategy;
+
+    impl TryDropStrategy for NoOpDropStrategy {
+        fn handle_error(&self, _error: crate::Error) {}
+    }
+}
 
 #[cfg(feature = "ds-panic")]
 pub mod panic {}
