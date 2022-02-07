@@ -105,6 +105,7 @@ pub mod panic {
 pub mod write {
     use std::io;
     use std::io::Write;
+    use std::string::ToString;
     use parking_lot::Mutex;
     use crate::FallibleTryDropStrategy;
     use std::vec::Vec;
