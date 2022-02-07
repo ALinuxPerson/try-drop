@@ -13,6 +13,7 @@ use tokio::sync::broadcast::error::SendError;
 use tokio::sync::broadcast::error::{RecvError, TryRecvError};
 use tokio::sync::broadcast::{Receiver, Sender};
 
+/// An async receiver, which is made sync via blocking on the tokio runtime.
 #[cfg_attr(feature = "derives", derive(Debug))]
 pub struct BlockingReceiver<T> {
     receiver: Receiver<T>,
@@ -24,19 +25,23 @@ impl<T: Clone> BlockingReceiver<T> {
         Self { receiver, runtime }
     }
 
+    /// Receive a message from the channel, blocking until one is available.
     pub fn recv(&mut self) -> Result<T, RecvError> {
         self.runtime.block_on(self.receiver.recv())
     }
 
+    /// Try to receive a message from the channel, without blocking.
     pub fn try_recv(&mut self) -> Result<T, TryRecvError> {
         self.receiver.try_recv()
     }
 }
 
+/// A wrapper against [`crate::Error`], implementing [`std::error::Error`].
 #[derive(Debug, Clone)]
 pub struct ArcError(pub Arc<crate::Error>);
 
 impl ArcError {
+    /// Create a new [`ArcError`] from a [`crate::Error`].
     pub fn new(error: crate::Error) -> Self {
         ArcError(Arc::new(error))
     }
@@ -50,20 +55,24 @@ impl fmt::Display for ArcError {
 
 impl Error for ArcError {}
 
+/// How to handle errors when sending a message to all receivers.
 pub trait Mode: private::Sealed {}
 
+/// Continue on sending errors to nobody if no receivers are available.
 pub enum OkIfAlone {}
 
 impl Mode for OkIfAlone {}
 
 impl private::Sealed for OkIfAlone {}
 
+/// Return an error if there are no receivers to send errors to.
 pub enum NeedsReceivers {}
 
 impl Mode for NeedsReceivers {}
 
 impl private::Sealed for NeedsReceivers {}
 
+/// A drop strategy which broadcasts a drop error to all receivers.
 #[cfg_attr(feature = "derives", derive(Debug, Clone))]
 pub struct BroadcastDropStrategy<M: Mode> {
     sender: Sender<ArcError>,
@@ -72,11 +81,13 @@ pub struct BroadcastDropStrategy<M: Mode> {
 }
 
 impl<M: Mode> BroadcastDropStrategy<M> {
+    /// Create a new broadcast drop strategy.
     #[cfg(feature = "ds-broadcast-new")]
     pub fn new(capacity: usize) -> io::Result<(Self, BlockingReceiver<ArcError>)> {
         Ok(Self::new_with(capacity, Runtime::new()?))
     }
 
+    /// Create a new broadcast drop strategy, with a runtime.
     pub fn new_with(capacity: usize, runtime: Runtime) -> (Self, BlockingReceiver<ArcError>) {
         let (sender, receiver) = broadcast::channel(capacity);
         let runtime = Arc::new(runtime);
@@ -92,6 +103,7 @@ impl<M: Mode> BroadcastDropStrategy<M> {
         )
     }
 
+    /// Subscribe to this drop strategy, receiving new errors.
     pub fn subscribe(&self) -> BlockingReceiver<ArcError> {
         BlockingReceiver::new(self.sender.subscribe(), Arc::clone(&self.runtime))
     }

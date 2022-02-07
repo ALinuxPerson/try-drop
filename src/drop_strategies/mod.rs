@@ -22,7 +22,7 @@ mod write;
 pub use abort::AbortDropStrategy;
 
 #[cfg(feature = "ds-broadcast")]
-pub use broadcast::BroadcastDropStrategy;
+pub use broadcast::{BroadcastDropStrategy, BlockingReceiver, OkIfAlone, NeedsReceivers, ArcError, Mode};
 
 #[cfg(feature = "ds-exit")]
 pub use exit::ExitDropStrategy;
