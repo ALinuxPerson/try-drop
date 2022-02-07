@@ -45,12 +45,24 @@ pub use self::ImpureTryDrop as TryDrop;
 ///
 /// This is a pure version of try drop, meaning that the drop strategies have to be explicitly
 /// specified, which means it does not depend on a global try drop strategy.
+///
+/// # Gotchas
+/// Implementing this trait is not enough to make it droppable. In order for the try drop strategy
+/// to be run, you need to put your type in a [`DropAdapter`].
 pub trait PureTryDrop {
+    /// The type of the error that may occur during drop.
     type Error: Into<anyhow::Error>;
+
+    /// The type which will be used if the drop strategy fails.
     type FallbackTryDropStrategy: FallbackTryDropStrategy;
+
+    /// The type which will be used if dropping fails.
     type TryDropStrategy: FallibleTryDropStrategy;
 
+    /// Get a reference to the fallback try drop strategy.
     fn fallback_try_drop_strategy(&self) -> &Self::FallbackTryDropStrategy;
+
+    /// Get a reference to the try drop strategy.
     fn try_drop_strategy(&self) -> &Self::TryDropStrategy;
 
     /// Execute the fallible destructor for this type. This function is unsafe because if this is
@@ -67,8 +79,13 @@ pub trait PureTryDrop {
 /// A trait for types which can be dropped, but which may fail to do so.
 ///
 /// This is an impure version of try drop, meaning that it depends on the global try drop strategy.
+///
+/// # Gotchas
+/// Implementing this trait is not enough to make it droppable. In order for the try drop strategy
+/// to be run, you need to put your type in a [`DropAdapter`].
 #[cfg(feature = "global")]
 pub trait ImpureTryDrop {
+    /// The type of the error that may occur during drop.
     type Error: Into<anyhow::Error>;
 
     /// Execute the fallible destructor for this type. This function is unsafe because if this is
@@ -82,12 +99,17 @@ pub trait ImpureTryDrop {
     unsafe fn try_drop(&mut self) -> Result<(), Self::Error>;
 }
 
+/// A trait which signifies a try drop strategy which can fail.
 pub trait FallibleTryDropStrategy {
+    /// The type of the error that may occur when handling a drop error.
     type Error: Into<anyhow::Error>;
 
+    /// Try and handle a drop error.
     fn try_handle_error(&self, error: anyhow::Error) -> Result<(), Self::Error>;
 }
 
+/// A reference to a type which implements [`FallibleTryDropStrategy`]. Used as a workaround for
+/// implementing [`FallibleTryDropStrategy`] on references.
 #[cfg_attr(
     feature = "derives",
     derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
@@ -103,14 +125,20 @@ impl<'a, T: FallibleTryDropStrategy> FallibleTryDropStrategy for FallibleTryDrop
     }
 }
 
+/// A trait which signifies a try drop strategy which can fail. Can be dynamically dispatched.
 pub trait DynFallibleTryDropStrategy {
+    /// Try to handle the drop error.
     fn dyn_try_handle_error(&self, error: anyhow::Error) -> anyhow::Result<()>;
 }
 
+/// A trait which signifies a try drop strategy which can fail, can be dynamically dispatched, and
+/// can be used as the global try drop strategy.
 #[cfg(feature = "global")]
 #[cfg(not(feature = "downcast-rs"))]
 pub trait GlobalDynFallibleTryDropStrategy: ThreadSafe + DynFallibleTryDropStrategy {}
 
+/// A trait which signifies a try drop strategy which can fail, can be dynamically dispatched, and
+/// can be used as the global try drop strategy.
 #[cfg(feature = "global")]
 #[cfg(feature = "downcast-rs")]
 pub trait GlobalDynFallibleTryDropStrategy:
@@ -131,7 +159,10 @@ impl<FTDS: FallibleTryDropStrategy> DynFallibleTryDropStrategy for FTDS {
     }
 }
 
+/// A trait which signifies a try drop strategy. This can never fail. If it can, use
+/// [`FallibleTryDropStrategy`] instead.
 pub trait TryDropStrategy {
+    /// Handle the drop error.
     fn handle_error(&self, error: anyhow::Error);
 }
 
@@ -144,6 +175,7 @@ impl<TDS: TryDropStrategy> FallibleTryDropStrategy for TDS {
     }
 }
 
+/// A trait which signifies a thread safe type. Can be used in a `static`.
 pub trait ThreadSafe: Send + Sync + 'static {}
 
 impl<T: Send + Sync + 'static> ThreadSafe for T {}
