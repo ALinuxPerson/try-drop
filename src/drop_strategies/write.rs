@@ -5,14 +5,21 @@ use std::io::Write;
 use std::string::ToString;
 use std::vec::Vec;
 
+/// A drop strategy which writes the message of an error to a writer.
 #[cfg_attr(feature = "derives", derive(Debug))]
 pub struct WriteDropStrategy<W: Write> {
+    /// The writer to write to.
     pub writer: Mutex<W>,
+
+    /// Whether or not to append a newline to the end of the message.
     pub new_line: bool,
+
+    /// The message to add at the beginning of the message.
     pub prelude: Option<Vec<u8>>,
 }
 
 impl<W: Write> WriteDropStrategy<W> {
+    /// Creates a new [`WriteDropStrategy`] with the given writer.
     pub fn new(writer: W) -> Self {
         Self {
             writer: Mutex::new(writer),
@@ -21,11 +28,13 @@ impl<W: Write> WriteDropStrategy<W> {
         }
     }
 
+    /// Sets whether or not to append a newline to the end of the message.
     pub fn new_line(&mut self, new_line: bool) -> &mut Self {
         self.new_line = new_line;
         self
     }
 
+    /// Sets the message to add at the beginning of the message.
     pub fn prelude(&mut self, prelude: impl Into<Vec<u8>>) -> &mut Self {
         self.prelude = Some(prelude.into());
         self
@@ -33,6 +42,7 @@ impl<W: Write> WriteDropStrategy<W> {
 }
 
 impl WriteDropStrategy<io::Stderr> {
+    /// Write to standard error.
     pub fn stderr() -> Self {
         let mut this = Self::new(io::stderr());
         this.new_line(true);
@@ -41,6 +51,7 @@ impl WriteDropStrategy<io::Stderr> {
 }
 
 impl WriteDropStrategy<io::Stdout> {
+    /// Write to standard output.
     pub fn stdout() -> Self {
         let mut this = Self::new(io::stdout());
         this.new_line(true);
