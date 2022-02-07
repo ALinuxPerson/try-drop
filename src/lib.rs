@@ -1,6 +1,7 @@
 //! try-drop - utilities for drops which can fail
 
 #![allow(drop_bounds)]
+#![warn(missing_docs)]
 #![no_std]
 
 #[cfg(feature = "shrinkwraprs")]
