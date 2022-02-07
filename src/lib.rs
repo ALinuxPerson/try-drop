@@ -177,6 +177,11 @@ pub trait ThreadSafe: Send + Sync + 'static {}
 
 impl<T: Send + Sync + 'static> ThreadSafe for T {}
 
+/// A type which implements [`Drop`] for types which implements [`TryDrop`].
+///
+/// # Implementation
+/// We call `try_drop`, which is safe because we only do it in [`Drop::drop`]. If it returns an
+/// error, we redirect the error to the fallback try drop strategy.
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)]
 #[cfg_attr(feature = "shrinkwraprs", derive(Shrinkwrap))]
 #[cfg_attr(feature = "shrinkwraprs", shrinkwrap(mutable))]
