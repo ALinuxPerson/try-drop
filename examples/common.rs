@@ -1,7 +1,7 @@
-use try_drop::prelude::*;
 use std::convert::Infallible as StdInfallible;
 use std::marker::PhantomData;
 use std::println;
+use try_drop::prelude::*;
 
 mod private {
     pub trait Sealed {}
@@ -88,10 +88,10 @@ impl<M: Mode> ErrorsOnDrop<M, NotGiven> {
 }
 
 impl<M, D, DD> ErrorsOnDrop<M, Given<D, DD>>
-    where
-        M: Mode,
-        D: FallibleTryDropStrategy,
-        DD: DoubleDropStrategy,
+where
+    M: Mode,
+    D: FallibleTryDropStrategy,
+    DD: DoubleDropStrategy,
 {
     pub fn given(fallible_try_drop_strategy: D, double_drop_strategy: DD) -> Self {
         Self {
@@ -119,7 +119,7 @@ impl TryDrop for ErrorsOnDrop<Infallible, NotGiven> {
 }
 
 impl<D: FallibleTryDropStrategy, DD: DoubleDropStrategy> SpecificTryDrop
-for ErrorsOnDrop<Infallible, Given<D, DD>>
+    for ErrorsOnDrop<Infallible, Given<D, DD>>
 {
     type Error = StdInfallible;
     type DoubleDropStrategy = DD;
@@ -149,7 +149,7 @@ impl TryDrop for ErrorsOnDrop<Fallible, NotGiven> {
 }
 
 impl<D: FallibleTryDropStrategy, DD: DoubleDropStrategy> SpecificTryDrop
-for ErrorsOnDrop<Fallible, Given<D, DD>>
+    for ErrorsOnDrop<Fallible, Given<D, DD>>
 {
     type Error = try_drop::Error;
     type DoubleDropStrategy = DD;
@@ -185,7 +185,7 @@ impl TryDrop for ErrorsOnDrop<Random, NotGiven> {
 }
 
 impl<D: FallibleTryDropStrategy, DD: DoubleDropStrategy> SpecificTryDrop
-for ErrorsOnDrop<Random, Given<D, DD>>
+    for ErrorsOnDrop<Random, Given<D, DD>>
 {
     type Error = try_drop::Error;
     type DoubleDropStrategy = DD;

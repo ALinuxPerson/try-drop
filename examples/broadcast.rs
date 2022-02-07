@@ -1,8 +1,8 @@
 mod common;
 
+use common::{ErrorsOnDrop, Random};
 use std::thread;
 use std::time::Duration;
-use common::{ErrorsOnDrop, Random};
 use try_drop::drop_adapter::DropAdapter;
 use try_drop::drop_strategies::broadcast::OkIfAlone;
 use try_drop::drop_strategies::{BroadcastDropStrategy, PanicDropStrategy};
