@@ -35,6 +35,9 @@ mod global_crate_root;
 #[cfg(feature = "global")]
 pub use global_crate_root::*;
 
+#[cfg(not(feature = "global"))]
+pub use self::SpecificTryDrop as TryDrop;
+
 pub trait SpecificTryDrop {
     type Error: Into<anyhow::Error>;
     type DoubleDropStrategy: DoubleDropStrategy;
@@ -54,6 +57,7 @@ pub trait SpecificTryDrop {
     unsafe fn try_drop(&mut self) -> Result<(), Self::Error>;
 }
 
+#[cfg(feature = "global")]
 pub trait TryDrop {
     type Error: Into<anyhow::Error>;
 
