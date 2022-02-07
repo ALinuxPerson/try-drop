@@ -39,7 +39,8 @@ impl<T: Clone> BlockingReceiver<T> {
     }
 }
 
-/// A wrapper against [`crate::Error`], implementing [`std::error::Error`].
+/// An atomically reference counted wrapper against [`crate::Error`], implementing
+/// [`std::error::Error`], which can be cloned.
 #[derive(Debug, Clone)]
 pub struct ArcError(pub Arc<crate::Error>);
 
