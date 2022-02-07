@@ -1,3 +1,5 @@
+//! Most commonly used traits.
+
 pub use crate::{
     fallback::FallbackTryDropStrategy, DynFallibleTryDropStrategy, FallibleTryDropStrategy,
     PureTryDrop, ThreadSafe, ImpureTryDrop, TryDropStrategy,
