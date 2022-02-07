@@ -1,15 +1,15 @@
-pub use crate::double::global::GlobalDoubleDropStrategyHandler;
+pub use crate::fallback::global::GlobalFallbackDropStrategyHandler;
 pub use crate::global::GlobalDropStrategyHandler;
 use crate::prelude::*;
 use std::boxed::Box;
 
 impl<TD: ImpureTryDrop> PureTryDrop for TD {
     type Error = TD::Error;
-    type DoubleDropStrategy = GlobalDoubleDropStrategyHandler;
+    type FallbackDropStrategy = GlobalFallbackDropStrategyHandler;
     type DropStrategy = GlobalDropStrategyHandler;
 
-    fn double_drop_strategy(&self) -> &Self::DoubleDropStrategy {
-        &GlobalDoubleDropStrategyHandler
+    fn fallback_drop_strategy(&self) -> &Self::FallbackDropStrategy {
+        &GlobalFallbackDropStrategyHandler
     }
 
     fn drop_strategy(&self) -> &Self::DropStrategy {
@@ -23,15 +23,15 @@ impl<TD: ImpureTryDrop> PureTryDrop for TD {
 
 pub fn install(
     drop_strategy: impl GlobalDynFallibleTryDropStrategy,
-    double_drop_strategy: impl GlobalDoubleDropStrategy,
+    fallback_drop_strategy: impl GlobalFallbackDropStrategy,
 ) {
-    install_dyn(Box::new(drop_strategy), Box::new(double_drop_strategy))
+    install_dyn(Box::new(drop_strategy), Box::new(fallback_drop_strategy))
 }
 
 pub fn install_dyn(
     drop_strategy: Box<dyn GlobalDynFallibleTryDropStrategy>,
-    double_drop_strategy: Box<dyn GlobalDoubleDropStrategy>,
+    fallback_drop_strategy: Box<dyn GlobalFallbackDropStrategy>,
 ) {
     crate::global::install_dyn(drop_strategy);
-    crate::double::global::install_dyn(double_drop_strategy);
+    crate::fallback::global::install_dyn(fallback_drop_strategy);
 }

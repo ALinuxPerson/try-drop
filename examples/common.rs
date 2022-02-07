@@ -31,12 +31,12 @@ pub struct NotGiven;
 impl TryDropTypes for NotGiven {}
 impl private::Sealed for NotGiven {}
 
-pub struct Given<D: FallibleTryDropStrategy, DD: DoubleDropStrategy> {
+pub struct Given<D: FallibleTryDropStrategy, DD: FallbackDropStrategy> {
     fallible_try_drop_strategy: D,
     double_drop_strategy: DD,
 }
 
-impl<D: FallibleTryDropStrategy, DD: DoubleDropStrategy> Given<D, DD> {
+impl<D: FallibleTryDropStrategy, DD: FallbackDropStrategy> Given<D, DD> {
     pub fn new(fallible_try_drop_strategy: D, double_drop_strategy: DD) -> Self {
         Self {
             fallible_try_drop_strategy,
@@ -45,8 +45,8 @@ impl<D: FallibleTryDropStrategy, DD: DoubleDropStrategy> Given<D, DD> {
     }
 }
 
-impl<D: FallibleTryDropStrategy, DD: DoubleDropStrategy> TryDropTypes for Given<D, DD> {}
-impl<D: FallibleTryDropStrategy, DD: DoubleDropStrategy> private::Sealed for Given<D, DD> {}
+impl<D: FallibleTryDropStrategy, DD: FallbackDropStrategy> TryDropTypes for Given<D, DD> {}
+impl<D: FallibleTryDropStrategy, DD: FallbackDropStrategy> private::Sealed for Given<D, DD> {}
 
 pub struct ErrorsOnDrop<M: Mode, TDT: TryDropTypes> {
     times_try_drop_was_called: usize,
@@ -91,7 +91,7 @@ impl<M, D, DD> ErrorsOnDrop<M, Given<D, DD>>
 where
     M: Mode,
     D: FallibleTryDropStrategy,
-    DD: DoubleDropStrategy,
+    DD: FallbackDropStrategy,
 {
     pub fn given(fallible_try_drop_strategy: D, double_drop_strategy: DD) -> Self {
         Self {
@@ -118,14 +118,14 @@ impl ImpureTryDrop for ErrorsOnDrop<Infallible, NotGiven> {
     }
 }
 
-impl<D: FallibleTryDropStrategy, DD: DoubleDropStrategy> PureTryDrop
+impl<D: FallibleTryDropStrategy, DD: FallbackDropStrategy> PureTryDrop
     for ErrorsOnDrop<Infallible, Given<D, DD>>
 {
     type Error = StdInfallible;
-    type DoubleDropStrategy = DD;
+    type FallbackDropStrategy = DD;
     type DropStrategy = D;
 
-    fn double_drop_strategy(&self) -> &Self::DoubleDropStrategy {
+    fn fallback_drop_strategy(&self) -> &Self::FallbackDropStrategy {
         &self.try_drop_types.double_drop_strategy
     }
 
@@ -148,14 +148,14 @@ impl ImpureTryDrop for ErrorsOnDrop<Fallible, NotGiven> {
     }
 }
 
-impl<D: FallibleTryDropStrategy, DD: DoubleDropStrategy> PureTryDrop
+impl<D: FallibleTryDropStrategy, DD: FallbackDropStrategy> PureTryDrop
     for ErrorsOnDrop<Fallible, Given<D, DD>>
 {
     type Error = try_drop::Error;
-    type DoubleDropStrategy = DD;
+    type FallbackDropStrategy = DD;
     type DropStrategy = D;
 
-    fn double_drop_strategy(&self) -> &Self::DoubleDropStrategy {
+    fn fallback_drop_strategy(&self) -> &Self::FallbackDropStrategy {
         &self.try_drop_types.double_drop_strategy
     }
 
@@ -184,14 +184,14 @@ impl ImpureTryDrop for ErrorsOnDrop<Random, NotGiven> {
     }
 }
 
-impl<D: FallibleTryDropStrategy, DD: DoubleDropStrategy> PureTryDrop
+impl<D: FallibleTryDropStrategy, DD: FallbackDropStrategy> PureTryDrop
     for ErrorsOnDrop<Random, Given<D, DD>>
 {
     type Error = try_drop::Error;
-    type DoubleDropStrategy = DD;
+    type FallbackDropStrategy = DD;
     type DropStrategy = D;
 
-    fn double_drop_strategy(&self) -> &Self::DoubleDropStrategy {
+    fn fallback_drop_strategy(&self) -> &Self::FallbackDropStrategy {
         &self.try_drop_types.double_drop_strategy
     }
 

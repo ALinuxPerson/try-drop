@@ -13,7 +13,7 @@ extern crate std;
 #[macro_use]
 pub mod drop_adapter;
 
-pub mod double;
+pub mod fallback;
 
 #[cfg(feature = "global")]
 pub mod global;
@@ -24,9 +24,9 @@ pub mod drop_strategies;
 
 mod infallible;
 
-use crate::double::DoubleDropStrategy;
+use crate::fallback::FallbackDropStrategy;
 pub use anyhow::Error;
-pub use double::{DoubleDropStrategyHandler, DoubleDropStrategyRef};
+pub use fallback::{FallbackDropStrategyHandler, FallbackDropStrategyRef};
 pub use infallible::Infallible;
 
 #[cfg(feature = "global")]
@@ -47,10 +47,10 @@ pub use self::ImpureTryDrop as TryDrop;
 /// specified, which means it does not depend on a global try drop strategy.
 pub trait PureTryDrop {
     type Error: Into<anyhow::Error>;
-    type DoubleDropStrategy: DoubleDropStrategy;
+    type FallbackDropStrategy: FallbackDropStrategy;
     type DropStrategy: FallibleTryDropStrategy;
 
-    fn double_drop_strategy(&self) -> &Self::DoubleDropStrategy;
+    fn fallback_drop_strategy(&self) -> &Self::FallbackDropStrategy;
     fn drop_strategy(&self) -> &Self::DropStrategy;
 
     /// Execute the fallible destructor for this type. This function is unsafe because if this is

@@ -5,14 +5,14 @@ use crate::{DynFallibleTryDropStrategy, FallibleTryDropStrategy, TryDropStrategy
 use anyhow::Error;
 
 /// An error handler for drop strategies. If a struct implements [`TryDropStrategy`], it can also
-/// be used as a [`DoubleDropStrategy`].
+/// be used as a [`FallbackDropStrategy`].
 ///
 /// This **cannot** fail. However, if a failure somehow occurs, you must panic.
-pub trait DoubleDropStrategy {
+pub trait FallbackDropStrategy {
     fn handle_error_in_drop_strategy(&self, error: anyhow::Error);
 }
 
-impl<TDS: TryDropStrategy> DoubleDropStrategy for TDS {
+impl<TDS: TryDropStrategy> FallbackDropStrategy for TDS {
     fn handle_error_in_drop_strategy(&self, error: Error) {
         self.handle_error(error)
     }
@@ -23,9 +23,9 @@ impl<TDS: TryDropStrategy> DoubleDropStrategy for TDS {
     derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
 )]
 #[cfg_attr(feature = "shrinkwraprs", derive(Shrinkwrap))]
-pub struct DoubleDropStrategyRef<'a, T: DoubleDropStrategy>(pub &'a T);
+pub struct FallbackDropStrategyRef<'a, T: FallbackDropStrategy>(pub &'a T);
 
-impl<'a, T: DoubleDropStrategy> DoubleDropStrategy for DoubleDropStrategyRef<'a, T> {
+impl<'a, T: FallbackDropStrategy> FallbackDropStrategy for FallbackDropStrategyRef<'a, T> {
     fn handle_error_in_drop_strategy(&self, error: anyhow::Error) {
         self.0.handle_error_in_drop_strategy(error)
     }
@@ -33,56 +33,56 @@ impl<'a, T: DoubleDropStrategy> DoubleDropStrategy for DoubleDropStrategyRef<'a,
 
 #[cfg(feature = "global")]
 #[cfg(not(feature = "downcast-rs"))]
-pub trait GlobalDoubleDropStrategy: crate::ThreadSafe + DoubleDropStrategy {}
+pub trait GlobalFallbackDropStrategy: crate::ThreadSafe + FallbackDropStrategy {}
 
 #[cfg(feature = "global")]
 #[cfg(feature = "downcast-rs")]
-pub trait GlobalDoubleDropStrategy:
-    crate::ThreadSafe + downcast_rs::DowncastSync + DoubleDropStrategy
+pub trait GlobalFallbackDropStrategy:
+    crate::ThreadSafe + downcast_rs::DowncastSync + FallbackDropStrategy
 {
 }
 
 #[cfg(feature = "global")]
 #[cfg(feature = "downcast-rs")]
-downcast_rs::impl_downcast!(sync GlobalDoubleDropStrategy);
+downcast_rs::impl_downcast!(sync GlobalFallbackDropStrategy);
 
 #[cfg(feature = "global")]
-impl<T: crate::ThreadSafe + DoubleDropStrategy> GlobalDoubleDropStrategy for T {}
+impl<T: crate::ThreadSafe + FallbackDropStrategy> GlobalFallbackDropStrategy for T {}
 
 #[cfg_attr(
     feature = "derives",
     derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
 )]
-pub struct DoubleDropStrategyHandler<DDS, FTDS>
+pub struct FallbackDropStrategyHandler<FDS, FTDS>
 where
-    DDS: DoubleDropStrategy,
+    FDS: FallbackDropStrategy,
     FTDS: FallibleTryDropStrategy,
 {
-    pub double_drop_strategy: DDS,
+    pub fallback_drop_strategy: FDS,
     pub fallible_try_drop_strategy: FTDS,
 }
 
-impl<DDS, FTDS> DoubleDropStrategyHandler<DDS, FTDS>
+impl<FDS, FTDS> FallbackDropStrategyHandler<FDS, FTDS>
 where
-    DDS: DoubleDropStrategy,
+    FDS: FallbackDropStrategy,
     FTDS: FallibleTryDropStrategy,
 {
-    pub fn new(double_drop_strategy: DDS, fallible_try_drop_strategy: FTDS) -> Self {
+    pub fn new(fallback_drop_strategy: FDS, fallible_try_drop_strategy: FTDS) -> Self {
         Self {
-            double_drop_strategy,
+            fallback_drop_strategy,
             fallible_try_drop_strategy,
         }
     }
 }
 
-impl<DDS, FTDS> TryDropStrategy for DoubleDropStrategyHandler<DDS, FTDS>
+impl<FDS, FTDS> TryDropStrategy for FallbackDropStrategyHandler<FDS, FTDS>
 where
-    DDS: DoubleDropStrategy,
+    FDS: FallbackDropStrategy,
     FTDS: FallibleTryDropStrategy,
 {
     fn handle_error(&self, error: anyhow::Error) {
         if let Err(error) = self.fallible_try_drop_strategy.dyn_try_handle_error(error) {
-            self.double_drop_strategy
+            self.fallback_drop_strategy
                 .handle_error_in_drop_strategy(error)
         }
     }
