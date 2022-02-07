@@ -7,7 +7,7 @@ use try_drop::drop_strategies::{PanicDropStrategy, WriteDropStrategy};
 fn main() {
     let mut strategy = WriteDropStrategy::stderr();
     strategy.prelude("error: ");
-    try_drop::install(strategy, PanicDropStrategy::new());
+    try_drop::install(strategy, PanicDropStrategy::DEFAULT);
     let errors = DropAdapter(ErrorsOnDrop::<Random, _>::not_given());
     println!("dropping now (will only error randomly)");
     drop(errors);

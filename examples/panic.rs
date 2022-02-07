@@ -5,7 +5,7 @@ use try_drop::DropAdapter;
 use try_drop::drop_strategies::{AbortDropStrategy, PanicDropStrategy};
 
 fn main() {
-    try_drop::install(PanicDropStrategy::new(), AbortDropStrategy);
+    try_drop::install(PanicDropStrategy::DEFAULT, AbortDropStrategy);
     let errors = DropAdapter(ErrorsOnDrop::<Random, _>::not_given());
     println!("dropping now (will only error sometimes)");
     drop(errors);
