@@ -1,6 +1,6 @@
 pub use crate::{
     double::DoubleDropStrategy, DynFallibleTryDropStrategy, FallibleTryDropStrategy,
-    PureTryDrop, ThreadSafe, TryDrop, TryDropStrategy,
+    PureTryDrop, ThreadSafe, ImpureTryDrop, TryDropStrategy,
 };
 
 #[cfg(feature = "global")]

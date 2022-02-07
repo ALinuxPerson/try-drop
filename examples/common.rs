@@ -109,7 +109,7 @@ impl<M: Mode> Default for ErrorsOnDrop<M, NotGiven> {
     }
 }
 
-impl TryDrop for ErrorsOnDrop<Infallible, NotGiven> {
+impl ImpureTryDrop for ErrorsOnDrop<Infallible, NotGiven> {
     type Error = StdInfallible;
 
     unsafe fn try_drop(&mut self) -> Result<(), Self::Error> {
@@ -139,7 +139,7 @@ impl<D: FallibleTryDropStrategy, DD: DoubleDropStrategy> PureTryDrop
     }
 }
 
-impl TryDrop for ErrorsOnDrop<Fallible, NotGiven> {
+impl ImpureTryDrop for ErrorsOnDrop<Fallible, NotGiven> {
     type Error = try_drop::Error;
 
     unsafe fn try_drop(&mut self) -> Result<(), Self::Error> {
@@ -169,7 +169,7 @@ impl<D: FallibleTryDropStrategy, DD: DoubleDropStrategy> PureTryDrop
     }
 }
 
-impl TryDrop for ErrorsOnDrop<Random, NotGiven> {
+impl ImpureTryDrop for ErrorsOnDrop<Random, NotGiven> {
     type Error = try_drop::Error;
 
     unsafe fn try_drop(&mut self) -> Result<(), Self::Error> {

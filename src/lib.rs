@@ -58,7 +58,7 @@ pub trait PureTryDrop {
 }
 
 #[cfg(feature = "global")]
-pub trait TryDrop {
+pub trait ImpureTryDrop {
     type Error: Into<anyhow::Error>;
 
     /// Execute the fallible destructor for this type. This function is unsafe because if this is
