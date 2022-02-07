@@ -24,9 +24,9 @@ pub mod drop_strategies;
 
 mod infallible;
 
-use crate::fallback::FallbackDropStrategy;
+use crate::fallback::FallbackTryDropStrategy;
 pub use anyhow::Error;
-pub use fallback::{FallbackDropStrategyHandler, FallbackDropStrategyRef};
+pub use fallback::{FallbackTryDropStrategyHandler, FallbackTryDropStrategyRef};
 pub use infallible::Infallible;
 
 #[cfg(feature = "global")]
@@ -47,10 +47,10 @@ pub use self::ImpureTryDrop as TryDrop;
 /// specified, which means it does not depend on a global try drop strategy.
 pub trait PureTryDrop {
     type Error: Into<anyhow::Error>;
-    type FallbackDropStrategy: FallbackDropStrategy;
+    type FallbackTryDropStrategy: FallbackTryDropStrategy;
     type DropStrategy: FallibleTryDropStrategy;
 
-    fn fallback_drop_strategy(&self) -> &Self::FallbackDropStrategy;
+    fn fallback_try_drop_strategy(&self) -> &Self::FallbackTryDropStrategy;
     fn drop_strategy(&self) -> &Self::DropStrategy;
 
     /// Execute the fallible destructor for this type. This function is unsafe because if this is

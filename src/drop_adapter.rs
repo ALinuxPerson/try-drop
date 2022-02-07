@@ -1,4 +1,4 @@
-use crate::fallback::{FallbackDropStrategyHandler, FallbackDropStrategyRef};
+use crate::fallback::{FallbackTryDropStrategyHandler, FallbackTryDropStrategyRef};
 use crate::{FallibleTryDropStrategyRef, PureTryDrop, TryDropStrategy};
 
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)]
@@ -11,8 +11,8 @@ impl<TD: PureTryDrop> Drop for DropAdapter<TD> {
         // SAFETY: we called this function inside a `Drop::drop` context.
         let result = unsafe { self.0.try_drop() };
         if let Err(error) = result {
-            let handler = FallbackDropStrategyHandler::new(
-                FallbackDropStrategyRef(self.0.fallback_drop_strategy()),
+            let handler = FallbackTryDropStrategyHandler::new(
+                FallbackTryDropStrategyRef(self.0.fallback_try_drop_strategy()),
                 FallibleTryDropStrategyRef(self.0.drop_strategy()),
             );
 
