@@ -4,7 +4,7 @@
 mod abort;
 
 #[cfg(feature = "ds-broadcast")]
-mod broadcast;
+pub mod broadcast;
 
 #[cfg(feature = "ds-exit")]
 mod exit;
@@ -22,7 +22,7 @@ mod write;
 pub use abort::AbortDropStrategy;
 
 #[cfg(feature = "ds-broadcast")]
-pub use broadcast::{BroadcastDropStrategy, BlockingReceiver, OkIfAlone, NeedsReceivers, ArcError, Mode};
+pub use broadcast::BroadcastDropStrategy;
 
 #[cfg(feature = "ds-exit")]
 pub use exit::ExitDropStrategy;

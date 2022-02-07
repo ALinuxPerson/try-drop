@@ -1,3 +1,5 @@
+//! Types and traits for the broadcast drop strategy.
+
 mod private {
     pub trait Sealed {}
 }
