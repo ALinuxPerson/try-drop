@@ -1,5 +1,4 @@
-//! try-drop - utilities for drops which can fail
-
+#![doc = include_str!("../README.md")]
 #![allow(drop_bounds)]
 #![warn(missing_docs)]
 #![no_std]
