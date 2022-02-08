@@ -34,6 +34,16 @@ mod fn_mut {
         }
     }
 
+    /// Signifies that this type can be converted into an [`AdHocMutTryDropStrategy`].
+    pub trait IntoAdHocMutTryDropStrategy: FnMut(crate::Error) + Sized {
+        /// Convert this type into an [`AdHocMutTryDropStrategy`].
+        fn into_adhoc_mut_try_drop_strategy(self) -> AdHocMutTryDropStrategy<Self> {
+            AdHocMutTryDropStrategy::new(self)
+        }
+    }
+
+    impl<T: FnMut(crate::Error)> IntoAdHocMutTryDropStrategy for T {}
+
     /// A quick and dirty try drop strategy which uses a function.
     ///
     /// This is more flexible compared to [`AdHocFallibleTryDropStrategy`], accepting also
@@ -87,6 +97,18 @@ mod fn_mut {
             Self::new(f)
         }
     }
+
+    /// Signifies that this type can be converted into an [`AdHocMutFallibleTryDropStrategy`].
+    pub trait IntoAdHocMutFallibleTryDropStrategy: FnMut(crate::Error) -> Result<(), Self::Error> + Sized
+    {
+        /// The error type.
+        type Error: Into<anyhow::Error>;
+
+        /// Convert this type into an [`AdHocMutFallibleTryDropStrategy`].
+        fn into_adhoc_mut_fallible_try_drop_strategy(self) -> AdHocMutFallibleTryDropStrategy<Self, Self::Error> {
+            AdHocMutFallibleTryDropStrategy::new(self)
+        }
+    }
 }
 
 #[cfg(feature = "ds-adhoc-mut")]
@@ -120,6 +142,16 @@ impl<F: Fn(crate::Error)> From<F> for AdHocTryDropStrategy<F> {
         AdHocTryDropStrategy(f)
     }
 }
+
+/// Signifies that this type can be converted into an [`AdHocTryDropStrategy`].
+pub trait IntoAdHocTryDropStrategy: Fn(crate::Error) + Sized {
+    /// Convert this type into an [`AdHocTryDropStrategy`].
+    fn into_adhoc_try_drop_strategy(self) -> AdHocTryDropStrategy<Self> {
+        AdHocTryDropStrategy(self)
+    }
+}
+
+impl<T: Fn(crate::Error)> IntoAdHocTryDropStrategy for T {}
 
 /// A quick and dirty fallible try drop strategy which uses a function.
 #[cfg_attr(feature = "derives", derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default))]
@@ -173,5 +205,19 @@ impl<F, E> From<F> for AdHocFallibleTryDropStrategy<F, E>
 {
     fn from(f: F) -> Self {
         Self::new(f)
+    }
+}
+
+/// Signifies that this type can be converted into an [`AdHocFallibleTryDropStrategy`].
+pub trait IntoAdHocFallibleTryDropStrategy:
+    Fn(crate::Error) -> Result<(), Self::Error>
+    + Sized
+{
+    /// The error type.
+    type Error: Into<anyhow::Error>;
+
+    /// Convert this type into an [`AdHocFallibleTryDropStrategy`].
+    fn into_adhoc_fallible_try_drop_strategy(self) -> AdHocFallibleTryDropStrategy<Self, Self::Error> {
+        AdHocFallibleTryDropStrategy::new(self)
     }
 }

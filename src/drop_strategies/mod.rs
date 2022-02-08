@@ -40,8 +40,8 @@ pub use panic::PanicDropStrategy;
 pub use write::WriteDropStrategy;
 
 #[cfg(feature = "ds-adhoc")]
-pub use adhoc::{AdHocTryDropStrategy, AdHocFallibleTryDropStrategy};
+pub use adhoc::{AdHocTryDropStrategy, AdHocFallibleTryDropStrategy, IntoAdHocTryDropStrategy, IntoAdHocFallibleTryDropStrategy};
 
 #[cfg(feature = "ds-adhoc-mut")]
-pub use adhoc::{AdHocMutTryDropStrategy, AdHocMutFallibleTryDropStrategy};
+pub use adhoc::{AdHocMutTryDropStrategy, AdHocMutFallibleTryDropStrategy, IntoAdHocMutTryDropStrategy, IntoAdHocMutFallibleTryDropStrategy};
 
