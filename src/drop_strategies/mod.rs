@@ -18,6 +18,9 @@ mod panic;
 #[cfg(feature = "ds-write")]
 mod write;
 
+#[cfg(feature = "ds-adhoc")]
+mod adhoc;
+
 #[cfg(feature = "ds-abort")]
 pub use abort::AbortDropStrategy;
 
@@ -35,3 +38,6 @@ pub use panic::PanicDropStrategy;
 
 #[cfg(feature = "ds-write")]
 pub use write::WriteDropStrategy;
+
+#[cfg(feature = "ds-adhoc")]
+pub use adhoc::{AdHocTryDropStrategy, AdHocFallibleTryDropStrategy};

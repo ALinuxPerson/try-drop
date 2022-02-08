@@ -18,13 +18,14 @@ default = ["global", "downcast-rs", "std", "shrinkwraprs", "derives", "drop-stra
 global = ["std", "once_cell", "parking_lot"]
 std = ["anyhow/std"]
 derives = []
-drop-strategies = ["ds-abort", "ds-broadcast", "ds-exit", "ds-noop", "ds-panic", "ds-write"]
+drop-strategies = ["ds-abort", "ds-broadcast", "ds-exit", "ds-noop", "ds-panic", "ds-write", "ds-adhoc"]
 ds-abort = ["std"]
 ds-broadcast = ["tokio", "std"]
 ds-exit = ["std"]
 ds-noop = []
 ds-panic = []
 ds-write = ["std", "parking_lot"]
+ds-adhoc = []
 
 [dev-dependencies]
 rand = { version = "0.8.4", default-features = false, features = ["std", "std_rng"] }
