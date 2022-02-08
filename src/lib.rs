@@ -46,6 +46,8 @@ pub use self::ImpureTryDrop as TryDrop;
 /// # Gotchas
 /// Implementing this trait is not enough to make it droppable. In order for the try drop strategy
 /// to be run, you need to put your type in a [`DropAdapter`].
+///
+/// An easier way to make your type droppable is to call [`TryDrop::adapt`] on it.
 pub trait PureTryDrop {
     /// The type of the error that may occur during drop.
     type Error: Into<anyhow::Error>;
@@ -61,6 +63,11 @@ pub trait PureTryDrop {
 
     /// Get a reference to the try drop strategy.
     fn try_drop_strategy(&self) -> &Self::TryDropStrategy;
+
+    /// Adapts this type to take advantage of the specified try drop strategies.
+    fn adapt(self) -> DropAdapter<Self> where Self: Sized {
+        DropAdapter(self)
+    }
 
     /// Execute the fallible destructor for this type. This function is unsafe because if this is
     /// called outside of a [`Drop::drop`] context, once the scope of the object implementing trait
@@ -80,6 +87,8 @@ pub trait PureTryDrop {
 /// # Gotchas
 /// Implementing this trait is not enough to make it droppable. In order for the try drop strategy
 /// to be run, you need to put your type in a [`DropAdapter`].
+///
+/// An easier way to make your type droppable is to call [`TryDrop::adapt`] on it.
 #[cfg(feature = "global")]
 pub trait ImpureTryDrop {
     /// The type of the error that may occur during drop.
@@ -202,3 +211,8 @@ impl<TD: PureTryDrop> Drop for DropAdapter<TD> {
     }
 }
 
+impl<TD: PureTryDrop> From<TD> for DropAdapter<TD> {
+    fn from(t: TD) -> Self {
+        t.adapt()
+    }
+}
