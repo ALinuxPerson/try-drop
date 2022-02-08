@@ -21,6 +21,9 @@ mod write;
 #[cfg(feature = "ds-adhoc")]
 mod adhoc;
 
+#[cfg(feature = "ds-once-cell")]
+pub mod once_cell;
+
 #[cfg(feature = "ds-abort")]
 pub use abort::AbortDropStrategy;
 
@@ -44,4 +47,7 @@ pub use adhoc::{AdHocTryDropStrategy, AdHocFallibleTryDropStrategy, IntoAdHocTry
 
 #[cfg(feature = "ds-adhoc-mut")]
 pub use adhoc::{AdHocMutTryDropStrategy, AdHocMutFallibleTryDropStrategy, IntoAdHocMutTryDropStrategy, IntoAdHocMutFallibleTryDropStrategy};
+
+#[cfg(feature = "ds-once-cell")]
+pub use self::once_cell::OnceCellTryDropStrategy;
 
