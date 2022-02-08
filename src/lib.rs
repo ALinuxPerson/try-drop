@@ -106,7 +106,10 @@ pub trait PureTryDrop {
     ///
     /// This is because [`Self`] implicitly get copied.
     /// <sup><i>I may or may not have spent a large amount of time trying to get rid of this "soundness hole".</i></sup>
-    fn adapt(self) -> DropAdapter<Self> where Self: Sized {
+    fn adapt(self) -> DropAdapter<Self>
+    where
+        Self: Sized,
+    {
         DropAdapter(self)
     }
 

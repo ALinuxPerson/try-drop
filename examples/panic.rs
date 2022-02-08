@@ -1,8 +1,8 @@
 mod common;
 
 use crate::common::{ErrorsOnDrop, Random};
-use try_drop::DropAdapter;
 use try_drop::drop_strategies::{AbortDropStrategy, PanicDropStrategy};
+use try_drop::DropAdapter;
 
 fn main() {
     try_drop::install(PanicDropStrategy::DEFAULT, AbortDropStrategy);

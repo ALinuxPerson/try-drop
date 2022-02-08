@@ -47,7 +47,9 @@ pub fn install(drop_strategy: impl GlobalFallbackTryDropStrategyTrait) {
 /// Install a new global fallback try drop strategy. Needs to be a dynamic trait object.
 pub fn install_dyn(drop_strategy: Box<dyn GlobalFallbackTryDropStrategyTrait>) {
     match FALLBACK_TRY_DROP_STRATEGY.get() {
-        Some(global_fallback_drop_strategy) => *global_fallback_drop_strategy.write() = drop_strategy,
+        Some(global_fallback_drop_strategy) => {
+            *global_fallback_drop_strategy.write() = drop_strategy
+        }
         None => {
             let _ = FALLBACK_TRY_DROP_STRATEGY.set(RwLock::new(drop_strategy));
         }

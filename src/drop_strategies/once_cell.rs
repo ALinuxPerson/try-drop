@@ -4,12 +4,12 @@ mod private {
     pub trait Sealed {}
 }
 
-use std::marker::PhantomData;
-use std::sync::Arc;
+use crate::{FallibleTryDropStrategy, TryDropStrategy};
 use once_cell::sync::OnceCell;
 use std::error::Error as StdError;
 use std::fmt;
-use crate::{FallibleTryDropStrategy, TryDropStrategy};
+use std::marker::PhantomData;
+use std::sync::Arc;
 
 /// Ignore the occupied error value and continue.
 pub enum Ignore {}

@@ -43,11 +43,16 @@ pub use panic::PanicDropStrategy;
 pub use write::WriteDropStrategy;
 
 #[cfg(feature = "ds-adhoc")]
-pub use adhoc::{AdHocTryDropStrategy, AdHocFallibleTryDropStrategy, IntoAdHocTryDropStrategy, IntoAdHocFallibleTryDropStrategy};
+pub use adhoc::{
+    AdHocFallibleTryDropStrategy, AdHocTryDropStrategy, IntoAdHocFallibleTryDropStrategy,
+    IntoAdHocTryDropStrategy,
+};
 
 #[cfg(feature = "ds-adhoc-mut")]
-pub use adhoc::{AdHocMutTryDropStrategy, AdHocMutFallibleTryDropStrategy, IntoAdHocMutTryDropStrategy, IntoAdHocMutFallibleTryDropStrategy};
+pub use adhoc::{
+    AdHocMutFallibleTryDropStrategy, AdHocMutTryDropStrategy, IntoAdHocMutFallibleTryDropStrategy,
+    IntoAdHocMutTryDropStrategy,
+};
 
 #[cfg(feature = "ds-once-cell")]
 pub use self::once_cell::OnceCellTryDropStrategy;
-
