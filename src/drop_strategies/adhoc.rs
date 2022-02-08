@@ -1,3 +1,62 @@
+#[cfg(feature = "ds-adhoc-mut")]
+mod fn_mut {
+    use std::marker::PhantomData;
+    use anyhow::Error;
+    use parking_lot::Mutex;
+    use crate::{FallibleTryDropStrategy, TryDropStrategy};
+
+    pub struct AdHocMutTryDropStrategy<F: FnMut(crate::Error)>(pub Mutex<F>);
+
+    impl<F: FnMut(crate::Error)> AdHocMutTryDropStrategy<F> {
+        pub fn new(f: F) -> Self {
+            Self(Mutex::new(f))
+        }
+    }
+
+    impl<F: FnMut(crate::Error)> TryDropStrategy for AdHocMutTryDropStrategy<F> {
+        fn handle_error(&self, error: crate::Error) {
+            self.0.lock()(error)
+        }
+    }
+
+    pub struct AdHocMutFallibleTryDropStrategy<F, E>
+    where
+        F: FnMut(crate::Error) -> Result<(), E>,
+        E: Into<anyhow::Error>,
+    {
+        pub f: Mutex<F>,
+        _error: PhantomData<E>,
+    }
+
+    impl<F, E> AdHocMutFallibleTryDropStrategy<F, E>
+    where
+        F: FnMut(crate::Error) -> Result<(), E>,
+        E: Into<anyhow::Error>,
+    {
+        pub fn new(f: F) -> Self {
+            Self {
+                f: Mutex::new(f),
+                _error: PhantomData,
+            }
+        }
+    }
+
+    impl<F, E> FallibleTryDropStrategy for AdHocMutFallibleTryDropStrategy<F, E>
+        where
+            F: FnMut(crate::Error) -> Result<(), E>,
+            E: Into<anyhow::Error>,
+    {
+        type Error = E;
+
+        fn try_handle_error(&self, error: Error) -> Result<(), Self::Error> {
+            self.f.lock()(error)
+        }
+    }
+}
+
+#[cfg(feature = "ds-adhoc-mut")]
+pub use fn_mut::*;
+
 use core::marker::PhantomData;
 use crate::{FallibleTryDropStrategy, TryDropStrategy};
 

@@ -25,7 +25,8 @@ ds-exit = ["std"]
 ds-noop = []
 ds-panic = []
 ds-write = ["std", "parking_lot"]
-ds-adhoc = []
+ds-adhoc-mut = []
+ds-adhoc = ["ds-adhoc-mut"]
 
 [dev-dependencies]
 rand = { version = "0.8.4", default-features = false, features = ["std", "std_rng"] }

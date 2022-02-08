@@ -41,3 +41,7 @@ pub use write::WriteDropStrategy;
 
 #[cfg(feature = "ds-adhoc")]
 pub use adhoc::{AdHocTryDropStrategy, AdHocFallibleTryDropStrategy};
+
+#[cfg(feature = "ds-adhoc-mut")]
+pub use adhoc::{AdHocMutTryDropStrategy, AdHocMutFallibleTryDropStrategy};
+
