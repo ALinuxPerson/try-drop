@@ -25,7 +25,10 @@ Here is a tree of the features (which aren't optional dependencies) and their ex
   * `default`: Enables the global try drop strategy, downcasting of try drop strategies, standard library, newtype 
                derefs, `derives`s for most types, and the default try drop strategies.
   * `global`: This enables the global try drop strategy without nothing set to it. `OnceCell` is required for lazy 
-              initialization of the global and parking lot to write to the global.
+              initialization of the global and parking lot to write to the global. By default, there are... *defaults*,
+              which are...
+    * `global-defaults`: This enables the default try drop and fallback try drop strategies, the write drop strategy 
+                         and panic drop strategy.
   * `std`: Enable types which require the standard library to work.
   * `derives`: Derives `Debug`, `Copy`, `Clone`, `PartialEq`, `Eq`, `PartialOrd`, `Ord`, `Hash`, and `Default` to all 
                public types if possible.
@@ -38,8 +41,10 @@ Here is a tree of the features (which aren't optional dependencies) and their ex
     * `ds-exit`: A drop strategy which exits the program without calling any destructors with the specified exit code if 
                  called.
     * `ds-noop`: A drop strategy which does nothing when called.
-    * `ds-panic`: A drop strategy which panics if called.
-    * `ds-write`: A drop strategy which writes the error to a writer if called.
+    * `ds-panic`: A drop strategy which panics if called. This is used as the default global fallback drop strategy if 
+                  it's available.
+    * `ds-write`: A drop strategy which writes the error to a writer if called. This is used as the default global drop 
+                  strategy if it's available.
     * `ds-adhoc`: A drop strategy which calls a function if called. This only supports `Fn`s, which is the strictest 
                   type of function trait based on its trait bounds. If you want a less strict version, use...
       * `ds-adhoc-mut`: A drop strategy which calls a function if called. This supports `FnMut`s, which has more 
