@@ -38,7 +38,7 @@ Here is a tree of the features and their explanations.
     * `ds-write`: A drop strategy which writes the error to a writer if called.
     * `ds-adhoc`: A drop strategy which calls a function if called. This only supports `Fn`s, which is the strictest 
                   type of function trait based on its trait bounds. If you want a less strict version, use...
-      * `ds-adhoc-mut`: A drop strategy which calls a function if called. This supports `FnMut`s, which is has more 
+      * `ds-adhoc-mut`: A drop strategy which calls a function if called. This supports `FnMut`s, which has more 
                         flexible trait bounds compared to `Fn`, at the cost of using a `Mutex` internally, in order to
                         call it, since try drop strategies **must** take self by reference.
     * `ds-once-cell`: A drop strategy which stores an error value once. This is primarily useful for `struct`s which own
