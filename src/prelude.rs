@@ -2,8 +2,8 @@
 
 pub use crate::{
     fallback::FallbackTryDropStrategy, DynFallibleTryDropStrategy, FallibleTryDropStrategy,
-    ImpureTryDrop, PureTryDrop, ThreadSafe, TryDropStrategy, TryDrop,
+    PureTryDrop, ThreadSafe, TryDropStrategy, TryDrop,
 };
 
 #[cfg(feature = "global")]
-pub use crate::{fallback::GlobalFallbackTryDropStrategy, GlobalDynFallibleTryDropStrategy};
+pub use crate::{fallback::GlobalFallbackTryDropStrategy, GlobalDynFallibleTryDropStrategy, ImpureTryDrop};
