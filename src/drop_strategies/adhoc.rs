@@ -5,9 +5,18 @@ mod fn_mut {
     use parking_lot::Mutex;
     use crate::{FallibleTryDropStrategy, TryDropStrategy};
 
+    /// A quick and dirty try drop strategy which uses a function.
+    ///
+    /// This is more flexible compared to [`AdHocTryDropStrategy`], accepting also [`FnMut`]s
+    /// instead of only [`Fn`]s, but the function is guarded by a [`Mutex`], which has more
+    /// overhead.
+    ///
+    /// [`AdHocTryDropStrategy`]: super::AdHocTryDropStrategy
+    #[cfg_attr(feature = "derives", derive(Debug, Default))]
     pub struct AdHocMutTryDropStrategy<F: FnMut(crate::Error)>(pub Mutex<F>);
 
     impl<F: FnMut(crate::Error)> AdHocMutTryDropStrategy<F> {
+        /// Create a new ad-hoc try drop strategy.
         pub fn new(f: F) -> Self {
             Self(Mutex::new(f))
         }
@@ -19,11 +28,20 @@ mod fn_mut {
         }
     }
 
+    /// A quick and dirty try drop strategy which uses a function.
+    ///
+    /// This is more flexible compared to [`AdHocFallibleTryDropStrategy`], accepting also
+    /// [`FnMut`]s instead of only [`Fn`]s, but the function is guarded by a [`Mutex`], which has
+    /// more overhead.
+    ///
+    /// [`AdHocTryDropStrategy`]: super::AdHocFallibleTryDropStrategy
+    #[cfg_attr(feature = "derives", derive(Debug, Default))]
     pub struct AdHocMutFallibleTryDropStrategy<F, E>
     where
         F: FnMut(crate::Error) -> Result<(), E>,
         E: Into<anyhow::Error>,
     {
+        /// The function to call.
         pub f: Mutex<F>,
         _error: PhantomData<E>,
     }
@@ -33,6 +51,7 @@ mod fn_mut {
         F: FnMut(crate::Error) -> Result<(), E>,
         E: Into<anyhow::Error>,
     {
+        /// Create a new ad-hoc fallible try drop strategy.
         pub fn new(f: F) -> Self {
             Self {
                 f: Mutex::new(f),
