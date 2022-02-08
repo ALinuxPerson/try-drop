@@ -9,7 +9,7 @@ use crate::{FallibleTryDropStrategy, TryDropStrategy};
 use std::error::Error;
 use std::marker::PhantomData;
 use std::sync::Arc;
-use std::{fmt, io};
+use std::fmt;
 use tokio::runtime::Handle;
 use tokio::sync::broadcast;
 use tokio::sync::broadcast::error::SendError;
@@ -86,8 +86,8 @@ pub struct BroadcastDropStrategy<M: Mode> {
 
 impl<M: Mode> BroadcastDropStrategy<M> {
     /// Create a new broadcast drop strategy from a handle to the current tokio runtime.
-    pub fn new(capacity: usize) -> io::Result<(Self, BlockingReceiver<ArcError>)> {
-        Ok(Self::new_with(capacity, Handle::current()))
+    pub fn new(capacity: usize) -> (Self, BlockingReceiver<ArcError>) {
+        Self::new_with(capacity, Handle::current())
     }
 
     /// Create a new broadcast drop strategy, with a handle to a tokio runtime.
