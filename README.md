@@ -16,7 +16,7 @@ At the bare minimum, there is only one dependency--`anyhow`. With all default fe
 dependencies.
 
 # Features
-Here is a tree of the features and their explanations.
+Here is a tree of the features (which aren't optional dependencies) and their explanations.
 
   * `default`: Enables the global try drop strategy, downcasting of try drop strategies, standard library, newtype 
                derefs, `derives`s for most types, and the default try drop strategies.
