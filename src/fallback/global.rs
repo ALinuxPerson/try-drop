@@ -1,5 +1,5 @@
 //! Manage the global fallback try drop strategy.
-#[cfg(all(feature = "ds-panic", feature = "std"))]
+#[cfg(feature = "ds-panic")]
 mod fallback_drop_strategy {
     use std::boxed::Box;
     use once_cell::sync::Lazy;
@@ -19,7 +19,7 @@ mod fallback_drop_strategy {
         *fallback_drop_strategy().write() = drop_strategy
     }
 }
-#[cfg(not(all(feature = "ds-panic", feature = "std")))]
+#[cfg(not(feature = "ds-panic"))]
 mod fallback_drop_strategy {
     use std::boxed::Box;
     use once_cell::sync::OnceCell;
