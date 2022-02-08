@@ -65,6 +65,47 @@ pub trait PureTryDrop {
     fn try_drop_strategy(&self) -> &Self::TryDropStrategy;
 
     /// Adapts this type to take advantage of the specified try drop strategies.
+    ///
+    /// # Notes
+    /// If [`Self`] implements [`Copy`], and you call this function, at first it seems like there
+    /// would be a soundness hole:
+    ///
+    /// ```rust
+    /// use try_drop::{Infallible, PureTryDrop, TryDrop};
+    ///
+    /// #[derive(Copy, Clone)]
+    /// struct T(usize);
+    ///
+    /// impl TryDrop for T {
+    ///     type Error = Infallible;
+    ///
+    ///     unsafe fn try_drop(&mut self) -> Result<(), Self::Error> {
+    ///         self.0 += 1;
+    ///         println!("{}", self.0);
+    ///         Ok(())
+    ///     }
+    /// }
+    ///
+    /// // this is valid code and does not result in a compilation error
+    /// let t = T.adapt().adapt();
+    /// ```
+    ///
+    /// You'd think the output would be:
+    ///
+    /// ```ignore
+    /// 1
+    /// 2
+    /// ```
+    ///
+    /// However, it's actually:
+    ///
+    /// ```ignore
+    /// 1
+    /// 1
+    /// ```
+    ///
+    /// This is because [`Self`] implicitly get copied.
+    /// <sup><i>I may or may not have spent a large amount of time trying to get rid of this "soundness hole".</i></sup>
     fn adapt(self) -> DropAdapter<Self> where Self: Sized {
         DropAdapter(self)
     }
