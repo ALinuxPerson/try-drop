@@ -14,3 +14,6 @@ errors.
 # Dependencies
 At the bare minimum, there is only one dependency--`anyhow`. With all default features enabled, there are six 
 dependencies.
+
+# License
+This project is licensed under the MIT License.
