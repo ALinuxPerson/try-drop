@@ -15,7 +15,8 @@ tokio = { version = "1.16.1", features = ["sync", "rt"], default-features = fals
 
 [features]
 default = ["global", "downcast-rs", "std", "shrinkwraprs", "derives", "drop-strategies"]
-global = ["std", "once_cell", "parking_lot"]
+global = ["std", "once_cell", "parking_lot", "global-defaults"]
+global-defaults = ["ds-write", "ds-abort"]
 std = ["anyhow/std"]
 derives = []
 drop-strategies = ["ds-abort", "ds-broadcast", "ds-exit", "ds-noop", "ds-panic", "ds-write", "ds-adhoc-mut", "ds-once-cell"]
