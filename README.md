@@ -11,6 +11,10 @@ errors.
 
 <sup>[1] Don't know what that means? don't worry, we'll get to that in a bit.</sup>
 
+# Usage
+
+This is exactly the problem I was having when I was making the [`ideapad`] project.
+
 # Dependencies
 At the bare minimum, there is only one dependency--`anyhow`. With all default features enabled, there are six 
 dependencies.
@@ -46,3 +50,5 @@ Here is a tree of the features (which aren't optional dependencies) and their ex
 
 # License
 This project is licensed under the MIT License.
+
+[`ideapad`]: https://github.com/ALinuxPerson/ideapad
