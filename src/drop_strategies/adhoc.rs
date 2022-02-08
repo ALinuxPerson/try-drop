@@ -28,6 +28,12 @@ mod fn_mut {
         }
     }
 
+    impl<F: FnMut(crate::Error)> From<F> for AdHocMutTryDropStrategy<F> {
+        fn from(f: F) -> Self {
+            Self::new(f)
+        }
+    }
+
     /// A quick and dirty try drop strategy which uses a function.
     ///
     /// This is more flexible compared to [`AdHocFallibleTryDropStrategy`], accepting also
@@ -69,6 +75,16 @@ mod fn_mut {
 
         fn try_handle_error(&self, error: Error) -> Result<(), Self::Error> {
             self.f.lock()(error)
+        }
+    }
+
+    impl<F, E> From<F> for AdHocMutFallibleTryDropStrategy<F, E>
+    where
+        F: FnMut(crate::Error) -> Result<(), E>,
+        E: Into<anyhow::Error>,
+    {
+        fn from(f: F) -> Self {
+            Self::new(f)
         }
     }
 }
