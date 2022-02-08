@@ -5,6 +5,12 @@ mod with_std {
 
 #[cfg(not(feature = "std"))]
 mod no_std {
+    /// The error type for errors which can never happen.
+    ///
+    /// This is only used as a drop-in replacement for [`core::convert::Infallible`], so that
+    /// `anyhow` has a never error type.
+    ///
+    /// For more information, see [`core::convert::Infallible`].
     #[derive(Copy, Clone)]
     pub enum Infallible {}
 
