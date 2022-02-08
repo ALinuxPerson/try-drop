@@ -25,7 +25,7 @@ Here is a tree of the features (which aren't optional dependencies) and their ex
   * `std`: Enable types which require the standard library to work.
   * `derives`: Derives `Debug`, `Copy`, `Clone`, `PartialEq`, `Eq`, `PartialOrd`, `Ord`, `Hash`, and `Default` to all 
                public types if possible.
-  * `drop-stratgies`: Enables the default drop strategies. Each drop strategy is explained below. Note that `ds` stands
+  * `drop-strategies`: Enables the default drop strategies. Each drop strategy is explained below. Note that `ds` stands
                       for drop strategies, due to Rust's lack of feature namespacing (I think).
     * `ds-abort`: A drop strategy which aborts the current program if called.
     * `ds-broadcast`: A drop strategy which broadcasts the error to all receivers. This is a heavy drop strategy; it 
