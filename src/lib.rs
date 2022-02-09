@@ -297,6 +297,8 @@ impl<RTD: RepeatableTryDrop> PureTryDrop for DropAdapter<RTD> {
     }
 }
 
+// SAFETY: since `RTD` is `RepeatableTryDrop`, we know that it is safe to call `try_drop` multiple
+// times.
 unsafe impl<RTD: RepeatableTryDrop> RepeatableTryDrop for DropAdapter<RTD> {}
 
 impl<TD: PureTryDrop> From<TD> for DropAdapter<TD> {
