@@ -1,6 +1,4 @@
-mod common;
-
-use crate::common::{ErrorsOnDrop, Random};
+use try_drop::test_utils::{ErrorsOnDrop, Random};
 use try_drop::drop_strategies::{PanicDropStrategy, WriteDropStrategy};
 use try_drop::DropAdapter;
 

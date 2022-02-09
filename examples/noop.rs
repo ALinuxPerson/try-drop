@@ -1,8 +1,6 @@
-mod common;
-
-use crate::common::{ErrorsOnDrop, Fallible};
 use try_drop::drop_strategies::NoOpDropStrategy;
 use try_drop::DropAdapter;
+use try_drop::test_utils::{ErrorsOnDrop, Fallible};
 
 fn main() {
     let errors = DropAdapter(ErrorsOnDrop::<Fallible, _>::given(

@@ -1,8 +1,6 @@
-mod common;
-
-use common::{ErrorsOnDrop, Fallible};
 use try_drop::drop_strategies::AbortDropStrategy;
 use try_drop::DropAdapter;
+use try_drop::test_utils::{ErrorsOnDrop, Fallible};
 
 fn main() {
     try_drop::install(AbortDropStrategy, AbortDropStrategy);

@@ -1,6 +1,5 @@
-mod common;
 
-use crate::common::{ErrorsOnDrop, Mode, Random, TryDropTypes};
+use try_drop::test_utils::{ErrorsOnDrop, Mode, Random, TryDropTypes};
 use once_cell::sync::OnceCell;
 use std::sync::Arc;
 use try_drop::drop_strategies::once_cell::Ignore;

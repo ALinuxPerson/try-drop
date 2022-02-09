@@ -1,8 +1,6 @@
-mod common;
-
-use crate::common::{ErrorsOnDrop, Fallible};
 use try_drop::drop_strategies::{AdHocFallibleTryDropStrategy, AdHocTryDropStrategy};
 use try_drop::PureTryDrop;
+use try_drop::test_utils::{ErrorsOnDrop, Fallible};
 
 fn main() {
     let fallible_try_drop_strategy = AdHocFallibleTryDropStrategy::new(|error| {
