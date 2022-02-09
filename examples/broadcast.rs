@@ -10,7 +10,7 @@ use try_drop::DropAdapter;
 
 fn main() -> Result<(), try_drop::Error> {
     let _guard = Runtime::new()?.enter();
-    let (strategy, mut r1) = BroadcastDropStrategy::<OkIfAlone>::new(16)?;
+    let (strategy, mut r1) = BroadcastDropStrategy::<OkIfAlone>::new(16);
     let mut r2 = strategy.subscribe();
     try_drop::install(strategy, PanicDropStrategy::DEFAULT);
     let errors = DropAdapter(ErrorsOnDrop::<Random, _>::not_given());
