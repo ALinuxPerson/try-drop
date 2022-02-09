@@ -304,3 +304,47 @@ impl<TD: PureTryDrop> From<TD> for DropAdapter<TD> {
         t.adapt()
     }
 }
+
+pub struct RepeatableTryDropAdapter<T: PureTryDrop> {
+    pub inner: T,
+    dropped: bool,
+    panic_on_double_drop: bool,
+}
+
+impl<T: PureTryDrop> RepeatableTryDropAdapter<T> {
+    pub fn new(item: T) -> Self {
+        Self { inner: item, dropped: false, panic_on_double_drop: true }
+    }
+
+    pub fn panic_on_double_drop(mut this: Self, panic_on_double_drop: bool) -> Self {
+        this.panic_on_double_drop = panic_on_double_drop;
+        this
+    }
+}
+
+impl<T: PureTryDrop> PureTryDrop for RepeatableTryDropAdapter<T> {
+    type Error = T::Error;
+    type FallbackTryDropStrategy = T::FallbackTryDropStrategy;
+    type TryDropStrategy = T::TryDropStrategy;
+
+    fn fallback_try_drop_strategy(&self) -> &Self::FallbackTryDropStrategy {
+        self.inner.fallback_try_drop_strategy()
+    }
+
+    fn try_drop_strategy(&self) -> &Self::TryDropStrategy {
+        self.inner.try_drop_strategy()
+    }
+
+    unsafe fn try_drop(&mut self) -> Result<(), Self::Error> {
+        if self.dropped && self.panic_on_double_drop {
+            panic!("tried to drop object twice, this is an invalid operation")
+        } else {
+            self.inner.try_drop()?;
+            self.dropped = true;
+            Ok(())
+        }
+    }
+}
+
+// SAFETY: if we try to drop this twice, either nothing happens or it panics.
+unsafe impl<T: PureTryDrop> RepeatableTryDrop for RepeatableTryDropAdapter<T> {}

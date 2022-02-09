@@ -202,6 +202,7 @@ for you.
 fn do_stuff() {
     let c_wrapper = CWrapper(c_wrapper_sys::some_library_type_t_new());
     let c_wrapper = DropAdapter(c_wrapper);
+    // let c_wrapper = c_wrapper.adapt(); // you can also do this
     // you can't cause a double free as `DropAdapter` doesn't implement `TryDrop`[1]
 
     // do stuff with c_wrapper
