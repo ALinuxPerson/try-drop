@@ -55,8 +55,7 @@ use crate::fallback::{
 };
 use fallback_drop_strategy::fallback_drop_strategy;
 pub use fallback_drop_strategy::install_dyn;
-use once_cell::sync::OnceCell;
-use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
+use parking_lot::{RwLockReadGuard, RwLockWriteGuard};
 use std::boxed::Box;
 
 /// The global fallback try drop strategy. This doesn't store anything, it just provides a
