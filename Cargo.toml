@@ -17,6 +17,7 @@ once_cell = { version = "1.9.0", optional = true }
 parking_lot = { version = "0.12.0", optional = true }
 shrinkwraprs = { version = "0.3.0", default-features = false, optional = true }
 tokio = { version = "1.16.1", features = ["sync", "rt"], default-features = false, optional = true }
+rand = { version = "0.8.4", default-features = false, features = ["std", "std_rng"], optional = true }
 
 [features]
 default = ["global", "downcast-rs", "std", "shrinkwraprs", "derives", "drop-strategies"]
@@ -34,7 +35,7 @@ ds-write = ["std", "parking_lot"]
 ds-adhoc-mut = ["ds-adhoc"]
 ds-adhoc = []
 ds-once-cell = ["std", "once_cell"]
+__tests = ["std", "rand"]
 
 [dev-dependencies]
-rand = { version = "0.8.4", default-features = false, features = ["std", "std_rng"] }
 tokio = { version = "1.16.1", features = ["rt-multi-thread"], default-features = false }

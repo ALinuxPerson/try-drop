@@ -38,6 +38,9 @@ pub use self::PureTryDrop as TryDrop;
 #[cfg(feature = "global")]
 pub use self::ImpureTryDrop as TryDrop;
 
+#[cfg(any(feature = "__tests", test))]
+pub mod test_utils;
+
 /// A trait for types which can be dropped, but which may fail to do so.
 ///
 /// This is a pure version of try drop, meaning that the drop strategies have to be explicitly
