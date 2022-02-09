@@ -305,20 +305,62 @@ impl<TD: PureTryDrop> From<TD> for DropAdapter<TD> {
     }
 }
 
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "shrinkwraprs", derive(Shrinkwrap))]
+#[cfg_attr(feature = "shrinkwraprs", shrinkwrap(mutable))]
 pub struct RepeatableTryDropAdapter<T: PureTryDrop> {
+    #[cfg_attr(feature = "shrinkwraprs", shrinkwrap(main_field))]
     pub inner: T,
+
     dropped: bool,
     panic_on_double_drop: bool,
+}
+
+impl<T: PureTryDrop + Default> Default for RepeatableTryDropAdapter<T> {
+    fn default() -> Self {
+        Self::new(T::default())
+    }
 }
 
 impl<T: PureTryDrop> RepeatableTryDropAdapter<T> {
     pub fn new(item: T) -> Self {
         Self { inner: item, dropped: false, panic_on_double_drop: true }
     }
+}
 
-    pub fn panic_on_double_drop(mut this: Self, panic_on_double_drop: bool) -> Self {
+#[cfg(not(feature = "shrinkwraprs"))]
+impl<T: PureTryDrop> RepeatableTryDropAdapter<T> {
+    pub fn with_panic_on_double_drop(self, panic_on_double_drop: bool) -> Self {
+        self.panic_on_double_drop = panic_on_double_drop;
+        self
+    }
+
+    pub fn dropped(&self) -> bool {
+        self.dropped
+    }
+
+    pub fn panic_on_double_drop(&self) -> bool {
+        self.panic_on_double_drop
+    }
+}
+
+#[cfg(feature = "shrinkwraprs")]
+impl<T: PureTryDrop> RepeatableTryDropAdapter<T> {
+    pub fn with_panic_on_double_drop(mut this: Self, panic_on_double_drop: bool) -> Self {
         this.panic_on_double_drop = panic_on_double_drop;
         this
+    }
+
+    pub fn dropped(this: &Self) -> bool {
+        this.dropped
+    }
+
+    pub fn panic_on_double_drop(this: &Self) -> bool {
+        this.panic_on_double_drop
+    }
+
+    pub fn take(this: Self) -> T {
+        this.inner
     }
 }
 
