@@ -12,7 +12,7 @@ categories = ["no-std", "rust-patterns"]
 
 [dependencies]
 anyhow = { version = "1.0.53", default-features = false }
-downcast-rs = { version = "1.2.0", optional = true }
+downcast-rs = { version = "1.2.0", default-features = false, optional = true }
 once_cell = { version = "1.9.0", optional = true }
 parking_lot = { version = "0.12.0", optional = true }
 shrinkwraprs = { version = "0.3.0", default-features = false, optional = true }
@@ -23,12 +23,14 @@ rand = { version = "0.8.4", default-features = false, features = ["std", "std_rn
 doctest = false
 
 [features]
-default = ["global", "downcast-rs", "std", "shrinkwraprs", "derives", "drop-strategies"]
+default = ["downcast-rs", "shrinkwraprs", "derives", "drop-strategies", "std-defaults"]
+std-defaults = ["std", "global", "std-drop-strategies"]
 global = ["std", "once_cell", "parking_lot", "global-defaults"]
 global-defaults = ["ds-write", "ds-abort"]
-std = ["anyhow/std"]
+std = ["anyhow/std", "downcast-rs/std"]
 derives = []
-drop-strategies = ["ds-abort", "ds-broadcast", "ds-exit", "ds-noop", "ds-panic", "ds-write", "ds-adhoc-mut", "ds-once-cell"]
+drop-strategies = ["ds-abort", "ds-broadcast", "ds-exit", "ds-write", "ds-once-cell", "std-drop-strategies"]
+std-drop-strategies = ["ds-noop", "ds-panic", "ds-adhoc-mut"]
 ds-abort = ["std"]
 ds-broadcast = ["tokio", "std"]
 ds-exit = ["std"]
