@@ -1,16 +1,17 @@
 //! Manage the global fallback try drop strategy.
 #[cfg(feature = "ds-panic")]
 mod fallback_drop_strategy {
-    use std::boxed::Box;
-    use once_cell::sync::Lazy;
-    use parking_lot::RwLock;
     use crate::drop_strategies::PanicDropStrategy;
     use crate::fallback::GlobalFallbackTryDropStrategy as GlobalFallbackTryDropStrategyTrait;
+    use once_cell::sync::Lazy;
+    use parking_lot::RwLock;
+    use std::boxed::Box;
 
     static FALLBACK_TRY_DROP_STRATEGY: Lazy<RwLock<Box<dyn GlobalFallbackTryDropStrategyTrait>>> =
         Lazy::new(|| RwLock::new(Box::new(PanicDropStrategy::DEFAULT)));
 
-    pub fn fallback_drop_strategy() -> &'static RwLock<Box<dyn GlobalFallbackTryDropStrategyTrait>> {
+    pub fn fallback_drop_strategy() -> &'static RwLock<Box<dyn GlobalFallbackTryDropStrategyTrait>>
+    {
         &FALLBACK_TRY_DROP_STRATEGY
     }
 
@@ -21,15 +22,17 @@ mod fallback_drop_strategy {
 }
 #[cfg(not(feature = "ds-panic"))]
 mod fallback_drop_strategy {
-    use std::boxed::Box;
+    use crate::fallback::GlobalFallbackTryDropStrategy as GlobalFallbackTryDropStrategyTrait;
     use once_cell::sync::OnceCell;
     use parking_lot::RwLock;
-    use crate::fallback::GlobalFallbackTryDropStrategy as GlobalFallbackTryDropStrategyTrait;
+    use std::boxed::Box;
 
-    static FALLBACK_TRY_DROP_STRATEGY: OnceCell<RwLock<Box<dyn GlobalFallbackTryDropStrategyTrait>>> =
-        OnceCell::new();
+    static FALLBACK_TRY_DROP_STRATEGY: OnceCell<
+        RwLock<Box<dyn GlobalFallbackTryDropStrategyTrait>>,
+    > = OnceCell::new();
 
-    pub fn fallback_drop_strategy() -> &'static RwLock<Box<dyn GlobalFallbackTryDropStrategyTrait>> {
+    pub fn fallback_drop_strategy() -> &'static RwLock<Box<dyn GlobalFallbackTryDropStrategyTrait>>
+    {
         FALLBACK_TRY_DROP_STRATEGY.get()
             .expect("the global fallback try drop strategy is not initialized yet; initialize it with `global::initialize()`")
     }
@@ -47,11 +50,11 @@ mod fallback_drop_strategy {
     }
 }
 
-pub use fallback_drop_strategy::install_dyn;
-use fallback_drop_strategy::fallback_drop_strategy;
 use crate::fallback::{
     FallbackTryDropStrategy, GlobalFallbackTryDropStrategy as GlobalFallbackTryDropStrategyTrait,
 };
+use fallback_drop_strategy::fallback_drop_strategy;
+pub use fallback_drop_strategy::install_dyn;
 use once_cell::sync::OnceCell;
 use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 use std::boxed::Box;

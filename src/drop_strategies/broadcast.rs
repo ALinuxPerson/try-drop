@@ -7,9 +7,9 @@ mod private {
 
 use crate::{FallibleTryDropStrategy, TryDropStrategy};
 use std::error::Error;
+use std::fmt;
 use std::marker::PhantomData;
 use std::sync::Arc;
-use std::fmt;
 use tokio::runtime::Handle;
 use tokio::sync::broadcast;
 use tokio::sync::broadcast::error::SendError;

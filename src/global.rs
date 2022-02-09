@@ -2,17 +2,18 @@
 
 #[cfg(feature = "ds-write")]
 mod drop_strategy {
-    use std::boxed::Box;
-    use once_cell::sync::Lazy;
-    use parking_lot::RwLock;
     use crate::drop_strategies::WriteDropStrategy;
     use crate::GlobalDynFallibleTryDropStrategy;
+    use once_cell::sync::Lazy;
+    use parking_lot::RwLock;
+    use std::boxed::Box;
 
-    static DROP_STRATEGY: Lazy<RwLock<Box<dyn GlobalDynFallibleTryDropStrategy>>> = Lazy::new(|| {
-        let mut strategy = WriteDropStrategy::stderr();
-        strategy.prelude("error: ");
-        RwLock::new(Box::new(strategy))
-    });
+    static DROP_STRATEGY: Lazy<RwLock<Box<dyn GlobalDynFallibleTryDropStrategy>>> =
+        Lazy::new(|| {
+            let mut strategy = WriteDropStrategy::stderr();
+            strategy.prelude("error: ");
+            RwLock::new(Box::new(strategy))
+        });
 
     pub fn drop_strategy() -> &'static RwLock<Box<dyn GlobalDynFallibleTryDropStrategy>> {
         &DROP_STRATEGY
@@ -26,12 +27,13 @@ mod drop_strategy {
 
 #[cfg(not(feature = "ds-write"))]
 mod drop_strategy {
-    use std::boxed::Box;
+    use crate::GlobalDynFallibleTryDropStrategy;
     use once_cell::sync::OnceCell;
     use parking_lot::RwLock;
-    use crate::GlobalDynFallibleTryDropStrategy;
+    use std::boxed::Box;
 
-    static DROP_STRATEGY: OnceCell<RwLock<Box<dyn GlobalDynFallibleTryDropStrategy>>> = OnceCell::new();
+    static DROP_STRATEGY: OnceCell<RwLock<Box<dyn GlobalDynFallibleTryDropStrategy>>> =
+        OnceCell::new();
 
     pub fn drop_strategy() -> &'static RwLock<Box<dyn GlobalDynFallibleTryDropStrategy>> {
         DROP_STRATEGY.get().expect(
@@ -50,10 +52,10 @@ mod drop_strategy {
     }
 }
 
-pub use drop_strategy::install_dyn;
-use drop_strategy::drop_strategy;
 use crate::{FallibleTryDropStrategy, GlobalDynFallibleTryDropStrategy};
 use anyhow::Error;
+use drop_strategy::drop_strategy;
+pub use drop_strategy::install_dyn;
 use parking_lot::{RwLockReadGuard, RwLockWriteGuard};
 use std::boxed::Box;
 
