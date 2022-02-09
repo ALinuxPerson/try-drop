@@ -82,6 +82,22 @@ pub struct OnceCellTryDropStrategy<M: Mode> {
     _mode: PhantomData<M>,
 }
 
+impl OnceCellTryDropStrategy<Ignore> {
+    /// Create a new once cell try drop strategy which will ignore if there is already an error
+    /// value in its cell.
+    pub fn ignore(item: Arc<OnceCell<anyhow::Error>>) -> Self {
+        Self::new(item)
+    }
+}
+
+impl OnceCellTryDropStrategy<Error> {
+    /// Create a new once cell try drop strategy which will error if there is already an error value
+    /// in its cell.
+    pub fn error(item: Arc<OnceCell<anyhow::Error>>) -> Self {
+        Self::new(item)
+    }
+}
+
 impl<M: Mode> OnceCellTryDropStrategy<M> {
     /// Creates a new try drop strategy which sets an error value once.
     pub fn new(item: Arc<OnceCell<anyhow::Error>>) -> Self {
