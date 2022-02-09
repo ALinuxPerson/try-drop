@@ -4,7 +4,7 @@
         <img src="https://img.shields.io/crates/v/try-drop">
     </a>
     <a href="https://www.docs.rs/try-drop">
-        <img src="https://docs.rs/textsynth/try-drop.svg">
+        <img src="https://docs.rs/try-drop/try-drop.svg">
     </a>
     <p>Batteries included error handling mechanisms for drops which can fail</p>
 </div>
