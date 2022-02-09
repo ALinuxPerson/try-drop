@@ -425,6 +425,12 @@ let t = DropAdapter(DropAdapter(T));
 At the bare minimum, there is only one dependency--`anyhow`. With all default features enabled, there are six 
 dependencies.
 
+  * `anyhow`: used as the main error type.
+  * `downcast-rs`: used to support downcasting the drop strategies in globals. Is optional.
+  * `once_cell`: used to support the global drop strategy and for the OnceCell drop strategy. Is optional.
+  * `shrinkwraprs`: used for more flexible newtypes. Is optional.
+  * `tokio`: used for the broadcast drop strategy. Is optional.
+
 # Features
 Here is a tree of the features (which aren't optional dependencies) and their explanations.
 
