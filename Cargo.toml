@@ -38,6 +38,8 @@ ds-write = ["std", "parking_lot"]
 ds-adhoc-mut = ["ds-adhoc"]
 ds-adhoc = []
 ds-once-cell = ["std", "once_cell"]
+ds-unreachable-unsafe = ["ds-unreachable"]
+ds-unreachable = []
 __tests = ["std", "rand"]
 
 [dev-dependencies]
