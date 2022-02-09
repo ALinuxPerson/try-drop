@@ -445,7 +445,8 @@ Here is a tree of the features (which aren't optional dependencies) and their ex
   * `derives`: Derives `Debug`, `Copy`, `Clone`, `PartialEq`, `Eq`, `PartialOrd`, `Ord`, `Hash`, and `Default` to all 
                public types if possible.
   * `drop-strategies`: Enables the default drop strategies. Each drop strategy is explained below. Note that `ds` stands
-                      for drop strategies, due to Rust's lack of feature namespacing (I think).
+                       for drop strategies, due to Rust's lack of feature namespacing (I think). You can find these drop
+                       strategies in the `try_drop::drop_strategies` module.
     * `ds-abort`: A drop strategy which aborts the current program if called.
     * `ds-broadcast`: A drop strategy which broadcasts the error to all receivers. This is a heavy drop strategy; it 
                       depends on the Tokio broadcast channel and therefore the runtime as it provides a good 
