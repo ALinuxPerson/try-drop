@@ -4,8 +4,8 @@ mod private {
     pub trait Sealed {}
 }
 
+pub use once_cell::sync::OnceCell;
 use crate::{FallibleTryDropStrategy, TryDropStrategy};
-use once_cell::sync::OnceCell;
 use std::error::Error as StdError;
 use std::fmt;
 use std::marker::PhantomData;
