@@ -1,6 +1,6 @@
 [package]
 name = "try-drop"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "Batteries included error handling mechanisms for drops which can fail"
 license = "MIT"
