@@ -19,6 +19,9 @@ shrinkwraprs = { version = "0.3.0", default-features = false, optional = true }
 tokio = { version = "1.16.1", features = ["sync", "rt"], default-features = false, optional = true }
 rand = { version = "0.8.4", default-features = false, features = ["std", "std_rng"], optional = true }
 
+[lib]
+doctest = false
+
 [features]
 default = ["global", "downcast-rs", "std", "shrinkwraprs", "derives", "drop-strategies"]
 global = ["std", "once_cell", "parking_lot", "global-defaults"]
@@ -38,4 +41,5 @@ ds-once-cell = ["std", "once_cell"]
 __tests = ["std", "rand"]
 
 [dev-dependencies]
+rand = { version = "0.8.4", default-features = false, features = ["std", "std_rng"] }
 tokio = { version = "1.16.1", features = ["rt-multi-thread"], default-features = false }
