@@ -122,6 +122,244 @@ a module which was a part of the [`ideapad`] project.
 I originally meant to only leave it in the [`ideapad`] project, but eventually I started needing this pattern in other
 projects, so I decided to make it a standalone library.
 
+# Overview
+`try-drop` is based loosely off of how the x86 architecture handles exceptions, there is a primary exception handler,
+and then there is an exception handler for the primary exception handler.
+
+Except it isn't exception handlers, it's try drop strategies.
+
+But what is a try drop?
+
+## Try Drop
+A try drop or a `TryDrop` is a trait which defines a destructor which can fail.
+
+```rust
+pub trait TryDrop {
+    type Error;
+    
+    unsafe fn try_drop(&mut self) -> Result<(), Self::Error>;
+}
+```
+
+You may have noticed that `TryDrop::try_drop` is unsafe. This is intentional:
+
+See, the `Drop` trait has a special characteristic in that you can't call it's `drop` method directly. The reason is 
+that you may call the destructor *twice*, which could potentially cause a double free.
+
+```rust
+struct T;
+
+impl Drop for T {
+    fn drop(&mut self) {
+        // ...
+    }
+}
+
+let t = T;
+t.drop(); // this is not allowed and will result in a compile error
+```
+
+However, as far as I know, there is no way to implement this characteristic in your own traits. So you can do this if 
+`try_drop` wasn't marked unsafe:
+
+```rust
+struct CWrapper(pub *mut some_library_type_t);
+
+impl TryDrop for CWrapper {
+    type Error = Error;
+    
+    fn try_drop(&mut self) -> Result<(), Self::Error> {
+        let rc = c_wrapper_sys::some_library_type_t_free(self.0);
+        
+        if rc != 0 {
+            Err(Error::from_rc(rc))
+        } else {
+            Ok(())
+        }
+    }
+}
+
+// meanwhile, in another crate...
+fn do_stuff() -> Result<(), Error> {
+    let mut c_wrapper = CWrapper(c_wrapper_sys::some_library_type_t_new());
+    c_wrapper.try_drop()?;
+    c_wrapper.try_drop()?; // oops!
+    Ok(())
+}
+```
+
+So we have to trust that the user will **never** call `TryDrop::try_drop` directly, and we want to make this invariant
+explicit, so that's why I've made the `TryDrop::try_drop` method unsafe. You must only ever call this method from a
+`Drop` implementation.
+
+There *is* a way to make it safe, though.
+
+### Drop Adapter
+A drop adapter is basically the glue between the `Drop` trait and the `TryDrop` trait. This handles the error handling
+for you.
+
+```rust
+fn do_stuff() {
+    let c_wrapper = CWrapper(c_wrapper_sys::some_library_type_t_new());
+    let c_wrapper = DropAdapter(c_wrapper);
+    // you can't cause a double free as `DropAdapter` doesn't implement `TryDrop`[1]
+
+    // do stuff with c_wrapper
+    
+    // this results in a compile error as the method does not exist
+    // c_wrapper.try_drop()?;
+} // ... after this, the drop adapter handles the error
+
+// [1]: well, kinda. we'll explain more later
+```
+
+But how can we specify *how* `DropAdapter` handles the error? Well...
+
+# Try Drop Strategies
+A try drop strategy or a `TryDropStrategy` is a trait which defines how to handle an error which occurs in a drop.
+
+```rust
+pub trait TryDropStrategy {
+    fn handle_error(&self, error: try_drop::Error);
+}
+```
+
+Simply implement it to your type, then boom, Bob's your uncle.
+
+```rust
+struct MyStrategy;
+
+impl TryDropStrategy for MyStrategy {
+    fn handle_error(&self, error: try_drop::Error) {
+        println!("{}", error);
+    }
+}
+```
+
+But what if *that* strategy fails? You can provide a last resort strategy.
+
+# Fallback Try Drop Strategies
+A fallback try drop strategy or a `FallbackTryDropStrategy` is a trait which defines how to handle an error which
+occurs from another try drop strategy.
+
+While the `FallbackTryDropStrategy` *does* exist, any type which implements `TryDropStrategy` will automatically
+implement `FallbackTryDropStrategy` too. So `MyStrategy` already implements `FallbackTryDropStrategy`!
+
+```rust
+// yeah, cool, but like, how do i use the strategies in the drop adapter in the first place?
+let c_wrapper = DropAdapter(CWrapper(c_wrapper_sys::some_library_type_t_new()));
+```
+There are two ways.
+
+# Ways to use the strategies
+## Provide it as a generic parameter
+You can provide the drop strategies as a generic parameter for, in our case, `CWrapper`.
+
+```rust
+struct CWrapper<D, DD> 
+where
+    D: TryDropStrategy,
+    DD: FallbackTryDropStrategy,
+{
+    inner: *mut some_library_type_t,
+    strategy: D,
+    fallback_strategy: DD,
+}
+```
+
+And then you provide references to it in the `TryDrop` trait!
+
+"...but there is no way to provide it," you may ask.
+
+Well, *actually*, there are two version of the `TryDrop` trait.
+
+### Impure Try Drop
+This try drop, ignoring it's kinda ugly name, allows you to not provide any strategy.
+
+```rust
+pub trait ImpureTryDrop {
+    type Error;
+    
+    unsafe fn try_drop(&mut self) -> Result<(), Self::Error>;
+}
+```
+
+...seems familiar? that's because it's actually aliased to `TryDrop`!
+
+### Pure Try Drop
+This try drop, on the other hand, is a bit more verbose. You need to explicitly provide the strategies to use.
+
+```rust
+pub trait PureTryDrop {
+    type Error;
+    type FallbackTryDropStrategy;
+    type TryDropStrategy;
+    
+    fn try_drop_strategy(&self) -> &Self::TryDropStrategy;
+    fn fallback_try_drop_strategy(&self) -> &Self::FallbackTryDropStrategy;
+    unsafe fn try_drop(&mut self) -> Result<(), Self::Error>;
+}
+```
+
+We can now implement our drop strategy for `CWrapper`!
+
+```rust
+impl<D, DD> PureTryDrop for CWrapper<D, DD>
+where
+    D: TryDropStrategy,
+    DD: FallbackTryDropStrategy,
+{
+    type Error = Error;
+    type FallbackTryDropStrategy = DD;
+    type TryDropStrategy = D;
+    
+    fn try_drop_strategy(&self) -> &Self::TryDropStrategy {
+        &self.strategy
+    }
+    
+    fn fallback_try_drop_strategy(&self) -> &Self::FallbackTryDropStrategy {
+        &self.fallback_strategy
+    }
+    
+    unsafe fn try_drop(&mut self) -> Result<(), Self::Error> {
+        let rc = c_wrapper_sys::some_library_type_t_free(self.0);
+
+        if rc != 0 {
+            Err(Error::from_rc(rc))
+        } else {
+            Ok(())
+        }
+    }
+}
+```
+
+Actually, all types that implement `ImpureTryDrop` also implement `PureTryDrop`!
+
+> ...wait, what types are used then for `FallBackTryDropStrategy` and `TryDropStrategy`?
+
+I'm glad you asked.
+
+## Use it as the global drop strategy
+
+By default, `try-drop` has the `global` feature enabled which, as you may have guessed, provides a global drop strategy.
+However, it is only initialized if the `ds-write` (write drop strategy) and the `ds-panic` (panic drop strategy) 
+features are enabled, which are the main drop strategy and fallback drop strategy respectively. You'd need to provide a 
+drop strategy for each global if you don't have those features enabled.
+
+We can install our `MyStrategy` as the main drop strategy like so:
+
+```rust
+try_drop::global::install(MyStrategy);
+```
+
+We can also install it as the fallback drop strategy:
+
+```rust
+try_drop::fallback::install(MyStrategy);
+```
+
+Going back to our (previous) `CWrapper`, it should already be using our global drop strategy.
+
 # Dependencies
 At the bare minimum, there is only one dependency--`anyhow`. With all default features enabled, there are six 
 dependencies.
