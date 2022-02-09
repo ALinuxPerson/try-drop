@@ -6,7 +6,7 @@ description = "Batteries included error handling mechanisms for drops which can 
 license = "MIT"
 repository = "https://github.com/ALinuxPerson/try-drop"
 keywords = ["drop", "error", "library", "batteries-included", "utilities"]
-categories = ["no-std"]
+categories = ["no-std", "rust-patterns"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
