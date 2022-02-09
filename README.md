@@ -62,8 +62,10 @@ impl<'s> Drop for StructureGuard<'s> {
 But, alas! you need to handle the error.
 
 First option: Just panic. But, we'd like to handle the error.
+
 Second option: Print to standard error.
-Second option: create a finish `function` and then check in the `Drop` implementation if its finished.
+
+Second option: Create a finish `function` and then check in the `Drop` implementation if its finished.
 
 ```rust
 struct StructureGuard<'s> {
