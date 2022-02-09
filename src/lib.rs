@@ -305,10 +305,13 @@ impl<TD: PureTryDrop> From<TD> for DropAdapter<TD> {
     }
 }
 
+/// This type is an adapter for types which implement [`TryDrop`] which allow their
+/// [`TryDrop::try_drop`] functions to be repeated multiple times.
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "shrinkwraprs", derive(Shrinkwrap))]
 #[cfg_attr(feature = "shrinkwraprs", shrinkwrap(mutable))]
 pub struct RepeatableTryDropAdapter<T: PureTryDrop> {
+    /// The inner value.
     #[cfg_attr(feature = "shrinkwraprs", shrinkwrap(main_field))]
     pub inner: T,
 
@@ -323,6 +326,7 @@ impl<T: PureTryDrop + Default> Default for RepeatableTryDropAdapter<T> {
 }
 
 impl<T: PureTryDrop> RepeatableTryDropAdapter<T> {
+    /// Create a new `RepeatableTryDropAdapter` with the given value.
     pub fn new(item: T) -> Self {
         Self { inner: item, dropped: false, panic_on_double_drop: true }
     }
@@ -330,15 +334,19 @@ impl<T: PureTryDrop> RepeatableTryDropAdapter<T> {
 
 #[cfg(not(feature = "shrinkwraprs"))]
 impl<T: PureTryDrop> RepeatableTryDropAdapter<T> {
+    /// Choose whether or not to panic when the [`RepeatableTryDropAdapter`] is dropped twice or
+    /// multiple times.
     pub fn with_panic_on_double_drop(self, panic_on_double_drop: bool) -> Self {
         self.panic_on_double_drop = panic_on_double_drop;
         self
     }
 
+    /// Check whether or not this object has it's destructor called.
     pub fn dropped(&self) -> bool {
         self.dropped
     }
 
+    /// Check whether or not this object will panic when dropped twice or multiple times.
     pub fn panic_on_double_drop(&self) -> bool {
         self.panic_on_double_drop
     }
@@ -346,19 +354,24 @@ impl<T: PureTryDrop> RepeatableTryDropAdapter<T> {
 
 #[cfg(feature = "shrinkwraprs")]
 impl<T: PureTryDrop> RepeatableTryDropAdapter<T> {
+    /// Choose whether or not to panic when the [`RepeatableTryDropAdapter`] is dropped twice or
+    /// multiple times.
     pub fn with_panic_on_double_drop(mut this: Self, panic_on_double_drop: bool) -> Self {
         this.panic_on_double_drop = panic_on_double_drop;
         this
     }
 
+    /// Check whether or not this object has it's destructor called.
     pub fn dropped(this: &Self) -> bool {
         this.dropped
     }
 
+    /// Check whether or not this object will panic when dropped twice or multiple times.
     pub fn panic_on_double_drop(this: &Self) -> bool {
         this.panic_on_double_drop
     }
 
+    /// Take the inner value out of the adapter.
     pub fn take(this: Self) -> T {
         this.inner
     }
