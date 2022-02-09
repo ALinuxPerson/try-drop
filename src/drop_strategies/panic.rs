@@ -49,3 +49,39 @@ impl Default for PanicDropStrategy {
         Self::DEFAULT
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::string::ToString;
+    use crate::drop_strategies::AbortDropStrategy;
+    use crate::PureTryDrop;
+    use crate::test_utils::{ErrorsOnDrop, Fallible};
+    use super::*;
+
+    #[test]
+    fn test_with_message() {
+        let strategy = PanicDropStrategy::with_message("test message");
+        assert_eq!(strategy.message, "test message");
+    }
+
+    #[test]
+    fn test_with_static_message() {
+        let strategy = PanicDropStrategy::with_static_message("test message");
+        assert_eq!(strategy.message, "test message");
+    }
+
+    #[test]
+    fn test_with_dynamic_message() {
+        let strategy = PanicDropStrategy::with_dynamic_message("test message".to_string());
+        assert_eq!(strategy.message, "test message");
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_strategy() {
+        let _errors = ErrorsOnDrop::<Fallible, _>::given(
+            PanicDropStrategy::DEFAULT,
+            AbortDropStrategy,
+        ).adapt();
+    }
+}
