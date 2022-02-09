@@ -78,3 +78,28 @@ impl<W: Write> FallibleTryDropStrategy for WriteDropStrategy<W> {
         self.writer.lock().write_all(&message)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Cursor;
+    use crate::drop_strategies::PanicDropStrategy;
+    use crate::PureTryDrop;
+    use crate::test_utils::{ErrorsOnDrop, Fallible};
+
+    #[test]
+    fn test_write_drop_strategy() {
+        let mut writer = Cursor::new(Vec::new());
+        let mut strategy = WriteDropStrategy::new(&mut writer);
+        strategy.prelude("error: ");
+        let errors = ErrorsOnDrop::<Fallible, _>::given(
+            strategy,
+            PanicDropStrategy::DEFAULT,
+        ).adapt();
+        drop(errors);
+        assert_eq!(
+            writer.into_inner(),
+            b"error: this will always fail\n",
+        )
+    }
+}
