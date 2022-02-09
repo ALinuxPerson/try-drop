@@ -47,7 +47,7 @@ pub use self::ImpureTryDrop as TryDrop;
 /// Implementing this trait is not enough to make it droppable. In order for the try drop strategy
 /// to be run, you need to put your type in a [`DropAdapter`].
 ///
-/// An easier way to make your type droppable is to call [`TryDrop::adapt`] on it.
+/// An easier way to make your type droppable is to call [`PureTryDrop::adapt`] on it.
 pub trait PureTryDrop {
     /// The type of the error that may occur during drop.
     type Error: Into<anyhow::Error>;
@@ -132,7 +132,7 @@ pub trait PureTryDrop {
 /// Implementing this trait is not enough to make it droppable. In order for the try drop strategy
 /// to be run, you need to put your type in a [`DropAdapter`].
 ///
-/// An easier way to make your type droppable is to call [`TryDrop::adapt`] on it.
+/// An easier way to make your type droppable is to call [`PureTryDrop::adapt`] on it.
 #[cfg(feature = "global")]
 pub trait ImpureTryDrop {
     /// The type of the error that may occur during drop.

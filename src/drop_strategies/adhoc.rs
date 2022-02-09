@@ -50,7 +50,7 @@ mod fn_mut {
     /// [`FnMut`]s instead of only [`Fn`]s, but the function is guarded by a [`Mutex`], which has
     /// more overhead.
     ///
-    /// [`AdHocTryDropStrategy`]: super::AdHocFallibleTryDropStrategy
+    /// [`AdHocFallibleTryDropStrategy`]: super::AdHocFallibleTryDropStrategy
     #[cfg_attr(feature = "derives", derive(Debug, Default))]
     pub struct AdHocMutFallibleTryDropStrategy<F, E>
     where

@@ -45,10 +45,10 @@ impl fmt::Display for AlreadyOccupiedError {
 /// A try drop strategy which sets an error value once.
 //
 /// This try drop strategy can only handle single errors. If you want to handle multiple errors,
-/// see the [`BroadcastTryDropStrategy`].
+/// see the [`BroadcastDropStrategy`].
 ///
 /// The most common use case of this is when you want to get an error from inside a function which
-/// calls [`TryDrop`].
+/// calls [`TryDrop`](crate::TryDrop).
 ///
 /// # Examples
 /// ```ignore
@@ -75,7 +75,7 @@ impl fmt::Display for AlreadyOccupiedError {
 /// }
 /// ```
 ///
-/// [`BroadcastTryDropStrategy`]: super::BroadcastTryDropStrategy
+/// [`BroadcastDropStrategy`]: crate::drop_strategies::BroadcastDropStrategy
 pub struct OnceCellTryDropStrategy<M: Mode> {
     /// The inner error value.
     pub inner: Arc<OnceCell<anyhow::Error>>,
