@@ -382,6 +382,36 @@ try_drop::fallback::install(MyStrategy);
 
 Going back to our (previous) `CWrapper`, it should already be using our global drop strategy.
 
+# Other features
+## Repeatable Try Drops
+If you're 100% sure that your `TryDrop` implementation is safe, you can implement the `RepeatableTryDrop` marker trait.
+
+```rust
+pub unsafe trait RepeatableTryDrop: PureTryDrop {}
+```
+
+Implement it like so:
+
+```rust
+unsafe impl RepeatableTryDrop for T {}
+```
+
+With this, a safe version of `try_drop` will be provided.
+
+```rust
+// look ma, no `unsafe`!
+let t = T;
+t.safe_try_drop();
+t.safe_try_drop();
+```
+
+Providing `DropAdapter` with this type will make `DropAdapter` implement `TryDrop` and `RepeatableTryDrop`, therefore 
+allowing you to nest `DropAdapter`s.
+
+```rust
+let t = DropAdapter(DropAdapter(T));
+```
+
 # Dependencies
 At the bare minimum, there is only one dependency--`anyhow`. With all default features enabled, there are six 
 dependencies.
