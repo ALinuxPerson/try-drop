@@ -146,6 +146,10 @@ pub trait ImpureTryDrop {
     ///
     /// # Safety
     /// The caller must ensure that this function is called within a [`Drop::drop`] context.
+    ///
+    /// If the implementing type implements [`RepeatableTryDrop`], however, then this function is
+    /// safe to call multiple times. If the `unsafe` seems ugly to you, you can use
+    /// [`RepeatableTryDrop::safe_try_drop`].
     unsafe fn try_drop(&mut self) -> Result<(), Self::Error>;
 }
 
@@ -230,7 +234,27 @@ pub trait ThreadSafe: Send + Sync + 'static {}
 
 impl<T: Send + Sync + 'static> ThreadSafe for T {}
 
+/// Marker trait signifying that the implementing type can repeatedly call its [`TryDrop::try_drop`]
+/// method.
+///
+/// # Safety
+/// The implementor must ensure that no undefined behavior will occur when calling
+/// [`TryDrop::try_drop`] multiple times.
+pub unsafe trait RepeatableTryDrop: PureTryDrop {
+    /// Safely try and drop the implementing type. You can call this function multiple times.
+    fn safe_try_drop(&mut self) -> Result<(), Self::Error> {
+        // SAFETY: This is safe because the implementing type has implemented `RepeatableTryDrop`,
+        // which assures us that it is safe to call `try_drop` multiple times.
+        unsafe { self.try_drop() }
+    }
+}
+
 /// A type which implements [`Drop`] for types which implements [`TryDrop`].
+///
+/// # Notes
+/// This does **not** implement [`TryDrop`] itself, as you could repeat calling the
+/// [`TryDrop::try_drop`] method, potentially resulting in undefined behavior. *However*, it does
+/// implement it if your type implements the [`RepeatableTryDrop`] trait.
 ///
 /// # Implementation
 /// We call `try_drop`, which is safe because we only do it in [`Drop::drop`]. If it returns an
@@ -254,6 +278,26 @@ impl<TD: PureTryDrop> Drop for DropAdapter<TD> {
         }
     }
 }
+
+impl<RTD: RepeatableTryDrop> PureTryDrop for DropAdapter<RTD> {
+    type Error = RTD::Error;
+    type FallbackTryDropStrategy = RTD::FallbackTryDropStrategy;
+    type TryDropStrategy = RTD::TryDropStrategy;
+
+    fn fallback_try_drop_strategy(&self) -> &Self::FallbackTryDropStrategy {
+        self.0.fallback_try_drop_strategy()
+    }
+
+    fn try_drop_strategy(&self) -> &Self::TryDropStrategy {
+        self.0.try_drop_strategy()
+    }
+
+    unsafe fn try_drop(&mut self) -> Result<(), Self::Error> {
+        self.0.try_drop()
+    }
+}
+
+unsafe impl<RTD: RepeatableTryDrop> RepeatableTryDrop for DropAdapter<RTD> {}
 
 impl<TD: PureTryDrop> From<TD> for DropAdapter<TD> {
     fn from(t: TD) -> Self {
