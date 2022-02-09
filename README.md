@@ -236,6 +236,28 @@ impl TryDropStrategy for MyStrategy {
 }
 ```
 
+A try drop strategy can also be *fallible*, meaning that it can fail.
+
+```rust
+pub trait FallibleTryDropStrategy {
+    type Error;
+    
+    fn handle_error(&self, error: Self::Error) -> Result<(), Self::Error>;
+}
+```
+
+Implementing it is like so:
+
+```rust
+impl FallibleTryDropStrategy for MyStrategy {
+    type Error = io::Error;
+    
+    fn handle_error(&self, error: Self::Error) -> Result<(), Self::Error> {
+        io::stdout().write_all(error.to_string().as_bytes())
+    }
+}
+```
+
 But what if *that* strategy fails? You can provide a last resort strategy.
 
 # Fallback Try Drop Strategies
