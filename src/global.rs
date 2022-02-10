@@ -70,7 +70,7 @@ use parking_lot::{RwLockReadGuard, RwLockWriteGuard};
 use std::boxed::Box;
 
 /// The global try drop strategy. This doesn't store anything, it just provides an interface
-/// to the global fallback try drop strategy, stored in a `static`.
+/// to the global try drop strategy, stored in a `static`.
 #[cfg_attr(
     feature = "derives",
     derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
