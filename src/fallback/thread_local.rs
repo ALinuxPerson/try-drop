@@ -1,4 +1,4 @@
-//! Manage the thread local drop strategy.
+//! Manage the thread local fallback drop strategy.
 use std::boxed::Box;
 use std::cell::{Ref, RefCell, RefMut};
 use once_cell::unsync::{Lazy, OnceCell};
