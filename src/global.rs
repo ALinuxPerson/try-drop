@@ -20,6 +20,9 @@ const UNINITIALIZED_ERROR: &str = "the global drop strategy is not initialized y
 pub struct GlobalFallibleTryDropStrategy<OU: OnUninit = PanicOnUninit>(PhantomData<OU>);
 
 impl GlobalFallibleTryDropStrategy<ErrorOnUninit> {
+    /// See [`Self::on_uninit_error`].
+    pub const ERROR_ON_UNINIT: Self = Self::on_uninit_error();
+
     /// Get an interface to the global try drop strategy. If there is no global try drop strategy
     /// initialized, this will error.
     pub const fn on_uninit_error() -> Self {
@@ -28,6 +31,9 @@ impl GlobalFallibleTryDropStrategy<ErrorOnUninit> {
 }
 
 impl GlobalFallibleTryDropStrategy<PanicOnUninit> {
+    /// See [`Self::on_uninit_panic`].
+    pub const PANIC_ON_UNINIT: Self = Self::on_uninit_panic();
+
     /// Get an interface to the global try drop strategy. If there is no global try drop strategy
     /// initialized, this will panic.
     pub const fn on_uninit_panic() -> Self {
@@ -37,6 +43,9 @@ impl GlobalFallibleTryDropStrategy<PanicOnUninit> {
 
 #[cfg(feature = "ds-write")]
 impl GlobalFallibleTryDropStrategy<UseDefaultOnUninit> {
+    /// See [`Self::on_uninit_use_default`].
+    pub const USE_DEFAULT_ON_UNINIT: Self = Self::on_uninit_use_default();
+
     /// Get an interface to the global try drop strategy. If there is no global try drop strategy
     /// initialized, this will set it to the default.
     pub const fn on_uninit_use_default() -> Self {
