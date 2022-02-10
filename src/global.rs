@@ -95,7 +95,8 @@ pub fn write() -> RwLockWriteGuard<'static, Box<dyn GlobalDynFallibleTryDropStra
     drop_strategy().write()
 }
 
-/// Install a new global try drop strategy.
+/// Install a new global try drop strategy. Since this drop strategy will only be used in one
+/// thread, it is more flexible than the global try drop strategy.
 pub fn install(drop_strategy: impl GlobalDynFallibleTryDropStrategy) {
     install_dyn(Box::new(drop_strategy))
 }
