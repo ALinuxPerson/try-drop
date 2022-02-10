@@ -23,6 +23,11 @@ mod drop_strategy {
     pub fn install_dyn(strategy: Box<dyn GlobalDynFallibleTryDropStrategy>) {
         *drop_strategy().write() = strategy
     }
+
+    /// Check if there is already a drop strategy in this global.
+    pub fn initialized() -> bool {
+        true
+    }
 }
 
 #[cfg(not(feature = "ds-write"))]
@@ -50,12 +55,17 @@ mod drop_strategy {
             }
         }
     }
+
+    /// Check if there is already a drop strategy in this global.
+    pub fn initialized() -> bool {
+        DROP_STRATEGY.get().is_some()
+    }
 }
 
 use crate::{FallibleTryDropStrategy, GlobalDynFallibleTryDropStrategy};
 use anyhow::Error;
 use drop_strategy::drop_strategy;
-pub use drop_strategy::install_dyn;
+pub use drop_strategy::{install_dyn, initialized};
 use parking_lot::{RwLockReadGuard, RwLockWriteGuard};
 use std::boxed::Box;
 
