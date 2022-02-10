@@ -2,10 +2,11 @@
 use std::boxed::Box;
 use std::cell::{Ref, RefCell, RefMut};
 use once_cell::unsync::{Lazy, OnceCell};
-use crate::FallbackTryDropStrategy;
+use crate::{FallbackTryDropStrategy, TryDropStrategy};
 use crate::utils::NotSendNotSync;
 use std::{fmt, thread_local};
 use std::marker::PhantomData;
+use anyhow::Error;
 use crate::on_uninit::{ErrorOnUninit, OnUninit, PanicOnUninit, UseDefaultOnUninit};
 use crate::uninit_error::UninitializedError;
 
@@ -63,15 +64,15 @@ impl ThreadLocalFallbackDropStrategy<UseDefaultOnUninit> {
     }
 }
 
-impl FallbackTryDropStrategy for ThreadLocalFallbackDropStrategy<PanicOnUninit> {
-    fn handle_error_in_strategy(&self, error: anyhow::Error) {
+impl TryDropStrategy for ThreadLocalFallbackDropStrategy<PanicOnUninit> {
+    fn handle_error(&self, error: Error) {
         read(|strategy| strategy.handle_error_in_strategy(error))
     }
 }
 
 #[cfg(feature = "ds-panic")]
-impl FallbackTryDropStrategy for ThreadLocalFallbackDropStrategy<UseDefaultOnUninit> {
-    fn handle_error_in_strategy(&self, error: anyhow::Error) {
+impl TryDropStrategy for ThreadLocalFallbackDropStrategy<UseDefaultOnUninit> {
+    fn handle_error(&self, error: Error) {
         read_or_default(|strategy| strategy.handle_error_in_strategy(error))
     }
 }
