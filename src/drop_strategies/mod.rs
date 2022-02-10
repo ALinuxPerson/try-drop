@@ -58,4 +58,4 @@ pub use adhoc::{
 };
 
 #[cfg(feature = "ds-once-cell")]
-pub use self::once_cell::OnceCellTryDropStrategy;
+pub use self::once_cell::{OnceCellTryDropStrategy, ThreadUnsafeOnceCellTryDropStrategy, OnceCell};
