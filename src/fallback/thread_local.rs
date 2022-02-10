@@ -6,7 +6,6 @@ use crate::FallbackTryDropStrategy;
 use crate::utils::NotSendNotSync;
 use std::{fmt, thread_local};
 use std::marker::PhantomData;
-use crate::drop_strategies::{PanicDropStrategy, WriteDropStrategy};
 use crate::on_uninit::{ErrorOnUninit, OnUninit, PanicOnUninit, UseDefaultOnUninit};
 use crate::uninit_error::UninitializedError;
 
@@ -79,8 +78,9 @@ pub fn read<T>(f: impl FnOnce(&dyn FallbackTryDropStrategy) -> T) -> T {
     try_read(f).expect(UNINITIALIZED_ERROR)
 }
 
+#[cfg(feature = "ds-panic")]
 fn default() -> Box<dyn FallbackTryDropStrategy> {
-    Box::new(PanicDropStrategy::DEFAULT)
+    Box::new(crate::drop_strategies::PanicDropStrategy::DEFAULT)
 }
 
 /// Get a reference to the thread local fallback try drop strategy. If there is no value present in

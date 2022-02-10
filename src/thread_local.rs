@@ -7,7 +7,6 @@ use crate::{DynFallibleTryDropStrategy, FallibleTryDropStrategy};
 use crate::utils::NotSendNotSync;
 use std::{fmt, thread_local};
 use std::marker::PhantomData;
-use crate::drop_strategies::WriteDropStrategy;
 use crate::on_uninit::{ErrorOnUninit, OnUninit, PanicOnUninit, UseDefaultOnUninit};
 use crate::uninit_error::UninitializedError;
 
@@ -94,8 +93,9 @@ pub fn read<T>(f: impl FnOnce(&dyn DynFallibleTryDropStrategy) -> T) -> T {
     try_read(f).expect(UNINITIALIZED_ERROR)
 }
 
+#[cfg(feature = "ds-write")]
 fn default() -> Box<dyn DynFallibleTryDropStrategy> {
-    let mut strategy = WriteDropStrategy::stderr();
+    let mut strategy = crate::drop_strategies::WriteDropStrategy::stderr();
     strategy.prelude("error: ");
     Box::new(strategy)
 }

@@ -2,7 +2,6 @@ use std::boxed::Box;
 use std::marker::PhantomData;
 use anyhow::Error;
 use parking_lot::{MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLock, RwLockReadGuard, RwLockWriteGuard};
-use crate::drop_strategies::PanicDropStrategy;
 use crate::{FallibleTryDropStrategy, GlobalDynFallibleTryDropStrategy};
 use crate::on_uninit::{ErrorOnUninit, OnUninit, PanicOnUninit, UseDefaultOnUninit};
 use crate::uninit_error::UninitializedError;
@@ -137,9 +136,15 @@ pub fn write() -> MappedRwLockWriteGuard<'static, Box<dyn GlobalDynFallibleTryDr
 /// initialized, this will set it to the default then return it.
 #[cfg(feature = "ds-write")]
 pub fn write_or_default() -> MappedRwLockWriteGuard<'static, Box<dyn GlobalDynFallibleTryDropStrategy>> {
+    use crate::drop_strategies::WriteDropStrategy;
+
     RwLockWriteGuard::map(
         DROP_STRATEGY.write(),
-        |drop_strategy| drop_strategy.get_or_insert_with(|| Box::new(PanicDropStrategy::DEFAULT))
+        |drop_strategy| drop_strategy.get_or_insert_with(|| {
+            let mut strategy = WriteDropStrategy::stderr();
+            strategy.prelude("error: ");
+            Box::new(strategy)
+        })
     )
 }
 
