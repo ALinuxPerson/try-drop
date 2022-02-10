@@ -9,11 +9,11 @@ impl<TD: ImpureTryDrop> PureTryDrop for TD {
     type TryDropStrategy = GlobalFallibleTryDropStrategy;
 
     fn fallback_try_drop_strategy(&self) -> &Self::FallbackTryDropStrategy {
-        &GlobalFallbackDropStrategy::PANIC_ON_UNINIT
+        &GlobalFallbackDropStrategy::DEFAULT
     }
 
     fn try_drop_strategy(&self) -> &Self::TryDropStrategy {
-        &GlobalFallibleTryDropStrategy::PANIC_ON_UNINIT
+        &GlobalFallibleTryDropStrategy::DEFAULT
     }
 
     unsafe fn try_drop(&mut self) -> Result<(), Self::Error> {
