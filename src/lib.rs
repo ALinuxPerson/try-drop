@@ -424,12 +424,17 @@ impl<T: PureTryDrop> PureTryDrop for RepeatableTryDropAdapter<T> {
 // SAFETY: if we try to drop this twice, either nothing happens or it panics.
 unsafe impl<T: PureTryDrop> RepeatableTryDrop for RepeatableTryDropAdapter<T> {}
 
+/// An adapter which makes a type which implements [`TryDropStrategy`], an infallible or try drop
+/// strategy which never fails, fallible.
+///
+/// Note that it's *still* infallible, it's just that it will return an [`Ok`].
 #[cfg_attr(
     feature = "derives",
     derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
 )]
 #[cfg_attr(feature = "shrinkwraprs", derive(Shrinkwrap))]
 pub struct InfallibleToFallibleTryDropStrategyAdapter<T: TryDropStrategy, E: Into<anyhow::Error>> {
+    /// The inner value.
     #[shrinkwrap(main_field)]
     pub inner: T,
 
@@ -437,8 +442,15 @@ pub struct InfallibleToFallibleTryDropStrategyAdapter<T: TryDropStrategy, E: Int
 }
 
 impl<T: TryDropStrategy, E: Into<anyhow::Error>> InfallibleToFallibleTryDropStrategyAdapter<T, E> {
+    /// Wrap the `value` in this adapter.
     pub fn new(value: T) -> Self {
         Self { inner: value, _error: PhantomData }
+    }
+
+    /// Take the inner value.
+    #[cfg(feature = "shrinkwraprs")]
+    pub fn take(this: Self) -> T {
+        this.inner
     }
 }
 
