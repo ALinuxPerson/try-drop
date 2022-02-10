@@ -157,3 +157,8 @@ pub fn install_dyn(strategy: Box<dyn DynFallibleTryDropStrategy>) {
         drop_strategy.borrow_mut().replace(strategy);
     })
 }
+
+/// Uninstall this drop strategy from the current thread.
+pub fn uninstall() {
+    DROP_STRATEGY.with(|drop_strategy| *drop_strategy.borrow_mut() = None)
+}
