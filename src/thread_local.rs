@@ -11,31 +11,10 @@ use crate::drop_strategies::WriteDropStrategy;
 use crate::on_uninit::{ErrorOnUninit, OnUninit, PanicOnUninit, UseDefaultOnUninit};
 
 thread_local! {
-    static DROP_STRATEGY: OnceCell<RefCell<Box<dyn DynFallibleTryDropStrategy>>> = OnceCell::new();
-}
-
-fn try_drop_strategy<T>(f: impl FnOnce(&RefCell<Box<dyn DynFallibleTryDropStrategy>>) -> T) -> Result<T, UninitializedError> {
-    DROP_STRATEGY.with(|drop_strategy| {
-        drop_strategy.get().map(f).ok_or(UninitializedError(()))
-    })
+    static DROP_STRATEGY: RefCell<Option<Box<dyn DynFallibleTryDropStrategy>>> = RefCell::new(None);
 }
 
 const UNINITIALIZED_ERROR: &str = "the thread local drop strategy is not initialized yet";
-
-fn drop_strategy<T>(f: impl FnOnce(&RefCell<Box<dyn DynFallibleTryDropStrategy>>) -> T) -> T {
-    try_drop_strategy(f).expect(UNINITIALIZED_ERROR)
-}
-
-#[cfg(feature = "ds-write")]
-fn drop_strategy_or_default<T>(f: impl FnOnce(&RefCell<Box<dyn DynFallibleTryDropStrategy>>) -> T) -> T {
-    DROP_STRATEGY.with(|drop_strategy| {
-        f(drop_strategy.get_or_init(|| {
-            let mut strategy = WriteDropStrategy::stderr();
-            strategy.prelude("error: ");
-            RefCell::new(Box::new(strategy))
-        }))
-    })
-}
 
 /// This error occurs when an attempt to get the thread local drop strategy is made before it is
 /// initialized.
@@ -126,49 +105,55 @@ pub fn install(strategy: impl DynFallibleTryDropStrategy + 'static) {
 
 /// Get a reference to the thread local try drop strategy. This will panic if the thread local drop
 /// strategy has no value in it.
-pub fn read<T>(f: impl FnOnce(Ref<Box<dyn DynFallibleTryDropStrategy>>) -> T) -> T {
-    drop_strategy(|strategy| f(strategy.borrow()))
+pub fn read<T>(f: impl FnOnce(&dyn DynFallibleTryDropStrategy) -> T) -> T {
+    try_read(f).expect(UNINITIALIZED_ERROR)
+}
+
+fn default() -> Box<dyn DynFallibleTryDropStrategy> {
+    let mut strategy = WriteDropStrategy::stderr();
+    strategy.prelude("error: ");
+    Box::new(strategy)
 }
 
 /// Get a reference to the thread local try drop strategy. If there is no value present in it, then
 /// it will initialize it with the default strategy.
 #[cfg(feature = "ds-write")]
-pub fn read_or_default<T>(f: impl FnOnce(Ref<Box<dyn DynFallibleTryDropStrategy>>) -> T) -> T {
-    drop_strategy_or_default(|strategy| f(strategy.borrow()))
+pub fn read_or_default<T>(f: impl FnOnce(&dyn DynFallibleTryDropStrategy) -> T) -> T {
+    DROP_STRATEGY.with(|drop_strategy| {
+        let mut strategy = drop_strategy.borrow_mut();
+        let strategy = strategy.get_or_insert_with(default);
+        let strategy = &*strategy;
+        f(strategy.as_ref())
+    })
 }
 
 /// Get a reference to the thread local try drop strategy. This will return an error if the
 /// thread local drop strategy has no value in it.
-pub fn try_read<T>(f: impl FnOnce(Ref<Box<dyn DynFallibleTryDropStrategy>>) -> T) -> Result<T, UninitializedError> {
-    try_drop_strategy(|strategy| f(strategy.borrow()))
+pub fn try_read<T>(f: impl FnOnce(&dyn DynFallibleTryDropStrategy) -> T) -> Result<T, UninitializedError> {
+    DROP_STRATEGY.with(|cell| cell.borrow().as_deref().map(f).ok_or(UninitializedError(())))
 }
 
 /// Get a mutable reference to the thread local try drop strategy.
-pub fn write<T>(f: impl FnOnce(RefMut<Box<dyn DynFallibleTryDropStrategy>>) -> T) -> T {
-    drop_strategy(|strategy| f(strategy.borrow_mut()))
+pub fn write<T>(f: impl FnOnce(&mut Box<dyn DynFallibleTryDropStrategy>) -> T) -> T {
+    try_write(f).expect(UNINITIALIZED_ERROR)
 }
 
 /// Get a mutable reference to the thread local try drop strategy. This will return an error if the
 /// thread local drop strategy has no value in it.
-pub fn try_write<T>(f: impl FnOnce(RefMut<Box<dyn DynFallibleTryDropStrategy>>) -> T) -> Result<T, UninitializedError> {
-    try_drop_strategy(|strategy| f(strategy.borrow_mut()))
+pub fn try_write<T>(f: impl FnOnce(&mut Box<dyn DynFallibleTryDropStrategy>) -> T) -> Result<T, UninitializedError> {
+    DROP_STRATEGY.with(|cell| cell.borrow_mut().as_mut().map(f).ok_or(UninitializedError(())))
 }
 
 /// Get a mutable reference to the thread local try drop strategy. If there is no value present in
 /// it, then it will initialize it with the default strategy.
 #[cfg(feature = "ds-write")]
-pub fn write_or_default<T>(f: impl FnOnce(Ref<Box<dyn DynFallibleTryDropStrategy>>) -> T) -> T {
-    drop_strategy_or_default(|strategy| f(strategy.borrow()))
+pub fn write_or_default<T>(f: impl FnOnce(&mut Box<dyn DynFallibleTryDropStrategy>) -> T) -> T {
+    DROP_STRATEGY.with(|drop_strategy| f(drop_strategy.borrow_mut().get_or_insert_with(default)))
 }
 
 /// Install this drop strategy to the current thread.
 pub fn install_dyn(strategy: Box<dyn DynFallibleTryDropStrategy>) {
     DROP_STRATEGY.with(|drop_strategy| {
-        match drop_strategy.get() {
-            Some(thread_local_strategy) => *thread_local_strategy.borrow_mut() = strategy,
-            None => {
-                let _ = drop_strategy.set(RefCell::new(strategy));
-            }
-        }
+        drop_strategy.borrow_mut().replace(strategy);
     })
 }
