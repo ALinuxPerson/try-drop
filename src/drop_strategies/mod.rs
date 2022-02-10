@@ -24,6 +24,9 @@ mod adhoc;
 #[cfg(feature = "ds-once-cell")]
 pub mod once_cell;
 
+#[cfg(feature = "ds-unreachable")]
+pub mod unreachable;
+
 #[cfg(feature = "ds-abort")]
 pub use abort::AbortDropStrategy;
 
