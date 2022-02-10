@@ -424,18 +424,18 @@ impl<T: PureTryDrop> PureTryDrop for RepeatableTryDropAdapter<T> {
 // SAFETY: if we try to drop this twice, either nothing happens or it panics.
 unsafe impl<T: PureTryDrop> RepeatableTryDrop for RepeatableTryDropAdapter<T> {}
 
-pub struct InfallibleToFallibleDropAdapter<T: TryDropStrategy, E: Into<anyhow::Error>> {
+pub struct InfallibleToFallibleTryDropStrategyAdapter<T: TryDropStrategy, E: Into<anyhow::Error>> {
     pub inner: T,
     _error: PhantomData<E>,
 }
 
-impl<T: TryDropStrategy, E: Into<anyhow::Error>> InfallibleToFallibleDropAdapter<T, E> {
+impl<T: TryDropStrategy, E: Into<anyhow::Error>> InfallibleToFallibleTryDropStrategyAdapter<T, E> {
     pub fn new(value: T) -> Self {
         Self { inner: value, _error: PhantomData }
     }
 }
 
-impl<T: TryDropStrategy, E: Into<anyhow::Error>> FallibleTryDropStrategy for InfallibleToFallibleDropAdapter<T, E> {
+impl<T: TryDropStrategy, E: Into<anyhow::Error>> FallibleTryDropStrategy for InfallibleToFallibleTryDropStrategyAdapter<T, E> {
     type Error = E;
 
     fn try_handle_error(&self, error: Error) -> Result<(), Self::Error> {
