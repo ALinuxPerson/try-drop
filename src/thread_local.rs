@@ -58,7 +58,6 @@ mod drop_strategy {
     }
 }
 
-pub use drop_strategy::install_dyn;
 use std::boxed::Box;
 use std::cell::{Ref, RefCell, RefMut};
 use std::error::Error;
@@ -219,4 +218,16 @@ pub fn try_write<T>(f: impl FnOnce(RefMut<Box<dyn DynFallibleTryDropStrategy>>) 
 #[cfg(feature = "ds-write")]
 pub fn write_or_default<T>(f: impl FnOnce(Ref<Box<dyn DynFallibleTryDropStrategy>>) -> T) -> T {
     drop_strategy_or_default(|strategy| f(strategy.borrow()))
+}
+
+/// Install this drop strategy to the current thread.
+pub fn install_dyn(strategy: Box<dyn DynFallibleTryDropStrategy>) {
+    DROP_STRATEGY.with(|drop_strategy| {
+        match drop_strategy.get() {
+            Some(thread_local_strategy) => *thread_local_strategy.borrow_mut() = strategy,
+            None => {
+                let _ = drop_strategy.set(RefCell::new(strategy));
+            }
+        }
+    })
 }
