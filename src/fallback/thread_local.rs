@@ -77,6 +77,7 @@ use std::cell::{Ref, RefMut};
 pub use drop_strategy::{initialized, install_dyn};
 use drop_strategy::fallback_try_drop_strategy;
 use crate::{FallbackTryDropStrategy, TryDropStrategy};
+use crate::utils::NotSendNotSync;
 
 /// The thread local fallback try drop strategy. This doesn't store anything, it just provides a
 /// interface to the thread local fallback try drop strategy, stored in a `static`.
@@ -84,7 +85,14 @@ use crate::{FallbackTryDropStrategy, TryDropStrategy};
     feature = "derives",
     derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
 )]
-pub struct ThreadLocalFallbackTryDropStrategy;
+pub struct ThreadLocalFallbackTryDropStrategy(NotSendNotSync);
+
+impl ThreadLocalFallbackTryDropStrategy {
+    /// Get the thread local fallback try drop strategy.
+    pub const fn new() -> Self {
+        Self(NotSendNotSync::new())
+    }
+}
 
 impl TryDropStrategy for ThreadLocalFallbackTryDropStrategy {
     fn handle_error(&self, error: crate::Error) {

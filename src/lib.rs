@@ -44,6 +44,8 @@ pub mod test_utils;
 #[cfg(feature = "thread-local")]
 pub mod thread_local;
 
+mod utils;
+
 /// A trait for types which can be dropped, but which may fail to do so.
 ///
 /// This is a pure version of try drop, meaning that the drop strategies have to be explicitly

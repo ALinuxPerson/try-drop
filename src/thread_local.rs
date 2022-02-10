@@ -65,6 +65,7 @@ use std::cell::{Ref, RefCell, RefMut};
 use anyhow::Error;
 use once_cell::unsync::{Lazy, OnceCell};
 use crate::{DynFallibleTryDropStrategy, FallibleTryDropStrategy};
+use crate::utils::NotSendNotSync;
 
 /// The thread local try drop strategy. This doesn't store anything, it just provides an interface
 /// to the thread local try drop strategy, stored in a `static`.
@@ -72,7 +73,14 @@ use crate::{DynFallibleTryDropStrategy, FallibleTryDropStrategy};
     feature = "derives",
     derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
 )]
-struct ThreadLocalDropStrategy;
+struct ThreadLocalDropStrategy(NotSendNotSync);
+
+impl ThreadLocalDropStrategy {
+    /// Get the thread local try drop strategy.
+    pub const fn new() -> Self {
+        Self(NotSendNotSync::new())
+    }
+}
 
 impl FallibleTryDropStrategy for ThreadLocalDropStrategy {
     type Error = anyhow::Error;
