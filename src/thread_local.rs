@@ -82,7 +82,8 @@ impl FallibleTryDropStrategy for ThreadLocalDropStrategy {
     }
 }
 
-/// Install a new thread local try drop strategy.
+/// Install a new thread local try drop strategy. Since this drop strategy will only be used in one
+/// thread, it is more flexible than the global try drop strategy.
 pub fn install(strategy: impl DynFallibleTryDropStrategy + 'static) {
     install_dyn(Box::new(strategy))
 }
