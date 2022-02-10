@@ -59,13 +59,52 @@ mod drop_strategy {
 }
 
 pub use drop_strategy::install_dyn;
-use drop_strategy::drop_strategy;
 use std::boxed::Box;
 use std::cell::{Ref, RefCell, RefMut};
-use anyhow::Error;
+use std::error::Error;
 use once_cell::unsync::{Lazy, OnceCell};
 use crate::{DynFallibleTryDropStrategy, FallibleTryDropStrategy};
 use crate::utils::NotSendNotSync;
+use std::{fmt, thread_local};
+use crate::drop_strategies::WriteDropStrategy;
+
+thread_local! {
+    static DROP_STRATEGY: OnceCell<RefCell<Box<dyn DynFallibleTryDropStrategy>>> = OnceCell::new();
+}
+
+fn try_drop_strategy<T>(f: impl FnOnce(&RefCell<Box<dyn DynFallibleTryDropStrategy>>) -> T) -> Result<T, UninitializedError> {
+    DROP_STRATEGY.with(|drop_strategy| {
+        drop_strategy.get().map(f).ok_or(UninitializedError(()))
+    })
+}
+
+const UNINITIALIZED_ERROR: &str = "the thread local drop strategy is not initialized yet";
+
+fn drop_strategy<T>(f: impl FnOnce(&RefCell<Box<dyn DynFallibleTryDropStrategy>>) -> T) -> T {
+    try_drop_strategy(f).expect(UNINITIALIZED_ERROR)
+}
+
+fn drop_strategy_or_default<T>(f: impl FnOnce(&RefCell<Box<dyn DynFallibleTryDropStrategy>>) -> T) -> T {
+    DROP_STRATEGY.with(|drop_strategy| {
+        f(drop_strategy.get_or_init(|| {
+            let mut strategy = WriteDropStrategy::stderr();
+            strategy.prelude("error: ");
+            RefCell::new(Box::new(strategy))
+        }))
+    })
+}
+
+/// This error occurs when an attempt to get the thread local drop strategy is made before it is
+/// initialized.
+#[derive(Debug)]
+pub struct UninitializedError(());
+
+impl Error for UninitializedError {}
+impl fmt::Display for UninitializedError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str(UNINITIALIZED_ERROR)
+    }
+}
 
 /// The thread local try drop strategy. This doesn't store anything, it just provides an interface
 /// to the thread local try drop strategy, stored in a `static`.
@@ -90,7 +129,7 @@ impl ThreadLocalDropStrategy {
 impl FallibleTryDropStrategy for ThreadLocalDropStrategy {
     type Error = anyhow::Error;
 
-    fn try_handle_error(&self, error: Error) -> Result<(), Self::Error> {
+    fn try_handle_error(&self, error: crate::Error) -> Result<(), Self::Error> {
         read(|strategy| strategy.dyn_try_handle_error(error))
     }
 }
@@ -101,12 +140,37 @@ pub fn install(strategy: impl DynFallibleTryDropStrategy + 'static) {
     install_dyn(Box::new(strategy))
 }
 
-/// Get a reference to the thread local try drop strategy.
+/// Get a reference to the thread local try drop strategy. This will panic if the thread local drop
+/// strategy has no value in it.
 pub fn read<T>(f: impl FnOnce(Ref<Box<dyn DynFallibleTryDropStrategy>>) -> T) -> T {
     drop_strategy(|strategy| f(strategy.borrow()))
+}
+
+/// Get a reference to the thread local try drop strategy. If there is no value present in it, then
+/// it will initialize it with the default strategy.
+pub fn read_or_default<T>(f: impl FnOnce(Ref<Box<dyn DynFallibleTryDropStrategy>>) -> T) -> T {
+    drop_strategy_or_default(|strategy| f(strategy.borrow()))
+}
+
+/// Get a reference to the thread local try drop strategy. This will return an error if the
+/// thread local drop strategy has no value in it.
+pub fn try_read<T>(f: impl FnOnce(Ref<Box<dyn DynFallibleTryDropStrategy>>) -> T) -> Result<T, UninitializedError> {
+    try_drop_strategy(|strategy| f(strategy.borrow()))
 }
 
 /// Get a mutable reference to the thread local try drop strategy.
 pub fn write<T>(f: impl FnOnce(RefMut<Box<dyn DynFallibleTryDropStrategy>>) -> T) -> T {
     drop_strategy(|strategy| f(strategy.borrow_mut()))
+}
+
+/// Get a mutable reference to the thread local try drop strategy. This will return an error if the
+/// thread local drop strategy has no value in it.
+pub fn try_write<T>(f: impl FnOnce(RefMut<Box<dyn DynFallibleTryDropStrategy>>) -> T) -> Result<T, UninitializedError> {
+    try_drop_strategy(|strategy| f(strategy.borrow_mut()))
+}
+
+/// Get a mutable reference to the thread local try drop strategy. If there is no value present in
+/// it, then it will initialize it with the default strategy.
+pub fn write_or_default<T>(f: impl FnOnce(Ref<Box<dyn DynFallibleTryDropStrategy>>) -> T) -> T {
+    drop_strategy_or_default(|strategy| f(strategy.borrow()))
 }
