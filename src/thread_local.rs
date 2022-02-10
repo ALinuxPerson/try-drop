@@ -86,6 +86,7 @@ fn drop_strategy<T>(f: impl FnOnce(&RefCell<Box<dyn DynFallibleTryDropStrategy>>
     try_drop_strategy(f).expect(UNINITIALIZED_ERROR)
 }
 
+#[cfg(feature = "ds-write")]
 fn drop_strategy_or_default<T>(f: impl FnOnce(&RefCell<Box<dyn DynFallibleTryDropStrategy>>) -> T) -> T {
     DROP_STRATEGY.with(|drop_strategy| {
         f(drop_strategy.get_or_init(|| {
@@ -141,6 +142,7 @@ impl ThreadLocalDropStrategy<PanicOnUninit> {
     }
 }
 
+#[cfg(feature = "ds-write")]
 impl ThreadLocalDropStrategy<UseDefaultOnUninit> {
     /// Create a new interface to the thread local drop strategy. If the thread local drop strategy
     /// is not initialized, this will set it to the default drop strategy.
@@ -167,6 +169,7 @@ impl FallibleTryDropStrategy for ThreadLocalDropStrategy<PanicOnUninit> {
     }
 }
 
+#[cfg(feature = "ds-write")]
 impl FallibleTryDropStrategy for ThreadLocalDropStrategy<UseDefaultOnUninit> {
     type Error = anyhow::Error;
 
@@ -189,6 +192,7 @@ pub fn read<T>(f: impl FnOnce(Ref<Box<dyn DynFallibleTryDropStrategy>>) -> T) ->
 
 /// Get a reference to the thread local try drop strategy. If there is no value present in it, then
 /// it will initialize it with the default strategy.
+#[cfg(feature = "ds-write")]
 pub fn read_or_default<T>(f: impl FnOnce(Ref<Box<dyn DynFallibleTryDropStrategy>>) -> T) -> T {
     drop_strategy_or_default(|strategy| f(strategy.borrow()))
 }
@@ -212,6 +216,7 @@ pub fn try_write<T>(f: impl FnOnce(RefMut<Box<dyn DynFallibleTryDropStrategy>>) 
 
 /// Get a mutable reference to the thread local try drop strategy. If there is no value present in
 /// it, then it will initialize it with the default strategy.
+#[cfg(feature = "ds-write")]
 pub fn write_or_default<T>(f: impl FnOnce(Ref<Box<dyn DynFallibleTryDropStrategy>>) -> T) -> T {
     drop_strategy_or_default(|strategy| f(strategy.borrow()))
 }
