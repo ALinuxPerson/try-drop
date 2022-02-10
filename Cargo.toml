@@ -24,9 +24,10 @@ doctest = false
 
 [features]
 default = ["downcast-rs", "shrinkwraprs", "derives", "drop-strategies", "std-default"]
-std-default = ["std", "global", "std-drop-strategies"]
+std-default = ["std", "global", "std-drop-strategies", "thread-local"]
 global = ["std", "once_cell", "parking_lot", "global-defaults"]
 global-defaults = ["ds-write", "ds-abort"]
+thread-local = ["std", "once_cell"]
 std = ["anyhow/std", "downcast-rs/std"]
 derives = []
 drop-strategies = ["ds-abort", "ds-broadcast", "ds-exit", "ds-write", "ds-once-cell", "std-drop-strategies"]

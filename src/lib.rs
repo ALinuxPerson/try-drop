@@ -41,6 +41,9 @@ pub use self::ImpureTryDrop as TryDrop;
 #[cfg(any(feature = "__tests", test))]
 pub mod test_utils;
 
+#[cfg(feature = "thread-local")]
+pub mod thread_local;
+
 /// A trait for types which can be dropped, but which may fail to do so.
 ///
 /// This is a pure version of try drop, meaning that the drop strategies have to be explicitly
