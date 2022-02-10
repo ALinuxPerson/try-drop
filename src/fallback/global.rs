@@ -19,6 +19,11 @@ mod fallback_drop_strategy {
     pub fn install_dyn(drop_strategy: Box<dyn GlobalFallbackTryDropStrategyTrait>) {
         *fallback_drop_strategy().write() = drop_strategy
     }
+
+    /// Check if there is already a fallback try drop strategy installed.
+    pub fn initialized() -> bool {
+        true
+    }
 }
 #[cfg(not(feature = "ds-panic"))]
 mod fallback_drop_strategy {
@@ -48,13 +53,18 @@ mod fallback_drop_strategy {
             }
         }
     }
+
+    /// Check if there is already a fallback try drop strategy installed.
+    pub fn initialized() -> bool {
+        FALLBACK_TRY_DROP_STRATEGY.get().is_some()
+    }
 }
 
 use crate::fallback::{
     FallbackTryDropStrategy, GlobalFallbackTryDropStrategy as GlobalFallbackTryDropStrategyTrait,
 };
 use fallback_drop_strategy::fallback_drop_strategy;
-pub use fallback_drop_strategy::install_dyn;
+pub use fallback_drop_strategy::{install_dyn, initialized};
 use parking_lot::{RwLockReadGuard, RwLockWriteGuard};
 use std::boxed::Box;
 
