@@ -23,8 +23,8 @@ rand = { version = "0.8.4", default-features = false, features = ["std", "std_rn
 doctest = false
 
 [features]
-default = ["downcast-rs", "shrinkwraprs", "derives", "drop-strategies", "std-defaults"]
-std-defaults = ["std", "global", "std-drop-strategies"]
+default = ["downcast-rs", "shrinkwraprs", "derives", "drop-strategies", "std-default"]
+std-default = ["std", "global", "std-drop-strategies"]
 global = ["std", "once_cell", "parking_lot", "global-defaults"]
 global-defaults = ["ds-write", "ds-abort"]
 std = ["anyhow/std", "downcast-rs/std"]
