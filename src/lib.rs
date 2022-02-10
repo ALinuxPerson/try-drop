@@ -424,8 +424,15 @@ impl<T: PureTryDrop> PureTryDrop for RepeatableTryDropAdapter<T> {
 // SAFETY: if we try to drop this twice, either nothing happens or it panics.
 unsafe impl<T: PureTryDrop> RepeatableTryDrop for RepeatableTryDropAdapter<T> {}
 
+#[cfg_attr(
+    feature = "derives",
+    derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
+)]
+#[cfg_attr(feature = "shrinkwraprs", derive(Shrinkwrap))]
 pub struct InfallibleToFallibleTryDropStrategyAdapter<T: TryDropStrategy, E: Into<anyhow::Error>> {
+    #[shrinkwrap(main_field)]
     pub inner: T,
+
     _error: PhantomData<E>,
 }
 
