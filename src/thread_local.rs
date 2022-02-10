@@ -123,7 +123,7 @@ impl fmt::Display for UninitializedError {
     feature = "derives",
     derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
 )]
-pub struct ThreadLocalDropStrategy<OU: OnUninit>(PhantomData<(OU, NotSendNotSync)>);
+pub struct ThreadLocalDropStrategy<OU: OnUninit = PanicOnUninit>(PhantomData<(OU, NotSendNotSync)>);
 
 impl ThreadLocalDropStrategy<ErrorOnUninit> {
     pub const fn on_uninit_error() -> Self {
