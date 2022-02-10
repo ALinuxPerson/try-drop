@@ -78,6 +78,10 @@ impl fmt::Display for AlreadyOccupiedError {
 /// ```
 ///
 /// [`BroadcastDropStrategy`]: crate::drop_strategies::BroadcastDropStrategy
+#[cfg_attr(
+    feature = "derives",
+    derive(Debug, Clone, Default)
+)]
 pub struct OnceCellTryDropStrategy<M: Mode> {
     /// The inner error value.
     pub inner: Arc<OnceCell<anyhow::Error>>,
