@@ -32,3 +32,9 @@ pub enum PanicOnUninit {}
 
 impl OnUninit for PanicOnUninit {}
 impl private::Sealed for PanicOnUninit {}
+
+/// Does nothing if uninitialized.
+pub enum DoNothingOnUninit {}
+
+impl OnUninit for DoNothingOnUninit {}
+impl private::Sealed for DoNothingOnUninit {}
