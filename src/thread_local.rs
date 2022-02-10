@@ -78,7 +78,7 @@ use crate::utils::NotSendNotSync;
     feature = "derives",
     derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
 )]
-struct ThreadLocalDropStrategy(NotSendNotSync);
+pub struct ThreadLocalDropStrategy(NotSendNotSync);
 
 impl ThreadLocalDropStrategy {
     /// Get the thread local try drop strategy.
