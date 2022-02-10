@@ -17,7 +17,7 @@ const UNINITIALIZED_ERROR: &str = "the global drop strategy is not initialized y
     feature = "derives",
     derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
 )]
-pub struct GlobalFallibleTryDropStrategy<OU: OnUninit>(PhantomData<OU>);
+pub struct GlobalFallibleTryDropStrategy<OU: OnUninit = PanicOnUninit>(PhantomData<OU>);
 
 impl GlobalFallibleTryDropStrategy<ErrorOnUninit> {
     /// Get an interface to the global try drop strategy. If there is no global try drop strategy
