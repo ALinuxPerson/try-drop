@@ -143,11 +143,29 @@ impl ThreadLocalDropStrategy<UseDefaultOnUninit> {
     }
 }
 
-impl FallibleTryDropStrategy for ThreadLocalDropStrategy {
+impl FallibleTryDropStrategy for ThreadLocalDropStrategy<ErrorOnUninit> {
     type Error = anyhow::Error;
 
     fn try_handle_error(&self, error: crate::Error) -> Result<(), Self::Error> {
-        read(|strategy| strategy.dyn_try_handle_error(error))
+        try_read(|strategy| strategy.dyn_try_handle_error(error))
+            .map_err(Into::into)
+            .and_then(std::convert::identity)
+    }
+}
+
+impl FallibleTryDropStrategy for ThreadLocalDropStrategy<PanicOnUninit> {
+    type Error = anyhow::Error;
+
+    fn try_handle_error(&self, error: crate::Error) -> Result<(), Self::Error> {
+        try_read(|strategy| strategy.dyn_try_handle_error(error)).expect(UNINITIALIZED_ERROR)
+    }
+}
+
+impl FallibleTryDropStrategy for ThreadLocalDropStrategy<UseDefaultOnUninit> {
+    type Error = anyhow::Error;
+
+    fn try_handle_error(&self, error: crate::Error) -> Result<(), Self::Error> {
+        read_or_default(|strategy| strategy.dyn_try_handle_error(error))
     }
 }
 
