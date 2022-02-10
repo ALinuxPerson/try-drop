@@ -10,3 +10,18 @@ pub struct NoOpDropStrategy;
 impl TryDropStrategy for NoOpDropStrategy {
     fn handle_error(&self, _error: crate::Error) {}
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::drop_strategies::PanicDropStrategy;
+    use crate::test_utils::{ErrorsOnDrop, Fallible};
+    use super::*;
+
+    #[test]
+    fn test_drop_strategy() {
+        let _errors = ErrorsOnDrop::<Fallible, _>::given(
+            NoOpDropStrategy,
+            PanicDropStrategy::DEFAULT,
+        );
+    }
+}
