@@ -13,6 +13,12 @@ thread_local! {
     static DROP_STRATEGY: RefCell<Option<Box<dyn FallbackTryDropStrategy>>> = RefCell::new(None);
 }
 
+#[cfg(not(feature = "ds-panic"))]
+pub type DefaultOnUninit = PanicOnUninit;
+
+#[cfg(feature = "ds-panic")]
+pub type DefaultOnUninit = UseDefaultOnUninit;
+
 const UNINITIALIZED_ERROR: &str = "the thread local fallback drop strategy is not initialized yet";
 
 /// The thread local fallback try drop strategy. This doesn't store anything, it just provides an
@@ -26,7 +32,11 @@ const UNINITIALIZED_ERROR: &str = "the thread local fallback drop strategy is no
     feature = "derives",
     derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
 )]
-pub struct ThreadLocalFallbackDropStrategy<OU: OnUninit = PanicOnUninit>(PhantomData<(OU, NotSendNotSync)>);
+pub struct ThreadLocalFallbackDropStrategy<OU: OnUninit = DefaultOnUninit>(PhantomData<(OU, NotSendNotSync)>);
+
+impl ThreadLocalFallbackDropStrategy<DefaultOnUninit> {
+    pub const DEFAULT: Self = Self(PhantomData);
+}
 
 impl ThreadLocalFallbackDropStrategy<ErrorOnUninit> {
     /// Create a new interface to the thread local fallback drop strategy. If the thread local drop

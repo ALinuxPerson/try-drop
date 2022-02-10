@@ -12,13 +12,23 @@ static FALLBACK_DROP_STRATEGY: RwLock<Option<Box<dyn GlobalFallbackTryDropStrate
 
 const UNINITIALIZED_ERROR: &str = "the global drop strategy is not initialized yet";
 
+#[cfg(not(feature = "ds-panic"))]
+pub type DefaultOnUninit = PanicOnUninit;
+
+#[cfg(feature = "ds-panic")]
+pub type DefaultOnUninit = UseDefaultOnUninit;
+
 /// The global fallback try drop strategy. This doesn't store anything, it just provides an
 /// interface to the global fallback try drop strategy, stored in a `static`.
 #[cfg_attr(
     feature = "derives",
     derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
 )]
-pub struct GlobalFallbackDropStrategy<OU: OnUninit = PanicOnUninit>(PhantomData<OU>);
+pub struct GlobalFallbackDropStrategy<OU: OnUninit = DefaultOnUninit>(PhantomData<OU>);
+
+impl GlobalFallbackDropStrategy<DefaultOnUninit> {
+    pub const DEFAULT: Self = Self(PhantomData);
+}
 
 impl GlobalFallbackDropStrategy<PanicOnUninit> {
     /// See [`Self::on_uninit_panic`].

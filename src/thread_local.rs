@@ -16,6 +16,12 @@ thread_local! {
 
 const UNINITIALIZED_ERROR: &str = "the thread local drop strategy is not initialized yet";
 
+#[cfg(not(feature = "ds-write"))]
+pub type DefaultOnUninit = PanicOnUninit;
+
+#[cfg(feature = "ds-write")]
+pub type DefaultOnUninit = UseDefaultOnUninit;
+
 /// The thread local try drop strategy. This doesn't store anything, it just provides an interface
 /// to the thread local try drop strategy, stored in a `static`.
 ///
@@ -28,6 +34,10 @@ const UNINITIALIZED_ERROR: &str = "the thread local drop strategy is not initial
     derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
 )]
 pub struct ThreadLocalDropStrategy<OU: OnUninit = PanicOnUninit>(PhantomData<(OU, NotSendNotSync)>);
+
+impl ThreadLocalDropStrategy<DefaultOnUninit> {
+    pub const DEFAULT: Self = Self(PhantomData);
+}
 
 impl ThreadLocalDropStrategy<ErrorOnUninit> {
     /// Create a new interface to the thread local drop strategy. If the thread local drop strategy
