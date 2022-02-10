@@ -50,6 +50,9 @@ pub mod shim;
 #[cfg(any(feature = "global", feature = "thread-local"))]
 pub mod on_uninit;
 
+#[cfg(any(feature = "global", feature = "thread-local"))]
+pub mod uninit_error;
+
 mod utils;
 
 /// A trait for types which can be dropped, but which may fail to do so.

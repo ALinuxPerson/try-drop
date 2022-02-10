@@ -9,28 +9,13 @@ use std::{fmt, thread_local};
 use std::marker::PhantomData;
 use crate::drop_strategies::WriteDropStrategy;
 use crate::on_uninit::{ErrorOnUninit, OnUninit, PanicOnUninit, UseDefaultOnUninit};
+use crate::uninit_error::UninitializedError;
 
 thread_local! {
     static DROP_STRATEGY: RefCell<Option<Box<dyn DynFallibleTryDropStrategy>>> = RefCell::new(None);
 }
 
 const UNINITIALIZED_ERROR: &str = "the thread local drop strategy is not initialized yet";
-
-/// This error occurs when an attempt to get the thread local drop strategy is made before it is
-/// initialized.
-#[cfg_attr(
-    feature = "derives",
-    derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
-)]
-#[derive(Debug)]
-pub struct UninitializedError(());
-
-impl Error for UninitializedError {}
-impl fmt::Display for UninitializedError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str(UNINITIALIZED_ERROR)
-    }
-}
 
 /// The thread local try drop strategy. This doesn't store anything, it just provides an interface
 /// to the thread local try drop strategy, stored in a `static`.
