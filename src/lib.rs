@@ -44,6 +44,12 @@ pub mod test_utils;
 #[cfg(feature = "thread-local")]
 pub mod thread_local;
 
+#[cfg(all(feature = "global", feature = "thread-local"))]
+pub mod shim;
+
+#[cfg(any(feature = "global", feature = "thread-local"))]
+pub mod on_uninit;
+
 mod utils;
 
 /// A trait for types which can be dropped, but which may fail to do so.
