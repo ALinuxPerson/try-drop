@@ -39,6 +39,9 @@ impl private::Sealed for Unsafe {}
 pub struct UnreachableDropStrategy<S: Safety>(PhantomData<S>);
 
 impl UnreachableDropStrategy<Safe> {
+    /// Safe version of the unreachable drop strategy.
+    pub const SAFE: Self = Self::safe();
+
     /// Create an unreachable drop strategy which just panics.
     pub const fn safe() -> Self {
         UnreachableDropStrategy(PhantomData)
@@ -47,6 +50,9 @@ impl UnreachableDropStrategy<Safe> {
 
 #[cfg(feature = "ds-unreachable-unsafe")]
 impl UnreachableDropStrategy<Unsafe> {
+    /// Unsafe version of the unreachable drop strategy.
+    pub const UNSAFE: Self = Self::r#unsafe();
+
     /// Create an unreachable drop strategy which calls [`core::hint::unreachable_unchecked`]. Here
     /// be dragons!
     ///
