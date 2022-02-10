@@ -1,3 +1,5 @@
+//! Manage the thread local drop strategy.
+
 #[cfg(feature = "ds-write")]
 mod drop_strategy {
     use std::boxed::Box;
@@ -19,6 +21,7 @@ mod drop_strategy {
         DROP_STRATEGY.with(|drop_strategy| f(drop_strategy))
     }
 
+    /// Install this drop strategy to the current thread.
     pub fn install_dyn(strategy: Box<dyn DynFallibleTryDropStrategy>) {
         drop_strategy(|drop_strategy| *drop_strategy.borrow_mut() = strategy)
     }
@@ -42,6 +45,7 @@ mod drop_strategy {
         })
     }
 
+    /// Install this drop strategy to the current thread.
     pub fn install_dyn(strategy: Box<dyn DynFallibleTryDropStrategy>) {
         DROP_STRATEGY.with(|drop_strategy| {
             match drop_strategy.get() {
@@ -62,6 +66,8 @@ use anyhow::Error;
 use once_cell::unsync::{Lazy, OnceCell};
 use crate::{DynFallibleTryDropStrategy, FallibleTryDropStrategy};
 
+/// The thread local try drop strategy. This doesn't store anything, it just provides an interface
+/// to the thread local try drop strategy, stored in a `static`.
 struct ThreadLocalDropStrategy;
 
 impl FallibleTryDropStrategy for ThreadLocalDropStrategy {
@@ -72,14 +78,17 @@ impl FallibleTryDropStrategy for ThreadLocalDropStrategy {
     }
 }
 
+/// Install a new thread local try drop strategy.
 pub fn install(strategy: impl DynFallibleTryDropStrategy + 'static) {
     install_dyn(Box::new(strategy))
 }
 
+/// Get a reference to the thread local try drop strategy.
 pub fn read<T>(f: impl FnOnce(Ref<Box<dyn DynFallibleTryDropStrategy>>) -> T) -> T {
     drop_strategy(|strategy| f(strategy.borrow()))
 }
 
+/// Get a mutable reference to the thread local try drop strategy.
 pub fn write<T>(f: impl FnOnce(RefMut<Box<dyn DynFallibleTryDropStrategy>>) -> T) -> T {
     drop_strategy(|strategy| f(strategy.borrow_mut()))
 }
