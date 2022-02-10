@@ -1,3 +1,5 @@
+//! Manage the thread local fallback drop strategy.
+
 #[cfg(feature = "ds-panic")]
 mod drop_strategy {
     use std::cell::RefCell;
@@ -19,12 +21,14 @@ mod drop_strategy {
         })
     }
 
+    /// Install a new thread local fallback drop strategy. Must be a dynamic trait object.
     pub fn install_dyn(strategy: Box<dyn FallbackTryDropStrategy>) {
         FALLBACK_TRY_DROP_STRATEGY.with(|fallback_try_drop_strategy| {
             *fallback_try_drop_strategy.borrow_mut() = strategy;
         });
     }
 
+    /// Check if the thread local fallback drop strategy is initialized with a value.
     pub fn initialized() -> bool {
         true
     }
@@ -48,6 +52,7 @@ mod drop_strategy {
         })
     }
 
+    /// Install a new thread local fallback drop strategy. Must be a dynamic trait object.
     pub fn install_dyn(strategy: Box<dyn FallbackTryDropStrategy>) {
         FALLBACK_TRY_DROP_STRATEGY.with(|drop_strategy| {
             match drop_strategy.get() {
@@ -59,6 +64,7 @@ mod drop_strategy {
         })
     }
 
+    /// Check if the thread local fallback drop strategy is initialized with a value.
     pub fn initialized() -> bool {
         FALLBACK_TRY_DROP_STRATEGY.with(|drop_strategy| {
             drop_strategy.get().is_some()
@@ -72,6 +78,8 @@ pub use drop_strategy::{initialized, install_dyn};
 use drop_strategy::fallback_try_drop_strategy;
 use crate::{FallbackTryDropStrategy, TryDropStrategy};
 
+/// The thread local fallback try drop strategy. This doesn't store anything, it just provides a
+/// interface to the thread local fallback try drop strategy, stored in a `static`.
 pub struct ThreadLocalFallbackTryDropStrategy;
 
 impl TryDropStrategy for ThreadLocalFallbackTryDropStrategy {
@@ -80,14 +88,17 @@ impl TryDropStrategy for ThreadLocalFallbackTryDropStrategy {
     }
 }
 
+/// Get a reference to the thread local fallback try drop strategy.
 pub fn read<T>(f: impl FnOnce(Ref<Box<dyn FallbackTryDropStrategy>>) -> T) -> T {
     fallback_try_drop_strategy(|strategy| f(strategy.borrow()))
 }
 
+/// Get a mutable reference to the thread local fallback try drop strategy.
 pub fn write<T>(f: impl FnOnce(RefMut<Box<dyn FallbackTryDropStrategy>>) -> T) -> T {
     fallback_try_drop_strategy(|strategy| f(strategy.borrow_mut()))
 }
 
+/// Install a new thread local fallback try drop strategy.
 pub fn install(strategy: impl FallbackTryDropStrategy + 'static) {
     install_dyn(Box::new(strategy))
 }
