@@ -15,9 +15,6 @@ pub mod fallback;
 #[cfg(feature = "global")]
 pub mod global;
 
-#[cfg(feature = "global")]
-pub mod new_global;
-
 pub mod prelude;
 
 pub mod drop_strategies;

@@ -1,73 +1,15 @@
-//! Manage the global try drop strategy.
-
-#[cfg(feature = "ds-write")]
-mod drop_strategy {
-    use crate::drop_strategies::WriteDropStrategy;
-    use crate::GlobalDynFallibleTryDropStrategy;
-    use once_cell::sync::Lazy;
-    use parking_lot::RwLock;
-    use std::boxed::Box;
-
-    static DROP_STRATEGY: Lazy<RwLock<Box<dyn GlobalDynFallibleTryDropStrategy>>> =
-        Lazy::new(|| {
-            let mut strategy = WriteDropStrategy::stderr();
-            strategy.prelude("error: ");
-            RwLock::new(Box::new(strategy))
-        });
-
-    pub fn drop_strategy() -> &'static RwLock<Box<dyn GlobalDynFallibleTryDropStrategy>> {
-        &DROP_STRATEGY
-    }
-
-    /// Install a new global try drop strategy. Needs to be a dynamic trait object.
-    pub fn install_dyn(strategy: Box<dyn GlobalDynFallibleTryDropStrategy>) {
-        *drop_strategy().write() = strategy
-    }
-
-    /// Check if there is already a drop strategy in this global.
-    pub fn initialized() -> bool {
-        true
-    }
-}
-
-#[cfg(not(feature = "ds-write"))]
-mod drop_strategy {
-    use crate::GlobalDynFallibleTryDropStrategy;
-    use once_cell::sync::OnceCell;
-    use parking_lot::RwLock;
-    use std::boxed::Box;
-
-    static DROP_STRATEGY: OnceCell<RwLock<Box<dyn GlobalDynFallibleTryDropStrategy>>> =
-        OnceCell::new();
-
-    pub fn drop_strategy() -> &'static RwLock<Box<dyn GlobalDynFallibleTryDropStrategy>> {
-        DROP_STRATEGY.get().expect(
-            "the global drop strategy is not initialized; initialize it with `global::install()`",
-        )
-    }
-
-    /// Install a new global try drop strategy. Needs to be a dynamic trait object.
-    pub fn install_dyn(drop_strategy: Box<dyn GlobalDynFallibleTryDropStrategy>) {
-        match DROP_STRATEGY.get() {
-            Some(global_drop_strategy) => *global_drop_strategy.write() = drop_strategy,
-            None => {
-                let _ = DROP_STRATEGY.set(RwLock::new(drop_strategy));
-            }
-        }
-    }
-
-    /// Check if there is already a drop strategy in this global.
-    pub fn initialized() -> bool {
-        DROP_STRATEGY.get().is_some()
-    }
-}
-
-use crate::{FallibleTryDropStrategy, GlobalDynFallibleTryDropStrategy};
-use anyhow::Error;
-use drop_strategy::drop_strategy;
-pub use drop_strategy::{install_dyn, initialized};
-use parking_lot::{RwLockReadGuard, RwLockWriteGuard};
 use std::boxed::Box;
+use std::marker::PhantomData;
+use anyhow::Error;
+use parking_lot::{MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLock, RwLockReadGuard, RwLockWriteGuard};
+use crate::drop_strategies::PanicDropStrategy;
+use crate::{FallibleTryDropStrategy, GlobalDynFallibleTryDropStrategy};
+use crate::on_uninit::{ErrorOnUninit, OnUninit, PanicOnUninit, UseDefaultOnUninit};
+use crate::uninit_error::UninitializedError;
+
+static DROP_STRATEGY: RwLock<Option<Box<dyn GlobalDynFallibleTryDropStrategy>>> = parking_lot::const_rwlock(None);
+
+const UNINITIALIZED_ERROR: &str = "the global drop strategy is not initialized yet";
 
 /// The global try drop strategy. This doesn't store anything, it just provides an interface
 /// to the global try drop strategy, stored in a `static`.
@@ -75,9 +17,44 @@ use std::boxed::Box;
     feature = "derives",
     derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
 )]
-pub struct GlobalTryDropStrategyHandler;
+pub struct GlobalFallibleTryDropStrategy<OU: OnUninit>(PhantomData<OU>);
 
-impl FallibleTryDropStrategy for GlobalTryDropStrategyHandler {
+impl GlobalFallibleTryDropStrategy<ErrorOnUninit> {
+    /// Get an interface to the global try drop strategy. If there is no global try drop strategy
+    /// initialized, this will error.
+    pub const fn on_uninit_error() -> Self {
+        Self(PhantomData)
+    }
+}
+
+impl GlobalFallibleTryDropStrategy<PanicOnUninit> {
+    /// Get an interface to the global try drop strategy. If there is no global try drop strategy
+    /// initialized, this will panic.
+    pub const fn on_uninit_panic() -> Self {
+        Self(PhantomData)
+    }
+}
+
+#[cfg(feature = "ds-write")]
+impl GlobalFallibleTryDropStrategy<UseDefaultOnUninit> {
+    /// Get an interface to the global try drop strategy. If there is no global try drop strategy
+    /// initialized, this will set it to the default.
+    pub const fn on_uninit_use_default() -> Self {
+        Self(PhantomData)
+    }
+}
+
+impl FallibleTryDropStrategy for GlobalFallibleTryDropStrategy<ErrorOnUninit> {
+    type Error = anyhow::Error;
+
+    fn try_handle_error(&self, error: Error) -> Result<(), Self::Error> {
+        try_read().map(|strategy| strategy.dyn_try_handle_error(error))
+            .map_err(Into::into)
+            .and_then(std::convert::identity)
+    }
+}
+
+impl FallibleTryDropStrategy for GlobalFallibleTryDropStrategy<PanicOnUninit> {
     type Error = anyhow::Error;
 
     fn try_handle_error(&self, error: Error) -> Result<(), Self::Error> {
@@ -85,17 +62,79 @@ impl FallibleTryDropStrategy for GlobalTryDropStrategyHandler {
     }
 }
 
-/// Get a reference to the global try drop strategy.
-pub fn read() -> RwLockReadGuard<'static, Box<dyn GlobalDynFallibleTryDropStrategy>> {
-    drop_strategy().read()
+impl FallibleTryDropStrategy for GlobalFallibleTryDropStrategy<UseDefaultOnUninit> {
+    type Error = anyhow::Error;
+
+    fn try_handle_error(&self, error: Error) -> Result<(), Self::Error> {
+        read_or_default().dyn_try_handle_error(error)
+    }
 }
 
-/// Get a mutable reference to the global try drop strategy.
-pub fn write() -> RwLockWriteGuard<'static, Box<dyn GlobalDynFallibleTryDropStrategy>> {
-    drop_strategy().write()
+/// Install a new global try drop strategy. Must be a dynamic trait object.
+pub fn install_dyn(strategy: Box<dyn GlobalDynFallibleTryDropStrategy>) {
+    DROP_STRATEGY.write().replace(strategy);
 }
 
 /// Install a new global try drop strategy.
-pub fn install(drop_strategy: impl GlobalDynFallibleTryDropStrategy) {
-    install_dyn(Box::new(drop_strategy))
+pub fn install(strategy: impl GlobalDynFallibleTryDropStrategy) {
+    install_dyn(Box::new(strategy))
+}
+
+/// Get a reference to the try drop strategy. If there is no global try drop strategy initialized,
+/// this will return an error.
+pub fn try_read() -> Result<MappedRwLockReadGuard<'static, Box<dyn GlobalDynFallibleTryDropStrategy>>, UninitializedError> {
+    let drop_strategy = DROP_STRATEGY.read();
+
+    if drop_strategy.is_some() {
+        Ok(RwLockReadGuard::map(drop_strategy, |drop_strategy| drop_strategy.as_ref().unwrap()))
+    } else {
+        Err(UninitializedError(()))
+    }
+}
+
+/// Get a reference to the try drop strategy. If there is no global try drop strategy initialized,
+/// this will panic.
+pub fn read() -> MappedRwLockReadGuard<'static, Box<dyn GlobalDynFallibleTryDropStrategy>> {
+    try_read().expect(UNINITIALIZED_ERROR)
+}
+
+/// Get a reference to the try drop strategy. If there is no global try drop strategy initialized,
+/// this will set it to the default then return it.
+#[cfg(feature = "ds-write")]
+pub fn read_or_default() -> MappedRwLockReadGuard<'static, Box<dyn GlobalDynFallibleTryDropStrategy>> {
+    drop(write_or_default());
+    read()
+}
+
+/// Get a mutable reference to the try drop strategy. If there is no global try drop strategy
+/// initialized, this will return an error.
+pub fn try_write() -> Result<MappedRwLockWriteGuard<'static, Box<dyn GlobalDynFallibleTryDropStrategy>>, UninitializedError> {
+    let drop_strategy = DROP_STRATEGY.write();
+
+    if drop_strategy.is_some() {
+        Ok(RwLockWriteGuard::map(drop_strategy, |drop_strategy| drop_strategy.as_mut().unwrap()))
+    } else {
+        Err(UninitializedError(()))
+    }
+}
+
+/// Get a mutable reference to the try drop strategy. If there is no global try drop strategy
+/// initialized, this will panic.
+pub fn write() -> MappedRwLockWriteGuard<'static, Box<dyn GlobalDynFallibleTryDropStrategy>> {
+    try_write().expect(UNINITIALIZED_ERROR)
+}
+
+/// Get a mutable reference to the try drop strategy. If there is no global try drop strategy
+/// initialized, this will set it to the default then return it.
+#[cfg(feature = "ds-write")]
+pub fn write_or_default() -> MappedRwLockWriteGuard<'static, Box<dyn GlobalDynFallibleTryDropStrategy>> {
+    RwLockWriteGuard::map(
+        DROP_STRATEGY.write(),
+        |drop_strategy| drop_strategy.get_or_insert_with(|| Box::new(PanicDropStrategy::DEFAULT))
+    )
+}
+
+/// Uninstall or remove the global try drop strategy.
+pub fn uninstall() {
+    *DROP_STRATEGY.write() = None
 }
