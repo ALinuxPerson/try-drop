@@ -1,19 +1,19 @@
 pub use crate::fallback::global::GlobalFallbackTryDropStrategyHandler;
-pub use crate::global::GlobalTryDropStrategyHandler;
+pub use crate::global::GlobalFallibleTryDropStrategy;
 use crate::prelude::*;
 use std::boxed::Box;
 
 impl<TD: ImpureTryDrop> PureTryDrop for TD {
     type Error = TD::Error;
     type FallbackTryDropStrategy = GlobalFallbackTryDropStrategyHandler;
-    type TryDropStrategy = GlobalTryDropStrategyHandler;
+    type TryDropStrategy = GlobalFallibleTryDropStrategy;
 
     fn fallback_try_drop_strategy(&self) -> &Self::FallbackTryDropStrategy {
         &GlobalFallbackTryDropStrategyHandler
     }
 
     fn try_drop_strategy(&self) -> &Self::TryDropStrategy {
-        &GlobalTryDropStrategyHandler
+        &GlobalFallibleTryDropStrategy::PANIC_ON_UNINIT
     }
 
     unsafe fn try_drop(&mut self) -> Result<(), Self::Error> {

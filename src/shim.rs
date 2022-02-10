@@ -1,5 +1,5 @@
 use std::marker::PhantomData;
-use crate::{FallibleTryDropStrategy, GlobalTryDropStrategyHandler};
+use crate::{FallibleTryDropStrategy, global::GlobalFallibleTryDropStrategy};
 use crate::thread_local::ThreadLocalDropStrategy;
 
 mod private {
@@ -20,7 +20,7 @@ impl private::Sealed for Global {}
 pub enum ThreadLocal {}
 
 impl Precedence for ThreadLocal {
-    type DropStrategy = GlobalTryDropStrategyHandler;
+    type DropStrategy = GlobalFallibleTryDropStrategy;
 }
 impl private::Sealed for ThreadLocal {}
 
