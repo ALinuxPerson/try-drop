@@ -73,7 +73,7 @@ use std::boxed::Box;
 /// to the global try drop strategy, stored in a `static`.
 #[cfg_attr(
     feature = "derives",
-    derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
+    derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
 )]
 pub struct GlobalTryDropStrategyHandler;
 
