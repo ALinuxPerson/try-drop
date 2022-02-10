@@ -66,7 +66,9 @@ use once_cell::unsync::{Lazy, OnceCell};
 use crate::{DynFallibleTryDropStrategy, FallibleTryDropStrategy};
 use crate::utils::NotSendNotSync;
 use std::{fmt, thread_local};
+use std::marker::PhantomData;
 use crate::drop_strategies::WriteDropStrategy;
+use crate::on_uninit::{ErrorOnUninit, OnUninit, PanicOnUninit, UseDefaultOnUninit};
 
 thread_local! {
     static DROP_STRATEGY: OnceCell<RefCell<Box<dyn DynFallibleTryDropStrategy>>> = OnceCell::new();
@@ -121,12 +123,23 @@ impl fmt::Display for UninitializedError {
     feature = "derives",
     derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
 )]
-pub struct ThreadLocalDropStrategy(NotSendNotSync);
+pub struct ThreadLocalDropStrategy<OU: OnUninit>(PhantomData<(OU, NotSendNotSync)>);
 
-impl ThreadLocalDropStrategy {
-    /// Get the thread local try drop strategy.
-    pub const fn new() -> Self {
-        Self(NotSendNotSync::new())
+impl ThreadLocalDropStrategy<ErrorOnUninit> {
+    pub const fn on_uninit_error() -> Self {
+        Self(PhantomData)
+    }
+}
+
+impl ThreadLocalDropStrategy<PanicOnUninit> {
+    pub const fn on_uninit_panic() -> Self {
+        Self(PhantomData)
+    }
+}
+
+impl ThreadLocalDropStrategy<UseDefaultOnUninit> {
+    pub const fn on_uninit_use_default() -> Self {
+        Self(PhantomData)
     }
 }
 
