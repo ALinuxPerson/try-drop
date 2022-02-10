@@ -126,18 +126,24 @@ impl fmt::Display for UninitializedError {
 pub struct ThreadLocalDropStrategy<OU: OnUninit = PanicOnUninit>(PhantomData<(OU, NotSendNotSync)>);
 
 impl ThreadLocalDropStrategy<ErrorOnUninit> {
+    /// Create a new interface to the thread local drop strategy. If the thread local drop strategy
+    /// is not initialized, this will error.
     pub const fn on_uninit_error() -> Self {
         Self(PhantomData)
     }
 }
 
 impl ThreadLocalDropStrategy<PanicOnUninit> {
+    /// Create a new interface to the thread local drop strategy. If the thread local drop strategy
+    /// is not initialized, this will panic.
     pub const fn on_uninit_panic() -> Self {
         Self(PhantomData)
     }
 }
 
 impl ThreadLocalDropStrategy<UseDefaultOnUninit> {
+    /// Create a new interface to the thread local drop strategy. If the thread local drop strategy
+    /// is not initialized, this will set it to the default drop strategy.
     pub const fn on_uninit_use_default() -> Self {
         Self(PhantomData)
     }
