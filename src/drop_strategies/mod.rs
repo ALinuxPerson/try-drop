@@ -43,7 +43,7 @@ pub use noop::NoOpDropStrategy;
 pub use panic::PanicDropStrategy;
 
 #[cfg(feature = "ds-write")]
-pub use write::WriteDropStrategy;
+pub use write::{WriteDropStrategy, ThreadUnsafeWriteDropStrategy};
 
 #[cfg(feature = "ds-adhoc")]
 pub use adhoc::{
