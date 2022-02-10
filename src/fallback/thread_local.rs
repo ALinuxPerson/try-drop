@@ -80,6 +80,10 @@ use crate::{FallbackTryDropStrategy, TryDropStrategy};
 
 /// The thread local fallback try drop strategy. This doesn't store anything, it just provides a
 /// interface to the thread local fallback try drop strategy, stored in a `static`.
+#[cfg_attr(
+    feature = "derives",
+    derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
+)]
 pub struct ThreadLocalFallbackTryDropStrategy;
 
 impl TryDropStrategy for ThreadLocalFallbackTryDropStrategy {
