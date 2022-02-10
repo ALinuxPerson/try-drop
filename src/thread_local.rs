@@ -96,6 +96,10 @@ fn drop_strategy_or_default<T>(f: impl FnOnce(&RefCell<Box<dyn DynFallibleTryDro
 
 /// This error occurs when an attempt to get the thread local drop strategy is made before it is
 /// initialized.
+#[cfg_attr(
+    feature = "derives",
+    derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
+)]
 #[derive(Debug)]
 pub struct UninitializedError(());
 
