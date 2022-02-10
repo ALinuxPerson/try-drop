@@ -1,13 +1,66 @@
+#[cfg(feature = "ds-write")]
+mod drop_strategy {
+    use std::boxed::Box;
+    use std::cell::RefCell;
+    use std::thread_local;
+    use once_cell::unsync::Lazy;
+    use crate::DynFallibleTryDropStrategy;
+    use crate::drop_strategies::WriteDropStrategy;
+
+    thread_local! {
+        static DROP_STRATEGY: Lazy<RefCell<Box<dyn DynFallibleTryDropStrategy>>> = Lazy::new(|| {
+            let mut strategy = WriteDropStrategy::stderr();
+            strategy.prelude("error: ");
+            RefCell::new(Box::new(strategy))
+        })
+    }
+
+    pub fn drop_strategy<T>(f: impl FnOnce(&RefCell<Box<dyn DynFallibleTryDropStrategy>>) -> T) -> T {
+        DROP_STRATEGY.with(|drop_strategy| f(drop_strategy))
+    }
+
+    pub fn install_dyn(strategy: Box<dyn DynFallibleTryDropStrategy>) {
+        drop_strategy(|drop_strategy| *drop_strategy.borrow_mut() = strategy)
+    }
+}
+
+#[cfg(not(feature = "ds-write"))]
+mod drop_strategy {
+    use std::thread_local;
+    use once_cell::unsync::OnceCell;
+    use std::cell::RefCell;
+    use crate::DynFallibleTryDropStrategy;
+    use std::boxed::Box;
+
+    thread_local! {
+        static DROP_STRATEGY: OnceCell<RefCell<Box<dyn DynFallibleTryDropStrategy>>> = OnceCell::new();
+    }
+
+    pub fn drop_strategy<T>(f: impl FnOnce(&RefCell<Box<dyn DynFallibleTryDropStrategy>>) -> T) -> T {
+        DROP_STRATEGY.with(|drop_strategy| {
+            f(drop_strategy.get().expect("the thread local drop strategy is not initialized yet"))
+        })
+    }
+
+    pub fn install_dyn(strategy: Box<dyn DynFallibleTryDropStrategy>) {
+        DROP_STRATEGY.with(|drop_strategy| {
+            match drop_strategy.get() {
+                Some(thread_local_strategy) => *thread_local_strategy.borrow_mut() = strategy,
+                None => {
+                    let _ = drop_strategy.set(RefCell::new(strategy));
+                }
+            }
+        })
+    }
+}
+
+pub use drop_strategy::install_dyn;
+use drop_strategy::drop_strategy;
 use std::boxed::Box;
 use std::cell::{Ref, RefCell, RefMut};
-use std::thread_local;
 use anyhow::Error;
 use once_cell::unsync::{Lazy, OnceCell};
 use crate::{DynFallibleTryDropStrategy, FallibleTryDropStrategy};
-
-thread_local! {
-    static DROP_STRATEGY: OnceCell<RefCell<Box<dyn DynFallibleTryDropStrategy>>> = OnceCell::new();
-}
 
 struct ThreadLocalDropStrategy;
 
@@ -17,23 +70,6 @@ impl FallibleTryDropStrategy for ThreadLocalDropStrategy {
     fn try_handle_error(&self, error: Error) -> Result<(), Self::Error> {
         read(|strategy| strategy.dyn_try_handle_error(error))
     }
-}
-
-fn drop_strategy<T>(f: impl FnOnce(&RefCell<Box<dyn DynFallibleTryDropStrategy>>) -> T) -> T {
-    DROP_STRATEGY.with(|drop_strategy| {
-        f(drop_strategy.get().expect("the thread local drop strategy is not initialized yet"))
-    })
-}
-
-pub fn install_dyn(strategy: Box<dyn DynFallibleTryDropStrategy>) {
-    DROP_STRATEGY.with(|drop_strategy| {
-        match drop_strategy.get() {
-            Some(thread_local_strategy) => *thread_local_strategy.borrow_mut() = strategy,
-            None => {
-                let _ = drop_strategy.set(RefCell::new(strategy));
-            }
-        }
-    })
 }
 
 pub fn install(strategy: impl DynFallibleTryDropStrategy + 'static) {
