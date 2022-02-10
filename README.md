@@ -436,6 +436,7 @@ Here is a tree of the features (which aren't optional dependencies) and their ex
 
   * `default`: Enables the global try drop strategy, downcasting of try drop strategies, standard library, newtype 
                derefs, `derives`s for most types, and the default try drop strategies.
+    * `std-defaults`: Standard library only version of `default`.
   * `global`: This enables the global try drop strategy without nothing set to it. `OnceCell` is required for lazy 
               initialization of the global and parking lot to write to the global. By default, there are... *defaults*,
               which are...
@@ -447,6 +448,7 @@ Here is a tree of the features (which aren't optional dependencies) and their ex
   * `drop-strategies`: Enables the default drop strategies. Each drop strategy is explained below. Note that `ds` stands
                        for drop strategies, due to Rust's lack of feature namespacing (I think). You can find these drop
                        strategies in the `try_drop::drop_strategies` module.
+    * `std-drop-strategies`: Standard library only version of `drop-strategies`.
     * `ds-abort`: A drop strategy which aborts the current program if called.
     * `ds-broadcast`: A drop strategy which broadcasts the error to all receivers. This is a heavy drop strategy; it 
                       depends on the Tokio broadcast channel and therefore the runtime as it provides a good 
