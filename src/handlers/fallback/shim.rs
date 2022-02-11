@@ -1,16 +1,68 @@
-use std::io;
 use std::sync::atomic::{AtomicBool, Ordering};
 use anyhow::Error;
-use once_cell::unsync::Lazy;
-use crate::on_uninit::{DoNothingOnUninit, ErrorOnUninit, FlagOnUninit, PanicOnUninit};
-use crate::{FallibleTryDropStrategy, TryDropStrategy};
+use crate::on_uninit::{DoNothingOnUninit, FlagOnUninit, PanicOnUninit};
+use crate::TryDropStrategy;
 use crate::drop_strategies::broadcast::ArcError;
-use crate::drop_strategies::{PanicDropStrategy, WriteDropStrategy};
 use crate::handlers::fallback::global::GlobalFallbackDropStrategy;
 use crate::handlers::fallback::thread_local::ThreadLocalFallbackDropStrategy;
-use crate::handlers::shim::{OnUninitShim, FallbackHandler, UseDefaultOnUninitShim};
+use crate::handlers::shim::OnUninitShim;
+#[cfg(feature = "ds-panic")]
+mod with_ds_panic {
+    use once_cell::unsync::Lazy;
+    use crate::drop_strategies::PanicDropStrategy;
+    use crate::handlers::fallback::global::GlobalFallbackDropStrategy;
+    use crate::handlers::fallback::shim::ShimFallbackDropStrategy;
+    use crate::handlers::fallback::thread_local::ThreadLocalFallbackDropStrategy;
+    use crate::handlers::shim::{FallbackHandler, UseDefaultOnUninitShim};
+    use crate::TryDropStrategy;
 
-pub struct ShimFallbackDropStrategy<OU: OnUninitShim> {
+    pub type DefaultOnUninit = UseDefaultOnUninitShim<FallbackHandler>;
+
+    impl ShimFallbackDropStrategy<UseDefaultOnUninitShim<FallbackHandler>> {
+        pub const USE_DEFAULT_ON_UNINIT: Self = Self {
+            global: GlobalFallbackDropStrategy::FLAG_ON_UNINIT,
+            thread_local: ThreadLocalFallbackDropStrategy::FLAG_ON_UNINIT,
+            extra_data: Lazy::new(|| PanicDropStrategy::DEFAULT),
+        };
+
+        pub const fn use_default_on_uninit() -> Self {
+            Self::USE_DEFAULT_ON_UNINIT
+        }
+
+        fn cache(&self) -> &PanicDropStrategy {
+            &self.extra_data
+        }
+    }
+
+    impl ShimFallbackDropStrategy<DefaultOnUninit> {
+        pub const DEFAULT: Self = Self::USE_DEFAULT_ON_UNINIT;
+    }
+
+    impl TryDropStrategy for ShimFallbackDropStrategy<UseDefaultOnUninitShim<FallbackHandler>> {
+        fn handle_error(&self, error: crate::Error) {
+            self.on_all_uninit(error, |error| self.cache().handle_error(error.into()))
+        }
+    }
+}
+#[cfg(not(feature = "ds-panic"))]
+mod no_ds_panic {
+    use crate::handlers::fallback::shim::ShimFallbackDropStrategy;
+    use crate::on_uninit::PanicOnUninit;
+
+    pub type DefaultOnUninit = PanicOnUninit;
+
+    impl ShimFallbackDropStrategy<DefaultOnUninit> {
+        pub const DEFAULT: Self = Self::PANIC_ON_UNINIT;
+    }
+}
+
+#[cfg(feature = "ds-panic")]
+pub use with_ds_panic::DefaultOnUninit;
+
+#[cfg(not(feature = "ds-panic"))]
+pub use no_ds_panic::DefaultOnUninit;
+
+pub struct ShimFallbackDropStrategy<OU: OnUninitShim = DefaultOnUninit> {
     global: GlobalFallbackDropStrategy<FlagOnUninit>,
     thread_local: ThreadLocalFallbackDropStrategy<FlagOnUninit>,
     extra_data: OU::ExtraData,
@@ -60,22 +112,6 @@ impl ShimFallbackDropStrategy<FlagOnUninit> {
     }
 }
 
-impl ShimFallbackDropStrategy<UseDefaultOnUninitShim<FallbackHandler>> {
-    pub const USE_DEFAULT_ON_UNINIT: Self = Self {
-        global: GlobalFallbackDropStrategy::FLAG_ON_UNINIT,
-        thread_local: ThreadLocalFallbackDropStrategy::FLAG_ON_UNINIT,
-        extra_data: Lazy::new(|| PanicDropStrategy::DEFAULT),
-    };
-
-    pub const fn use_default_on_uninit() -> Self {
-        Self::USE_DEFAULT_ON_UNINIT
-    }
-
-    fn cache(&self) -> &PanicDropStrategy {
-        &self.extra_data
-    }
-}
-
 impl<OU: OnUninitShim> ShimFallbackDropStrategy<OU> {
     fn on_all_uninit(&self, error: anyhow::Error, f: impl FnOnce(ArcError)) {
         let error = ArcError::new(error);
@@ -111,8 +147,3 @@ impl TryDropStrategy for ShimFallbackDropStrategy<FlagOnUninit> {
     }
 }
 
-impl TryDropStrategy for ShimFallbackDropStrategy<UseDefaultOnUninitShim<FallbackHandler>> {
-    fn handle_error(&self, error: Error) {
-        self.on_all_uninit(error, |error| self.cache().handle_error(error.into()))
-    }
-}
