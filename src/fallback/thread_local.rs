@@ -1,15 +1,15 @@
 //! Manage the thread local fallback drop strategy.
 use std::boxed::Box;
-use std::cell::{Ref, RefCell, RefMut};
-use once_cell::unsync::{Lazy, OnceCell};
+use std::cell::{RefCell};
+
 use crate::{FallbackTryDropStrategy, TryDropStrategy};
 use crate::utils::NotSendNotSync;
-use std::{fmt, thread_local};
+use std::{thread_local};
 use std::marker::PhantomData;
 use std::sync::atomic::{AtomicBool, Ordering};
 use anyhow::Error;
 use crate::fallback::{FlagOnUninit, OnUninitFallback};
-use crate::on_uninit::{ErrorOnUninit, OnUninit, PanicOnUninit, UseDefaultOnUninit};
+use crate::on_uninit::{ErrorOnUninit, PanicOnUninit, UseDefaultOnUninit};
 use crate::uninit_error::UninitializedError;
 
 thread_local! {
