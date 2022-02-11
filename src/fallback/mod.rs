@@ -1,11 +1,5 @@
 //! Type and traits for fallback try drop strategies.
 
-#[cfg(feature = "global")]
-pub mod global;
-
-#[cfg(feature = "thread-local")]
-pub mod thread_local;
-
 mod private {
     pub trait Sealed {}
 }

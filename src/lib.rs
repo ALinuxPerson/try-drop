@@ -12,9 +12,6 @@ extern crate std;
 
 pub mod fallback;
 
-#[cfg(feature = "global")]
-pub mod global;
-
 pub mod prelude;
 
 pub mod drop_strategies;
@@ -38,9 +35,6 @@ pub use self::ImpureTryDrop as TryDrop;
 
 #[cfg(any(feature = "__tests", test))]
 pub mod test_utils;
-
-#[cfg(feature = "thread-local")]
-pub mod thread_local;
 
 #[cfg(any(feature = "global", feature = "thread-local"))]
 pub mod on_uninit;
