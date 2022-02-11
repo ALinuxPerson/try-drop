@@ -1,5 +1,5 @@
 use crate::drop_strategies::PanicDropStrategy;
-use crate::on_uninit::{OnUninit, PanicOnUninit, UseDefaultOnUninit};
+use crate::on_uninit::{FlagOnUninit, OnUninit, PanicOnUninit, UseDefaultOnUninit};
 use crate::uninit_error::UninitializedError;
 use crate::{GlobalTryDropStrategy, TryDropStrategy};
 use anyhow::Error;
@@ -9,7 +9,6 @@ use parking_lot::{
 use std::boxed::Box;
 use std::marker::PhantomData;
 use std::sync::atomic::{AtomicBool, Ordering};
-use crate::handlers::fallback::{FlagOnUninit, OnUninitFallback};
 
 static FALLBACK_DROP_STRATEGY: RwLock<Option<Box<dyn GlobalTryDropStrategy>>> =
     parking_lot::const_rwlock(None);
@@ -28,7 +27,7 @@ pub type DefaultOnUninit = UseDefaultOnUninit;
 feature = "derives",
 derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
 )]
-pub struct GlobalFallbackDropStrategy<OU: OnUninitFallback = DefaultOnUninit> {
+pub struct GlobalFallbackDropStrategy<OU: OnUninit = DefaultOnUninit> {
     extra_data: OU::ExtraData,
     _on_uninit: PhantomData<OU>,
 }
