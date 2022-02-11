@@ -8,6 +8,8 @@ use parking_lot::{
 };
 use std::boxed::Box;
 use std::marker::PhantomData;
+use std::sync::atomic::{AtomicBool, Ordering};
+use crate::handlers::fallback::{FlagOnUninit, OnUninitFallback};
 
 static FALLBACK_DROP_STRATEGY: RwLock<Option<Box<dyn GlobalTryDropStrategy>>> =
     parking_lot::const_rwlock(None);
@@ -26,10 +28,13 @@ pub type DefaultOnUninit = UseDefaultOnUninit;
 feature = "derives",
 derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
 )]
-pub struct GlobalFallbackDropStrategy<OU: OnUninit = DefaultOnUninit>(PhantomData<OU>);
+pub struct GlobalFallbackDropStrategy<OU: OnUninitFallback = DefaultOnUninit> {
+    extra_data: OU::ExtraData,
+    _on_uninit: PhantomData<OU>,
+}
 
 impl GlobalFallbackDropStrategy<DefaultOnUninit> {
-    pub const DEFAULT: Self = Self(PhantomData);
+    pub const DEFAULT: Self = Self { extra_data: (), _on_uninit: PhantomData };
 }
 
 impl GlobalFallbackDropStrategy<PanicOnUninit> {
@@ -39,7 +44,10 @@ impl GlobalFallbackDropStrategy<PanicOnUninit> {
     /// Get an interface to the global fallback try drop strategy. If there is no global try drop
     /// strategy initialized, this will panic.
     pub const fn on_uninit_panic() -> Self {
-        Self(PhantomData)
+        Self {
+            extra_data: (),
+            _on_uninit: PhantomData,
+        }
     }
 }
 
@@ -51,7 +59,34 @@ impl GlobalFallbackDropStrategy<UseDefaultOnUninit> {
     /// Get an interface to the global fallback try drop strategy. If there is no global fallback
     /// try drop strategy initialized, this will set it to the default.
     pub const fn on_uninit_use_default() -> Self {
-        Self(PhantomData)
+        Self {
+            extra_data: (),
+            _on_uninit: PhantomData,
+        }
+    }
+}
+
+impl GlobalFallbackDropStrategy<FlagOnUninit> {
+    /// See [`Self::on_uninit_flag`].
+    pub const FLAG_ON_UNINIT: Self = Self::on_uninit_flag();
+
+    /// Get an interface to the global fallback try drop strategy. If there is no global fallback
+    /// try drop strategy initialized, this will set the `last_drop_failed` flag to `true`.
+    pub const fn on_uninit_flag() -> Self {
+        Self {
+            extra_data: AtomicBool::new(false),
+            _on_uninit: PhantomData,
+        }
+    }
+
+    /// Did the last attempt to handle a drop failure fail because the global fallback try drop
+    /// strategy wasn't initialized?
+    pub fn last_drop_failed(&self) -> bool {
+        self.extra_data.load(Ordering::Acquire)
+    }
+
+    fn set_last_drop_failed(&self, value: bool) {
+        self.extra_data.store(value, Ordering::Release)
     }
 }
 
@@ -61,9 +96,20 @@ impl TryDropStrategy for GlobalFallbackDropStrategy<PanicOnUninit> {
     }
 }
 
+#[cfg(feature = "ds-panic")]
 impl TryDropStrategy for GlobalFallbackDropStrategy<UseDefaultOnUninit> {
     fn handle_error(&self, error: Error) {
         read_or_default().handle_error(error)
+    }
+}
+
+impl TryDropStrategy for GlobalFallbackDropStrategy<FlagOnUninit> {
+    fn handle_error(&self, error: Error) {
+        if let Err(UninitializedError(())) = try_read().map(|s| s.handle_error(error)) {
+            self.set_last_drop_failed(true);
+        } else {
+            self.set_last_drop_failed(false);
+        }
     }
 }
 
