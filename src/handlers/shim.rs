@@ -1,7 +1,3 @@
-use std::io;
-use std::marker::PhantomData;
-use once_cell::unsync::Lazy;
-use crate::drop_strategies::{PanicDropStrategy, WriteDropStrategy};
 use crate::on_uninit::OnUninit;
 
 mod private {
