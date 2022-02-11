@@ -33,12 +33,12 @@ pub struct NotGiven;
 impl TryDropTypes for NotGiven {}
 impl private::Sealed for NotGiven {}
 
-pub struct Given<D: FallibleTryDropStrategy, DD: FallbackTryDropStrategy> {
+pub struct Given<D: FallibleTryDropStrategy, DD: TryDropStrategy> {
     fallible_try_drop_strategy: D,
     double_drop_strategy: DD,
 }
 
-impl<D: FallibleTryDropStrategy, DD: FallbackTryDropStrategy> Given<D, DD> {
+impl<D: FallibleTryDropStrategy, DD: TryDropStrategy> Given<D, DD> {
     pub fn new(fallible_try_drop_strategy: D, double_drop_strategy: DD) -> Self {
         Self {
             fallible_try_drop_strategy,
@@ -47,8 +47,8 @@ impl<D: FallibleTryDropStrategy, DD: FallbackTryDropStrategy> Given<D, DD> {
     }
 }
 
-impl<D: FallibleTryDropStrategy, DD: FallbackTryDropStrategy> TryDropTypes for Given<D, DD> {}
-impl<D: FallibleTryDropStrategy, DD: FallbackTryDropStrategy> private::Sealed for Given<D, DD> {}
+impl<D: FallibleTryDropStrategy, DD: TryDropStrategy> TryDropTypes for Given<D, DD> {}
+impl<D: FallibleTryDropStrategy, DD: TryDropStrategy> private::Sealed for Given<D, DD> {}
 
 pub struct ErrorsOnDrop<M: Mode, TDT: TryDropTypes> {
     times_try_drop_was_called: usize,
@@ -93,7 +93,7 @@ impl<M, D, DD> ErrorsOnDrop<M, Given<D, DD>>
 where
     M: Mode,
     D: FallibleTryDropStrategy,
-    DD: FallbackTryDropStrategy,
+    DD: TryDropStrategy,
 {
     pub fn given(fallible_try_drop_strategy: D, double_drop_strategy: DD) -> Self {
         Self {
@@ -120,7 +120,7 @@ impl ImpureTryDrop for ErrorsOnDrop<Infallible, NotGiven> {
     }
 }
 
-impl<D: FallibleTryDropStrategy, DD: FallbackTryDropStrategy> PureTryDrop
+impl<D: FallibleTryDropStrategy, DD: TryDropStrategy> PureTryDrop
     for ErrorsOnDrop<Infallible, Given<D, DD>>
 {
     type Error = TryDropInfallible;
@@ -150,7 +150,7 @@ impl ImpureTryDrop for ErrorsOnDrop<Fallible, NotGiven> {
     }
 }
 
-impl<D: FallibleTryDropStrategy, DD: FallbackTryDropStrategy> PureTryDrop
+impl<D: FallibleTryDropStrategy, DD: TryDropStrategy> PureTryDrop
     for ErrorsOnDrop<Fallible, Given<D, DD>>
 {
     type Error = crate::Error;
@@ -186,7 +186,7 @@ impl ImpureTryDrop for ErrorsOnDrop<Random, NotGiven> {
     }
 }
 
-impl<D: FallibleTryDropStrategy, DD: FallbackTryDropStrategy> PureTryDrop
+impl<D: FallibleTryDropStrategy, DD: TryDropStrategy> PureTryDrop
     for ErrorsOnDrop<Random, Given<D, DD>>
 {
     type Error = crate::Error;
