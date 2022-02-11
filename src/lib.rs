@@ -25,10 +25,10 @@ mod global_crate_root;
 #[cfg(feature = "global")]
 pub use global_crate_root::*;
 
-#[cfg(not(feature = "global"))]
+#[cfg(not(any(feature = "global", feature = "thread-local")))]
 pub use self::PureTryDrop as TryDrop;
 
-#[cfg(feature = "global")]
+#[cfg(any(feature = "global", feature = "thread-local"))]
 pub use self::ImpureTryDrop as TryDrop;
 
 #[cfg(any(feature = "__tests", test))]
@@ -142,7 +142,7 @@ pub trait PureTryDrop {
 /// to be run, you need to put your type in a [`DropAdapter`].
 ///
 /// An easier way to make your type droppable is to call [`PureTryDrop::adapt`] on it.
-#[cfg(feature = "global")]
+#[cfg(any(feature = "global", feature = "thread-local"))]
 pub trait ImpureTryDrop {
     /// The type of the error that may occur during drop.
     type Error: Into<anyhow::Error>;

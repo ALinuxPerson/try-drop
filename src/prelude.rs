@@ -5,7 +5,7 @@ pub use crate::{
     PureTryDrop, ThreadSafe, TryDrop, TryDropStrategy,
 };
 
-#[cfg(feature = "global")]
+#[cfg(any(feature = "global", feature = "thread-local"))]
 pub use crate::{
     GlobalTryDropStrategy, GlobalDynFallibleTryDropStrategy, ImpureTryDrop,
 };
