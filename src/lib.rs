@@ -234,6 +234,12 @@ impl<TDS: TryDropStrategy> FallibleTryDropStrategy for TDS {
     }
 }
 
+/// A trait which signifies a try drop strategy which can be used as the primary or fallback
+/// handler.
+pub trait GlobalTryDropStrategy: ThreadSafe + TryDropStrategy {}
+
+impl<T: ThreadSafe + TryDropStrategy> GlobalTryDropStrategy for T {}
+
 /// A trait which signifies a thread safe type. Can be used in a `static`.
 pub trait ThreadSafe: Send + Sync + 'static {}
 
