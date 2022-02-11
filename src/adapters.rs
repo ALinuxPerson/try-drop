@@ -277,13 +277,13 @@ impl<FDS, FTDS> FallbackTryDropStrategyHandler<FDS, FTDS>
 
 impl<FDS, FTDS> TryDropStrategy for FallbackTryDropStrategyHandler<FDS, FTDS>
     where
-        FDS: FallbackTryDropStrategy,
+        FDS: TryDropStrategy,
         FTDS: FallibleTryDropStrategy,
 {
     fn handle_error(&self, error: anyhow::Error) {
         if let Err(error) = self.fallible_try_drop_strategy.dyn_try_handle_error(error) {
             self.fallback_try_drop_strategy
-                .handle_error_in_strategy(error)
+                .handle_error(error)
         }
     }
 }

@@ -6,14 +6,14 @@ use crate::fallback::{FlagOnUninit, OnUninitFallback};
 use crate::on_uninit::{ErrorOnUninit, PanicOnUninit, UseDefaultOnUninit};
 use crate::uninit_error::UninitializedError;
 use crate::utils::NotSendNotSync;
-use crate::{FallbackTryDropStrategy, TryDropStrategy};
+use crate::TryDropStrategy;
 use anyhow::Error;
 use std::marker::PhantomData;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread_local;
 
 thread_local! {
-    static DROP_STRATEGY: RefCell<Option<Box<dyn FallbackTryDropStrategy>>> = RefCell::new(None);
+    static DROP_STRATEGY: RefCell<Option<Box<dyn TryDropStrategy>>> = RefCell::new(None);
 }
 
 #[cfg(not(feature = "ds-panic"))]
@@ -104,21 +104,21 @@ impl ThreadLocalFallbackDropStrategy<FlagOnUninit> {
 
 impl TryDropStrategy for ThreadLocalFallbackDropStrategy<PanicOnUninit> {
     fn handle_error(&self, error: Error) {
-        read(|strategy| strategy.handle_error_in_strategy(error))
+        read(|strategy| strategy.handle_error(error))
     }
 }
 
 #[cfg(feature = "ds-panic")]
 impl TryDropStrategy for ThreadLocalFallbackDropStrategy<UseDefaultOnUninit> {
     fn handle_error(&self, error: Error) {
-        read_or_default(|strategy| strategy.handle_error_in_strategy(error))
+        read_or_default(|strategy| strategy.handle_error(error))
     }
 }
 
 impl TryDropStrategy for ThreadLocalFallbackDropStrategy<FlagOnUninit> {
     fn handle_error(&self, error: Error) {
         if let Err(UninitializedError(())) =
-            try_read(|strategy| strategy.handle_error_in_strategy(error))
+            try_read(|strategy| strategy.handle_error(error))
         {
             self.set_last_drop_failed(true)
         }
@@ -127,25 +127,25 @@ impl TryDropStrategy for ThreadLocalFallbackDropStrategy<FlagOnUninit> {
 
 /// Install a new thread local fallback try drop strategy. Since this drop strategy will only be
 /// used in one thread, it is more flexible than the global try drop strategy.
-pub fn install(strategy: impl FallbackTryDropStrategy + 'static) {
+pub fn install(strategy: impl TryDropStrategy + 'static) {
     install_dyn(Box::new(strategy))
 }
 
 /// Get a reference to the thread local fallback try drop strategy. This will panic if the thread
 /// local drop strategy has no value in it.
-pub fn read<T>(f: impl FnOnce(&dyn FallbackTryDropStrategy) -> T) -> T {
+pub fn read<T>(f: impl FnOnce(&dyn TryDropStrategy) -> T) -> T {
     try_read(f).expect(UNINITIALIZED_ERROR)
 }
 
 #[cfg(feature = "ds-panic")]
-fn default() -> Box<dyn FallbackTryDropStrategy> {
+fn default() -> Box<dyn TryDropStrategy> {
     Box::new(crate::drop_strategies::PanicDropStrategy::DEFAULT)
 }
 
 /// Get a reference to the thread local fallback try drop strategy. If there is no value present in
 /// it, then it will initialize it with the default strategy.
 #[cfg(feature = "ds-panic")]
-pub fn read_or_default<T>(f: impl FnOnce(&dyn FallbackTryDropStrategy) -> T) -> T {
+pub fn read_or_default<T>(f: impl FnOnce(&dyn TryDropStrategy) -> T) -> T {
     DROP_STRATEGY.with(|drop_strategy| {
         let mut strategy = drop_strategy.borrow_mut();
         let strategy = strategy.get_or_insert_with(default);
@@ -157,7 +157,7 @@ pub fn read_or_default<T>(f: impl FnOnce(&dyn FallbackTryDropStrategy) -> T) -> 
 /// Get a reference to the thread local try drop strategy. This will return an error if the
 /// thread local drop strategy has no value in it.
 pub fn try_read<T>(
-    f: impl FnOnce(&dyn FallbackTryDropStrategy) -> T,
+    f: impl FnOnce(&dyn TryDropStrategy) -> T,
 ) -> Result<T, UninitializedError> {
     DROP_STRATEGY.with(|cell| {
         cell.borrow()
@@ -168,14 +168,14 @@ pub fn try_read<T>(
 }
 
 /// Get a mutable reference to the thread local fallback try drop strategy.
-pub fn write<T>(f: impl FnOnce(&mut Box<dyn FallbackTryDropStrategy>) -> T) -> T {
+pub fn write<T>(f: impl FnOnce(&mut Box<dyn TryDropStrategy>) -> T) -> T {
     try_write(f).expect(UNINITIALIZED_ERROR)
 }
 
 /// Get a mutable reference to the thread local fallback try drop strategy. This will return an error if the
 /// thread local drop strategy has no value in it.
 pub fn try_write<T>(
-    f: impl FnOnce(&mut Box<dyn FallbackTryDropStrategy>) -> T,
+    f: impl FnOnce(&mut Box<dyn TryDropStrategy>) -> T,
 ) -> Result<T, UninitializedError> {
     DROP_STRATEGY.with(|cell| {
         cell.borrow_mut()
@@ -188,12 +188,12 @@ pub fn try_write<T>(
 /// Get a mutable reference to the thread local fallback try drop strategy. If there is no value
 /// present in it, then it will initialize it with the default strategy.
 #[cfg(feature = "ds-panic")]
-pub fn write_or_default<T>(f: impl FnOnce(&mut Box<dyn FallbackTryDropStrategy>) -> T) -> T {
+pub fn write_or_default<T>(f: impl FnOnce(&mut Box<dyn TryDropStrategy>) -> T) -> T {
     DROP_STRATEGY.with(|drop_strategy| f(drop_strategy.borrow_mut().get_or_insert_with(default)))
 }
 
 /// Install this fallback drop strategy to the current thread.
-pub fn install_dyn(strategy: Box<dyn FallbackTryDropStrategy>) {
+pub fn install_dyn(strategy: Box<dyn TryDropStrategy>) {
     DROP_STRATEGY.with(|drop_strategy| {
         drop_strategy.borrow_mut().replace(strategy);
     })
