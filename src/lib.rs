@@ -22,7 +22,7 @@ pub use infallible::Infallible;
 #[cfg(feature = "global")]
 mod global_crate_root;
 
-#[cfg(feature = "global")]
+#[cfg(any(feature = "global", feature = "thread-local"))]
 pub use global_crate_root::*;
 
 #[cfg(not(any(feature = "global", feature = "thread-local")))]
