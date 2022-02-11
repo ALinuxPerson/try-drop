@@ -203,6 +203,12 @@ pub trait DynFallibleTryDropStrategy {
     fn dyn_try_handle_error(&self, error: anyhow::Error) -> anyhow::Result<()>;
 }
 
+impl<T: FallibleTryDropStrategy> DynFallibleTryDropStrategy for T {
+    fn dyn_try_handle_error(&self, error: anyhow::Error) -> anyhow::Result<()> {
+        self.try_handle_error(error).map_err(Into::into)
+    }
+}
+
 /// A trait which signifies a try drop strategy which can fail, can be dynamically dispatched, and
 /// can be used as the global try drop strategy.
 #[cfg(feature = "global")]
@@ -224,12 +230,6 @@ downcast_rs::impl_downcast!(sync GlobalDynFallibleTryDropStrategy);
 
 #[cfg(feature = "global")]
 impl<T: ThreadSafe + DynFallibleTryDropStrategy> GlobalDynFallibleTryDropStrategy for T {}
-
-impl<FTDS: FallibleTryDropStrategy> DynFallibleTryDropStrategy for FTDS {
-    fn dyn_try_handle_error(&self, error: anyhow::Error) -> anyhow::Result<()> {
-        self.try_handle_error(error).map_err(Into::into)
-    }
-}
 
 /// A trait which signifies a try drop strategy. This can never fail. If it can, use
 /// [`FallibleTryDropStrategy`] instead.
