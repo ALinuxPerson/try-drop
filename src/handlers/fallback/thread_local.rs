@@ -10,6 +10,9 @@ use std::marker::PhantomData;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread_local;
 
+#[cfg(feature = "ds-panic")]
+use crate::on_uninit::UseDefaultOnUninit;
+
 thread_local! {
     static DROP_STRATEGY: RefCell<Option<Box<dyn TryDropStrategy>>> = RefCell::new(None);
 }

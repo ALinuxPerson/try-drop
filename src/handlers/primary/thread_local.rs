@@ -9,6 +9,9 @@ use std::marker::PhantomData;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread_local;
 
+#[cfg(feature = "ds-write")]
+use crate::on_uninit::UseDefaultOnUninit;
+
 thread_local! {
     static DROP_STRATEGY: RefCell<Option<Box<dyn DynFallibleTryDropStrategy>>> = RefCell::new(None);
 }

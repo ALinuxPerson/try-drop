@@ -9,6 +9,9 @@ use std::boxed::Box;
 use std::marker::PhantomData;
 use std::sync::atomic::{AtomicBool, Ordering};
 
+#[cfg(feature = "ds-panic")]
+use crate::on_uninit::UseDefaultOnUninit;
+
 static FALLBACK_DROP_STRATEGY: RwLock<Option<Box<dyn GlobalTryDropStrategy>>> =
     parking_lot::const_rwlock(None);
 
