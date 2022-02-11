@@ -21,9 +21,9 @@ pub mod drop_strategies;
 
 mod infallible;
 
-use core::marker::PhantomData;
 use crate::fallback::FallbackTryDropStrategy;
 pub use anyhow::Error;
+use core::marker::PhantomData;
 pub use fallback::{FallbackTryDropStrategyHandler, FallbackTryDropStrategyRef};
 pub use infallible::Infallible;
 
@@ -345,7 +345,11 @@ impl<T: PureTryDrop + Default> Default for RepeatableTryDropAdapter<T> {
 impl<T: PureTryDrop> RepeatableTryDropAdapter<T> {
     /// Create a new `RepeatableTryDropAdapter` with the given value.
     pub fn new(item: T) -> Self {
-        Self { inner: item, dropped: false, panic_on_double_drop: true }
+        Self {
+            inner: item,
+            dropped: false,
+            panic_on_double_drop: true,
+        }
     }
 }
 
@@ -441,7 +445,10 @@ pub struct InfallibleToFallibleTryDropStrategyAdapter<T: TryDropStrategy, E: Int
 impl<T: TryDropStrategy, E: Into<anyhow::Error>> InfallibleToFallibleTryDropStrategyAdapter<T, E> {
     /// Wrap the `value` in this adapter.
     pub fn new(value: T) -> Self {
-        Self { inner: value, _error: PhantomData }
+        Self {
+            inner: value,
+            _error: PhantomData,
+        }
     }
 
     /// Take the inner value.
@@ -451,7 +458,9 @@ impl<T: TryDropStrategy, E: Into<anyhow::Error>> InfallibleToFallibleTryDropStra
     }
 }
 
-impl<T: TryDropStrategy, E: Into<anyhow::Error>> FallibleTryDropStrategy for InfallibleToFallibleTryDropStrategyAdapter<T, E> {
+impl<T: TryDropStrategy, E: Into<anyhow::Error>> FallibleTryDropStrategy
+    for InfallibleToFallibleTryDropStrategyAdapter<T, E>
+{
     type Error = E;
 
     fn try_handle_error(&self, error: Error) -> Result<(), Self::Error> {

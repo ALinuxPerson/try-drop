@@ -43,7 +43,7 @@ pub use noop::NoOpDropStrategy;
 pub use panic::PanicDropStrategy;
 
 #[cfg(feature = "ds-write")]
-pub use write::{WriteDropStrategy, ThreadUnsafeWriteDropStrategy};
+pub use write::{ThreadUnsafeWriteDropStrategy, WriteDropStrategy};
 
 #[cfg(feature = "ds-adhoc")]
 pub use adhoc::{
@@ -58,4 +58,4 @@ pub use adhoc::{
 };
 
 #[cfg(feature = "ds-once-cell")]
-pub use self::once_cell::{OnceCellTryDropStrategy, ThreadUnsafeOnceCellTryDropStrategy, OnceCell};
+pub use self::once_cell::{OnceCell, OnceCellTryDropStrategy, ThreadUnsafeOnceCellTryDropStrategy};

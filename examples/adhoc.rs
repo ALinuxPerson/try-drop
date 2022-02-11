@@ -1,6 +1,6 @@
 use try_drop::drop_strategies::{AdHocFallibleTryDropStrategy, AdHocTryDropStrategy};
-use try_drop::PureTryDrop;
 use try_drop::test_utils::{ErrorsOnDrop, Fallible};
+use try_drop::PureTryDrop;
 
 fn main() {
     let fallible_try_drop_strategy = AdHocFallibleTryDropStrategy::new(|error| {

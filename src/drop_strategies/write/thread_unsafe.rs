@@ -1,10 +1,10 @@
+use crate::FallibleTryDropStrategy;
+use anyhow::Error;
 use std::cell::RefCell;
-use std::io::Write;
 use std::io;
+use std::io::Write;
 use std::string::ToString;
 use std::vec::Vec;
-use anyhow::Error;
-use crate::FallibleTryDropStrategy;
 
 /// A drop strategy which writes the message of an error to a writer. While more efficient than
 /// it's thread safe counterpart, it's less flexible.

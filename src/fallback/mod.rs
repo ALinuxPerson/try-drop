@@ -10,10 +10,10 @@ mod private {
     pub trait Sealed {}
 }
 
-use std::sync::atomic::AtomicBool;
+use crate::on_uninit::OnUninit;
 use crate::{DynFallibleTryDropStrategy, FallibleTryDropStrategy, TryDropStrategy};
 use anyhow::Error;
-use crate::on_uninit::OnUninit;
+use std::sync::atomic::AtomicBool;
 
 /// An error handler for drop strategies. If a struct implements [`TryDropStrategy`], it can also
 /// be used as a [`FallbackTryDropStrategy`]. This **cannot** fail.

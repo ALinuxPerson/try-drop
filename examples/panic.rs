@@ -1,5 +1,5 @@
-use try_drop::test_utils::{ErrorsOnDrop, Random};
 use try_drop::drop_strategies::{AbortDropStrategy, PanicDropStrategy};
+use try_drop::test_utils::{ErrorsOnDrop, Random};
 use try_drop::DropAdapter;
 
 fn main() {

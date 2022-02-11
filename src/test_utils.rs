@@ -1,8 +1,8 @@
 #![allow(missing_docs)]
 
-use std::marker::PhantomData;
 use crate::prelude::*;
 use crate::Infallible as TryDropInfallible;
+use std::marker::PhantomData;
 use std::println;
 
 mod private {
@@ -90,10 +90,10 @@ impl<M: Mode> ErrorsOnDrop<M, NotGiven> {
 }
 
 impl<M, D, DD> ErrorsOnDrop<M, Given<D, DD>>
-    where
-        M: Mode,
-        D: FallibleTryDropStrategy,
-        DD: FallbackTryDropStrategy,
+where
+    M: Mode,
+    D: FallibleTryDropStrategy,
+    DD: FallbackTryDropStrategy,
 {
     pub fn given(fallible_try_drop_strategy: D, double_drop_strategy: DD) -> Self {
         Self {
@@ -121,7 +121,7 @@ impl ImpureTryDrop for ErrorsOnDrop<Infallible, NotGiven> {
 }
 
 impl<D: FallibleTryDropStrategy, DD: FallbackTryDropStrategy> PureTryDrop
-for ErrorsOnDrop<Infallible, Given<D, DD>>
+    for ErrorsOnDrop<Infallible, Given<D, DD>>
 {
     type Error = TryDropInfallible;
     type FallbackTryDropStrategy = DD;
@@ -151,7 +151,7 @@ impl ImpureTryDrop for ErrorsOnDrop<Fallible, NotGiven> {
 }
 
 impl<D: FallibleTryDropStrategy, DD: FallbackTryDropStrategy> PureTryDrop
-for ErrorsOnDrop<Fallible, Given<D, DD>>
+    for ErrorsOnDrop<Fallible, Given<D, DD>>
 {
     type Error = crate::Error;
     type FallbackTryDropStrategy = DD;
@@ -187,7 +187,7 @@ impl ImpureTryDrop for ErrorsOnDrop<Random, NotGiven> {
 }
 
 impl<D: FallibleTryDropStrategy, DD: FallbackTryDropStrategy> PureTryDrop
-for ErrorsOnDrop<Random, Given<D, DD>>
+    for ErrorsOnDrop<Random, Given<D, DD>>
 {
     type Error = crate::Error;
     type FallbackTryDropStrategy = DD;

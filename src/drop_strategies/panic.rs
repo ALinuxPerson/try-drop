@@ -52,11 +52,11 @@ impl Default for PanicDropStrategy {
 
 #[cfg(test)]
 mod tests {
-    use std::string::ToString;
-    use crate::drop_strategies::AbortDropStrategy;
-    use crate::PureTryDrop;
-    use crate::test_utils::{ErrorsOnDrop, Fallible};
     use super::*;
+    use crate::drop_strategies::AbortDropStrategy;
+    use crate::test_utils::{ErrorsOnDrop, Fallible};
+    use crate::PureTryDrop;
+    use std::string::ToString;
 
     #[test]
     fn test_with_message() {
@@ -79,9 +79,8 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_strategy() {
-        let _errors = ErrorsOnDrop::<Fallible, _>::given(
-            PanicDropStrategy::DEFAULT,
-            AbortDropStrategy,
-        ).adapt();
+        let _errors =
+            ErrorsOnDrop::<Fallible, _>::given(PanicDropStrategy::DEFAULT, AbortDropStrategy)
+                .adapt();
     }
 }

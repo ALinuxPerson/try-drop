@@ -3,8 +3,8 @@ use std::time::Duration;
 use tokio::runtime::Runtime;
 use try_drop::drop_strategies::broadcast::OkIfAlone;
 use try_drop::drop_strategies::{BroadcastDropStrategy, PanicDropStrategy};
-use try_drop::DropAdapter;
 use try_drop::test_utils::{ErrorsOnDrop, Random};
+use try_drop::DropAdapter;
 
 fn main() -> Result<(), try_drop::Error> {
     let _guard = Runtime::new()?.enter();

@@ -1,7 +1,7 @@
+use crate::fallback::global::GlobalFallbackDropStrategy;
 pub use crate::global::GlobalFallibleTryDropStrategy;
 use crate::prelude::*;
 use std::boxed::Box;
-use crate::fallback::global::GlobalFallbackDropStrategy;
 
 impl<TD: ImpureTryDrop> PureTryDrop for TD {
     type Error = TD::Error;

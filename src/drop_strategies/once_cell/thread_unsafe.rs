@@ -1,16 +1,13 @@
+use super::{AlreadyOccupiedError, Error, Ignore, Mode};
+use crate::{FallibleTryDropStrategy, TryDropStrategy};
+use once_cell::unsync::OnceCell;
 use std::marker::PhantomData;
 use std::rc::Rc;
-use once_cell::unsync::OnceCell;
-use crate::{FallibleTryDropStrategy, TryDropStrategy};
-use super::{Mode, Ignore, Error, AlreadyOccupiedError};
 
 /// A try drop strategy which sets an error value once.
 ///
 /// For more information see it's thread safe counterpart.
-#[cfg_attr(
-    feature = "derives",
-    derive(Debug, Clone, Default)
-)]
+#[cfg_attr(feature = "derives", derive(Debug, Clone, Default))]
 pub struct ThreadUnsafeOnceCellTryDropStrategy<M: Mode> {
     /// The inner error value.
     pub inner: Rc<OnceCell<anyhow::Error>>,

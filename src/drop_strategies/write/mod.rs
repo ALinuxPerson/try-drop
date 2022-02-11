@@ -1,12 +1,12 @@
 mod thread_unsafe;
 
-pub use thread_unsafe::*;
 use crate::FallibleTryDropStrategy;
 use parking_lot::Mutex;
 use std::io;
 use std::io::Write;
 use std::string::ToString;
 use std::vec::Vec;
+pub use thread_unsafe::*;
 
 /// A drop strategy which writes the message of an error to a writer.
 #[cfg_attr(feature = "derives", derive(Debug))]
@@ -85,24 +85,19 @@ impl<W: Write> FallibleTryDropStrategy for WriteDropStrategy<W> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::io::Cursor;
     use crate::drop_strategies::PanicDropStrategy;
-    use crate::PureTryDrop;
     use crate::test_utils::{ErrorsOnDrop, Fallible};
+    use crate::PureTryDrop;
+    use std::io::Cursor;
 
     #[test]
     fn test_write_drop_strategy() {
         let mut writer = Cursor::new(Vec::new());
         let mut strategy = WriteDropStrategy::new(&mut writer);
         strategy.prelude("error: ");
-        let errors = ErrorsOnDrop::<Fallible, _>::given(
-            strategy,
-            PanicDropStrategy::DEFAULT,
-        ).adapt();
+        let errors =
+            ErrorsOnDrop::<Fallible, _>::given(strategy, PanicDropStrategy::DEFAULT).adapt();
         drop(errors);
-        assert_eq!(
-            writer.into_inner(),
-            b"error: this will always fail\n",
-        )
+        assert_eq!(writer.into_inner(), b"error: this will always fail\n",)
     }
 }

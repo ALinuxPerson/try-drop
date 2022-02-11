@@ -5,16 +5,16 @@ mod private {
     pub trait Sealed {}
 }
 
-pub use tokio::sync::broadcast::Receiver as AsyncReceiver;
-pub use tokio::runtime::Handle;
 use crate::{FallibleTryDropStrategy, TryDropStrategy};
 use std::error::Error;
 use std::fmt;
 use std::marker::PhantomData;
 use std::sync::Arc;
+pub use tokio::runtime::Handle;
 use tokio::sync::broadcast;
 use tokio::sync::broadcast::error::SendError;
 use tokio::sync::broadcast::error::{RecvError, TryRecvError};
+pub use tokio::sync::broadcast::Receiver as AsyncReceiver;
 use tokio::sync::broadcast::{Receiver, Sender};
 
 /// An async receiver, which is made sync via blocking on a handle to the tokio runtime.

@@ -13,15 +13,13 @@ impl TryDropStrategy for NoOpDropStrategy {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::drop_strategies::PanicDropStrategy;
     use crate::test_utils::{ErrorsOnDrop, Fallible};
-    use super::*;
 
     #[test]
     fn test_drop_strategy() {
-        let _errors = ErrorsOnDrop::<Fallible, _>::given(
-            NoOpDropStrategy,
-            PanicDropStrategy::DEFAULT,
-        );
+        let _errors =
+            ErrorsOnDrop::<Fallible, _>::given(NoOpDropStrategy, PanicDropStrategy::DEFAULT);
     }
 }

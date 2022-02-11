@@ -7,8 +7,8 @@ mod private {
     pub trait Sealed {}
 }
 
-use core::marker::PhantomData;
 use crate::TryDropStrategy;
+use core::marker::PhantomData;
 
 /// How safe will the [`UnreachableDropStrategy`] be.
 pub trait Safety: private::Sealed {}
@@ -86,6 +86,8 @@ impl TryDropStrategy for UnreachableDropStrategy<Unsafe> {
         unreachable!("panicking due to `debug_assertions` (debug profile), this error should not happen: {error}");
 
         #[cfg(not(debug_assertions))]
-        unsafe { core::hint::unreachable_unchecked() }
+        unsafe {
+            core::hint::unreachable_unchecked()
+        }
     }
 }

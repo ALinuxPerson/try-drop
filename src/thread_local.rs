@@ -1,14 +1,13 @@
 //! Manage the thread local drop strategy.
 use std::boxed::Box;
-use std::cell::{RefCell};
+use std::cell::RefCell;
 
-
-use crate::{DynFallibleTryDropStrategy, FallibleTryDropStrategy};
-use crate::utils::NotSendNotSync;
-use std::{thread_local};
-use std::marker::PhantomData;
 use crate::on_uninit::{ErrorOnUninit, OnUninit, PanicOnUninit, UseDefaultOnUninit};
 use crate::uninit_error::UninitializedError;
+use crate::utils::NotSendNotSync;
+use crate::{DynFallibleTryDropStrategy, FallibleTryDropStrategy};
+use std::marker::PhantomData;
+use std::thread_local;
 
 thread_local! {
     static DROP_STRATEGY: RefCell<Option<Box<dyn DynFallibleTryDropStrategy>>> = RefCell::new(None);
@@ -124,8 +123,15 @@ pub fn read_or_default<T>(f: impl FnOnce(&dyn DynFallibleTryDropStrategy) -> T) 
 
 /// Get a reference to the thread local try drop strategy. This will return an error if the
 /// thread local drop strategy has no value in it.
-pub fn try_read<T>(f: impl FnOnce(&dyn DynFallibleTryDropStrategy) -> T) -> Result<T, UninitializedError> {
-    DROP_STRATEGY.with(|cell| cell.borrow().as_deref().map(f).ok_or(UninitializedError(())))
+pub fn try_read<T>(
+    f: impl FnOnce(&dyn DynFallibleTryDropStrategy) -> T,
+) -> Result<T, UninitializedError> {
+    DROP_STRATEGY.with(|cell| {
+        cell.borrow()
+            .as_deref()
+            .map(f)
+            .ok_or(UninitializedError(()))
+    })
 }
 
 /// Get a mutable reference to the thread local try drop strategy.
@@ -135,8 +141,15 @@ pub fn write<T>(f: impl FnOnce(&mut Box<dyn DynFallibleTryDropStrategy>) -> T) -
 
 /// Get a mutable reference to the thread local try drop strategy. This will return an error if the
 /// thread local drop strategy has no value in it.
-pub fn try_write<T>(f: impl FnOnce(&mut Box<dyn DynFallibleTryDropStrategy>) -> T) -> Result<T, UninitializedError> {
-    DROP_STRATEGY.with(|cell| cell.borrow_mut().as_mut().map(f).ok_or(UninitializedError(())))
+pub fn try_write<T>(
+    f: impl FnOnce(&mut Box<dyn DynFallibleTryDropStrategy>) -> T,
+) -> Result<T, UninitializedError> {
+    DROP_STRATEGY.with(|cell| {
+        cell.borrow_mut()
+            .as_mut()
+            .map(f)
+            .ok_or(UninitializedError(()))
+    })
 }
 
 /// Get a mutable reference to the thread local try drop strategy. If there is no value present in

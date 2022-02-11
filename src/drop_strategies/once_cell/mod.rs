@@ -5,13 +5,13 @@ mod private {
     pub trait Sealed {}
 }
 
-pub use thread_unsafe::*;
-pub use once_cell::sync::OnceCell;
 use crate::{FallibleTryDropStrategy, TryDropStrategy};
+pub use once_cell::sync::OnceCell;
 use std::error::Error as StdError;
 use std::fmt;
 use std::marker::PhantomData;
 use std::sync::Arc;
+pub use thread_unsafe::*;
 
 /// Ignore the occupied error value and continue.
 pub enum Ignore {}
@@ -78,10 +78,7 @@ impl fmt::Display for AlreadyOccupiedError {
 /// ```
 ///
 /// [`BroadcastDropStrategy`]: crate::drop_strategies::BroadcastDropStrategy
-#[cfg_attr(
-    feature = "derives",
-    derive(Debug, Clone, Default)
-)]
+#[cfg_attr(feature = "derives", derive(Debug, Clone, Default))]
 pub struct OnceCellTryDropStrategy<M: Mode> {
     /// The inner error value.
     pub inner: Arc<OnceCell<anyhow::Error>>,
@@ -130,18 +127,16 @@ impl FallibleTryDropStrategy for OnceCellTryDropStrategy<Error> {
 
 #[cfg(test)]
 mod tests {
-    use crate::drop_strategies::PanicDropStrategy;
-    use crate::PureTryDrop;
-    use crate::test_utils::{ErrorsOnDrop, Fallible};
     use super::*;
+    use crate::drop_strategies::PanicDropStrategy;
+    use crate::test_utils::{ErrorsOnDrop, Fallible};
+    use crate::PureTryDrop;
 
     fn test<M: Mode>() {
         let item = Arc::new(OnceCell::new());
         let strategy = OnceCellTryDropStrategy::ignore(Arc::clone(&item));
-        let errors = ErrorsOnDrop::<Fallible, _>::given(
-            strategy,
-            PanicDropStrategy::DEFAULT,
-        ).adapt();
+        let errors =
+            ErrorsOnDrop::<Fallible, _>::given(strategy, PanicDropStrategy::DEFAULT).adapt();
         drop(errors);
         Arc::try_unwrap(item)
             .expect("item still referenced by `errors`")
