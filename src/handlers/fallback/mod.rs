@@ -10,6 +10,3 @@ pub mod shim;
 mod private {
     pub trait Sealed {}
 }
-
-use crate::on_uninit::OnUninit;
-use core::sync::atomic::AtomicBool;
