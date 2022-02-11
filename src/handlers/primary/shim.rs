@@ -8,7 +8,7 @@ use crate::handlers::shim::OnUninitShim;
 #[cfg(feature = "ds-write")]
 mod imp {
     use std::io;
-    use once_cell::unsync::Lazy;
+    use once_cell::sync::Lazy;
     use crate::drop_strategies::WriteDropStrategy;
     use crate::FallibleTryDropStrategy;
     use crate::handlers::primary::global::GlobalPrimaryDropStrategy;
