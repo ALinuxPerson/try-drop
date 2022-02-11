@@ -6,6 +6,7 @@ pub mod fallback;
 mod common;
 mod shim;
 
+#[cfg(feature = "global")]
 pub fn install_global_handlers(
     primary: impl GlobalDynFallibleTryDropStrategy,
     fallback: impl GlobalTryDropStrategy,
@@ -13,6 +14,7 @@ pub fn install_global_handlers(
     install_global_handlers_dyn(Box::new(primary), Box::new(fallback))
 }
 
+#[cfg(feature = "global")]
 pub fn install_global_handlers_dyn(
     primary: Box<dyn GlobalDynFallibleTryDropStrategy>,
     fallback: Box<dyn GlobalTryDropStrategy>,
@@ -21,11 +23,13 @@ pub fn install_global_handlers_dyn(
     fallback::global::install_dyn(fallback);
 }
 
+#[cfg(feature = "global")]
 pub fn uninstall_globally() {
     primary::global::uninstall();
     fallback::global::uninstall();
 }
 
+#[cfg(feature = "thread-local")]
 pub fn install_thread_local_handlers(
     primary: impl DynFallibleTryDropStrategy + 'static,
     fallback: impl TryDropStrategy + 'static
@@ -33,6 +37,7 @@ pub fn install_thread_local_handlers(
     install_thread_local_handlers_dyn(Box::new(primary), Box::new(fallback))
 }
 
+#[cfg(feature = "thread-local")]
 pub fn install_thread_local_handlers_dyn(
     primary: Box<dyn DynFallibleTryDropStrategy>,
     fallback: Box<dyn TryDropStrategy>,
@@ -41,6 +46,7 @@ pub fn install_thread_local_handlers_dyn(
     fallback::thread_local::install_dyn(fallback);
 }
 
+#[cfg(feature = "thread-local")]
 pub fn uninstall_for_thread() {
     primary::thread_local::uninstall();
     fallback::thread_local::uninstall();
