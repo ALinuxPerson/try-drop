@@ -7,7 +7,7 @@ use crate::handlers::fallback::global::GlobalFallbackDropStrategy;
 use crate::handlers::fallback::thread_local::ThreadLocalFallbackDropStrategy;
 use crate::handlers::shim::OnUninitShim;
 #[cfg(feature = "ds-panic")]
-mod with_ds_panic {
+mod imp {
     use once_cell::unsync::Lazy;
     use crate::drop_strategies::PanicDropStrategy;
     use crate::handlers::fallback::global::GlobalFallbackDropStrategy;
@@ -45,7 +45,7 @@ mod with_ds_panic {
     }
 }
 #[cfg(not(feature = "ds-panic"))]
-mod no_ds_panic {
+mod imp {
     use crate::handlers::fallback::shim::ShimFallbackDropStrategy;
     use crate::on_uninit::PanicOnUninit;
 
@@ -56,11 +56,7 @@ mod no_ds_panic {
     }
 }
 
-#[cfg(feature = "ds-panic")]
-pub use with_ds_panic::DefaultOnUninit;
-
-#[cfg(not(feature = "ds-panic"))]
-pub use no_ds_panic::DefaultOnUninit;
+pub use imp::DefaultOnUninit;
 
 pub struct ShimFallbackDropStrategy<OU: OnUninitShim = DefaultOnUninit> {
     global: GlobalFallbackDropStrategy<FlagOnUninit>,
