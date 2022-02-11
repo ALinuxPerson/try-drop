@@ -28,21 +28,6 @@ impl<TDS: TryDropStrategy> FallbackTryDropStrategy for TDS {
     }
 }
 
-/// A reference to a type which implements [`FallbackTryDropStrategy`]. Used as a workaround for
-/// implementing [`FallbackTryDropStrategy`] on references.
-#[cfg_attr(
-    feature = "derives",
-    derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
-)]
-#[cfg_attr(feature = "shrinkwraprs", derive(Shrinkwrap))]
-pub struct FallbackTryDropStrategyRef<'a, T: FallbackTryDropStrategy>(pub &'a T);
-
-impl<'a, T: FallbackTryDropStrategy> FallbackTryDropStrategy for FallbackTryDropStrategyRef<'a, T> {
-    fn handle_error_in_strategy(&self, error: anyhow::Error) {
-        self.0.handle_error_in_strategy(error)
-    }
-}
-
 #[cfg(feature = "global")]
 #[cfg(not(feature = "downcast-rs"))]
 pub trait GlobalFallbackTryDropStrategy: crate::ThreadSafe + FallbackTryDropStrategy {}
@@ -62,55 +47,6 @@ downcast_rs::impl_downcast!(sync GlobalFallbackTryDropStrategy);
 
 #[cfg(feature = "global")]
 impl<T: crate::ThreadSafe + FallbackTryDropStrategy> GlobalFallbackTryDropStrategy for T {}
-
-/// A type which chains two try drop strategies together, one of which may fail and if so, will be
-/// redirected to the fallback, infallible try drop strategy.
-///
-/// This type implements [`TryDropStrategy`] because, as said before, any and all errors in the
-/// fallible try drop strategy will be redirected to the fallback, which can never fail.
-#[cfg_attr(
-    feature = "derives",
-    derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
-)]
-pub struct FallbackTryDropStrategyHandler<FDS, FTDS>
-where
-    FDS: FallbackTryDropStrategy,
-    FTDS: FallibleTryDropStrategy,
-{
-    /// The fallback try drop strategy. This will be called if the first try drop strategy fails and
-    /// is a last resort to recovering sanely.
-    pub fallback_try_drop_strategy: FDS,
-
-    /// The try drop strategy which may fail. This will be called first.
-    pub fallible_try_drop_strategy: FTDS,
-}
-
-impl<FDS, FTDS> FallbackTryDropStrategyHandler<FDS, FTDS>
-where
-    FDS: FallbackTryDropStrategy,
-    FTDS: FallibleTryDropStrategy,
-{
-    /// Create a new fallback try drop strategy handler.
-    pub fn new(fallback_try_drop_strategy: FDS, fallible_try_drop_strategy: FTDS) -> Self {
-        Self {
-            fallback_try_drop_strategy,
-            fallible_try_drop_strategy,
-        }
-    }
-}
-
-impl<FDS, FTDS> TryDropStrategy for FallbackTryDropStrategyHandler<FDS, FTDS>
-where
-    FDS: FallbackTryDropStrategy,
-    FTDS: FallibleTryDropStrategy,
-{
-    fn handle_error(&self, error: anyhow::Error) {
-        if let Err(error) = self.fallible_try_drop_strategy.dyn_try_handle_error(error) {
-            self.fallback_try_drop_strategy
-                .handle_error_in_strategy(error)
-        }
-    }
-}
 
 pub trait OnUninitFallback: private::Sealed {
     type ExtraData;
