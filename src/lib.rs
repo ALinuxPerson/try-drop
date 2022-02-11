@@ -19,7 +19,7 @@ mod infallible;
 pub use anyhow::Error;
 pub use infallible::Infallible;
 
-#[cfg(feature = "global")]
+#[cfg(any(feature = "global", feature = "thread-local"))]
 mod global_crate_root;
 
 #[cfg(any(feature = "global", feature = "thread-local"))]
