@@ -10,8 +10,6 @@ extern crate shrinkwraprs;
 #[cfg(feature = "std")]
 extern crate std;
 
-pub mod fallback;
-
 pub mod prelude;
 
 pub mod drop_strategies;
