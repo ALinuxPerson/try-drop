@@ -18,6 +18,10 @@ mod imp {
 
     pub type DefaultOnUninit = UseDefaultOnUninitShim<PrimaryHandler>;
 
+    impl ShimPrimaryDropStrategy<DefaultOnUninit> {
+        pub const DEFAULT: Self = Self::USE_DEFAULT_ON_UNINIT;
+    }
+
     impl ShimPrimaryDropStrategy<UseDefaultOnUninitShim<PrimaryHandler>> {
         pub const USE_DEFAULT_ON_UNINIT: Self = Self {
             global: GlobalPrimaryDropStrategy::FLAG_ON_UNINIT,
