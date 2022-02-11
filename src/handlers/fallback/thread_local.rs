@@ -4,7 +4,6 @@ use std::cell::RefCell;
 
 use crate::on_uninit::{ErrorOnUninit, FlagOnUninit, OnUninit, PanicOnUninit, UseDefaultOnUninit};
 use crate::uninit_error::UninitializedError;
-use crate::utils::NotSendNotSync;
 use crate::TryDropStrategy;
 use anyhow::Error;
 use std::marker::PhantomData;
@@ -36,13 +35,13 @@ derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
 )]
 pub struct ThreadLocalFallbackDropStrategy<OU: OnUninit = DefaultOnUninit> {
     extra_data: OU::ExtraData,
-    _marker: PhantomData<(OU, NotSendNotSync)>,
+    _on_uninit: PhantomData<OU>,
 }
 
 impl ThreadLocalFallbackDropStrategy<DefaultOnUninit> {
     pub const DEFAULT: Self = Self {
         extra_data: (),
-        _marker: PhantomData,
+        _on_uninit: PhantomData,
     };
 }
 
@@ -55,7 +54,7 @@ impl ThreadLocalFallbackDropStrategy<ErrorOnUninit> {
     pub const fn on_uninit_error() -> Self {
         Self {
             extra_data: (),
-            _marker: PhantomData,
+            _on_uninit: PhantomData,
         }
     }
 }
@@ -69,7 +68,7 @@ impl ThreadLocalFallbackDropStrategy<PanicOnUninit> {
     pub const fn on_uninit_panic() -> Self {
         Self {
             extra_data: (),
-            _marker: PhantomData,
+            _on_uninit: PhantomData,
         }
     }
 }
@@ -84,7 +83,7 @@ impl ThreadLocalFallbackDropStrategy<UseDefaultOnUninit> {
     pub const fn on_uninit_use_default() -> Self {
         Self {
             extra_data: (),
-            _marker: PhantomData,
+            _on_uninit: PhantomData,
         }
     }
 }
@@ -98,7 +97,7 @@ impl ThreadLocalFallbackDropStrategy<FlagOnUninit> {
     pub const fn on_uninit_flag() -> Self {
         Self {
             extra_data: AtomicBool::new(false),
-            _marker: PhantomData,
+            _on_uninit: PhantomData,
         }
     }
 

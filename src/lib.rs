@@ -45,8 +45,6 @@ pub mod handlers;
 
 pub mod adapters;
 
-mod utils;
-
 use adapters::DropAdapter;
 
 /// A trait for types which can be dropped, but which may fail to do so.
