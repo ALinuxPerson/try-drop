@@ -25,13 +25,13 @@ pub type DefaultOnUninit = UseDefaultOnUninit;
 feature = "derives",
 derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
 )]
-pub struct GlobalPrimaryTryDropStrategy<OU: OnUninit = DefaultOnUninit>(PhantomData<OU>);
+pub struct GlobalPrimaryDropStrategy<OU: OnUninit = DefaultOnUninit>(PhantomData<OU>);
 
-impl GlobalPrimaryTryDropStrategy<DefaultOnUninit> {
+impl GlobalPrimaryDropStrategy<DefaultOnUninit> {
     pub const DEFAULT: Self = Self(PhantomData);
 }
 
-impl GlobalPrimaryTryDropStrategy<ErrorOnUninit> {
+impl GlobalPrimaryDropStrategy<ErrorOnUninit> {
     /// See [`Self::on_uninit_error`].
     pub const ERROR_ON_UNINIT: Self = Self::on_uninit_error();
 
@@ -42,7 +42,7 @@ impl GlobalPrimaryTryDropStrategy<ErrorOnUninit> {
     }
 }
 
-impl GlobalPrimaryTryDropStrategy<PanicOnUninit> {
+impl GlobalPrimaryDropStrategy<PanicOnUninit> {
     /// See [`Self::on_uninit_panic`].
     pub const PANIC_ON_UNINIT: Self = Self::on_uninit_panic();
 
@@ -54,7 +54,7 @@ impl GlobalPrimaryTryDropStrategy<PanicOnUninit> {
 }
 
 #[cfg(feature = "ds-write")]
-impl GlobalPrimaryTryDropStrategy<UseDefaultOnUninit> {
+impl GlobalPrimaryDropStrategy<UseDefaultOnUninit> {
     /// See [`Self::on_uninit_use_default`].
     pub const USE_DEFAULT_ON_UNINIT: Self = Self::on_uninit_use_default();
 
@@ -65,7 +65,7 @@ impl GlobalPrimaryTryDropStrategy<UseDefaultOnUninit> {
     }
 }
 
-impl FallibleTryDropStrategy for GlobalPrimaryTryDropStrategy<ErrorOnUninit> {
+impl FallibleTryDropStrategy for GlobalPrimaryDropStrategy<ErrorOnUninit> {
     type Error = anyhow::Error;
 
     fn try_handle_error(&self, error: Error) -> Result<(), Self::Error> {
@@ -76,7 +76,7 @@ impl FallibleTryDropStrategy for GlobalPrimaryTryDropStrategy<ErrorOnUninit> {
     }
 }
 
-impl FallibleTryDropStrategy for GlobalPrimaryTryDropStrategy<PanicOnUninit> {
+impl FallibleTryDropStrategy for GlobalPrimaryDropStrategy<PanicOnUninit> {
     type Error = anyhow::Error;
 
     fn try_handle_error(&self, error: Error) -> Result<(), Self::Error> {
@@ -84,7 +84,7 @@ impl FallibleTryDropStrategy for GlobalPrimaryTryDropStrategy<PanicOnUninit> {
     }
 }
 
-impl FallibleTryDropStrategy for GlobalPrimaryTryDropStrategy<UseDefaultOnUninit> {
+impl FallibleTryDropStrategy for GlobalPrimaryDropStrategy<UseDefaultOnUninit> {
     type Error = anyhow::Error;
 
     fn try_handle_error(&self, error: Error) -> Result<(), Self::Error> {
