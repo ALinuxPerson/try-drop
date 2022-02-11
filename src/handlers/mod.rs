@@ -5,6 +5,7 @@ mod shim;
 pub(crate) mod fns {
     use std::boxed::Box;
     use crate::{DynFallibleTryDropStrategy, TryDropStrategy};
+    use super::{primary, fallback};
 
     #[cfg(feature = "global")]
     use crate::{GlobalDynFallibleTryDropStrategy, GlobalTryDropStrategy};
