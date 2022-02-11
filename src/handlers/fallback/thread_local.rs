@@ -47,6 +47,9 @@ impl ThreadLocalFallbackDropStrategy<DefaultOnUninit> {
 }
 
 impl ThreadLocalFallbackDropStrategy<ErrorOnUninit> {
+    /// See [`Self::on_uninit_error`].
+    pub const ERROR_ON_UNINIT: Self = Self::on_uninit_error();
+
     /// Create a new interface to the thread local fallback drop strategy. If the thread local drop
     /// strategy is not initialized, this will error.
     pub const fn on_uninit_error() -> Self {
@@ -58,6 +61,9 @@ impl ThreadLocalFallbackDropStrategy<ErrorOnUninit> {
 }
 
 impl ThreadLocalFallbackDropStrategy<PanicOnUninit> {
+    /// See [`Self::on_uninit_panic`].
+    pub const PANIC_ON_UNINIT: Self = Self::on_uninit_panic();
+
     /// Create a new interface to the thread local fallback drop strategy. If the thread local drop
     /// strategy is not initialized, this will panic.
     pub const fn on_uninit_panic() -> Self {
@@ -70,6 +76,9 @@ impl ThreadLocalFallbackDropStrategy<PanicOnUninit> {
 
 #[cfg(feature = "ds-panic")]
 impl ThreadLocalFallbackDropStrategy<UseDefaultOnUninit> {
+    /// See [`Self::on_uninit_use_default`].
+    pub const USE_DEFAULT_ON_UNINIT: Self = Self::on_uninit_use_default();
+
     /// Create a new interface to the thread local fallback drop strategy. If the thread local drop
     /// strategy is not initialized, this will set it to the default drop strategy.
     pub const fn on_uninit_use_default() -> Self {
@@ -81,6 +90,9 @@ impl ThreadLocalFallbackDropStrategy<UseDefaultOnUninit> {
 }
 
 impl ThreadLocalFallbackDropStrategy<FlagOnUninit> {
+    /// See [`Self::on_uninit_flag`].
+    pub const FLAG_ON_UNINIT: Self = Self::on_uninit_flag();
+
     /// Create a new interface to the thread local fallback drop strategy. If the thread local drop
     /// strategy is not initialized, a flag `last_drop_failed` will be set to true.
     pub const fn on_uninit_flag() -> Self {
