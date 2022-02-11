@@ -1,7 +1,14 @@
-use crate::fallback::global::GlobalFallbackDropStrategy;
-pub use crate::global::GlobalFallibleTryDropStrategy;
 use crate::prelude::*;
-use std::boxed::Box;
+pub use crate::handlers::{
+    install_global_handlers_dyn,
+    install_global_handlers,
+    install_thread_local_handlers_dyn,
+    install_thread_local_handlers,
+    uninstall_globally,
+    uninstall_for_thread
+};
+use crate::handlers::fallback::global::GlobalFallbackDropStrategy;
+use crate::handlers::primary::global::GlobalFallibleTryDropStrategy;
 
 impl<TD: ImpureTryDrop> PureTryDrop for TD {
     type Error = TD::Error;
@@ -19,22 +26,4 @@ impl<TD: ImpureTryDrop> PureTryDrop for TD {
     unsafe fn try_drop(&mut self) -> Result<(), Self::Error> {
         TD::try_drop(self)
     }
-}
-
-/// Install a drop strategy and fallback drop strategy globally.
-pub fn install(
-    drop_strategy: impl GlobalDynFallibleTryDropStrategy,
-    fallback_drop_strategy: impl GlobalTryDropStrategy,
-) {
-    install_dyn(Box::new(drop_strategy), Box::new(fallback_drop_strategy))
-}
-
-/// Install a drop strategy and fallback drop strategy globally. They both need to be a dynamic
-/// trait object.
-pub fn install_dyn(
-    drop_strategy: Box<dyn GlobalDynFallibleTryDropStrategy>,
-    fallback_drop_strategy: Box<dyn GlobalTryDropStrategy>,
-) {
-    crate::global::install_dyn(drop_strategy);
-    crate::fallback::global::install_dyn(fallback_drop_strategy);
 }
