@@ -7,20 +7,20 @@ pub use crate::handlers::{
     uninstall_globally,
     uninstall_for_thread
 };
-use crate::handlers::fallback::global::GlobalFallbackDropStrategy;
-use crate::handlers::primary::global::GlobalPrimaryDropStrategy;
+use crate::handlers::PrimaryDropStrategy;
+use crate::handlers::FallbackDropStrategy;
 
 impl<TD: ImpureTryDrop> PureTryDrop for TD {
     type Error = TD::Error;
-    type FallbackTryDropStrategy = GlobalFallbackDropStrategy;
-    type TryDropStrategy = GlobalPrimaryDropStrategy;
+    type FallbackTryDropStrategy = FallbackDropStrategy;
+    type TryDropStrategy = PrimaryDropStrategy;
 
     fn fallback_try_drop_strategy(&self) -> &Self::FallbackTryDropStrategy {
-        &GlobalFallbackDropStrategy::DEFAULT
+        &FallbackDropStrategy::DEFAULT
     }
 
     fn try_drop_strategy(&self) -> &Self::TryDropStrategy {
-        &GlobalPrimaryDropStrategy::DEFAULT
+        &PrimaryDropStrategy::DEFAULT
     }
 
     unsafe fn try_drop(&mut self) -> Result<(), Self::Error> {
