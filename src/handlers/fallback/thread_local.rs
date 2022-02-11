@@ -2,8 +2,7 @@
 use std::boxed::Box;
 use std::cell::RefCell;
 
-use super::{FlagOnUninit, OnUninitFallback};
-use crate::on_uninit::{ErrorOnUninit, PanicOnUninit, UseDefaultOnUninit};
+use crate::on_uninit::{ErrorOnUninit, FlagOnUninit, OnUninit, PanicOnUninit, UseDefaultOnUninit};
 use crate::uninit_error::UninitializedError;
 use crate::utils::NotSendNotSync;
 use crate::TryDropStrategy;
@@ -35,7 +34,7 @@ const UNINITIALIZED_ERROR: &str = "the thread local fallback drop strategy is no
 feature = "derives",
 derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
 )]
-pub struct ThreadLocalFallbackDropStrategy<OU: OnUninitFallback = DefaultOnUninit> {
+pub struct ThreadLocalFallbackDropStrategy<OU: OnUninit = DefaultOnUninit> {
     extra_data: OU::ExtraData,
     _marker: PhantomData<(OU, NotSendNotSync)>,
 }
