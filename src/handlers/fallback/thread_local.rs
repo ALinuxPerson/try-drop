@@ -2,7 +2,7 @@
 use std::boxed::Box;
 use std::cell::RefCell;
 
-use crate::fallback::{FlagOnUninit, OnUninitFallback};
+use super::{FlagOnUninit, OnUninitFallback};
 use crate::on_uninit::{ErrorOnUninit, PanicOnUninit, UseDefaultOnUninit};
 use crate::uninit_error::UninitializedError;
 use crate::utils::NotSendNotSync;
