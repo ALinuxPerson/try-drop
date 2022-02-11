@@ -13,9 +13,6 @@ extern crate std;
 pub mod fallback;
 
 #[cfg(feature = "global")]
-pub mod primary;
-
-#[cfg(feature = "global")]
 pub mod global;
 
 pub mod prelude;
@@ -50,6 +47,9 @@ pub mod on_uninit;
 
 #[cfg(any(feature = "global", feature = "thread-local"))]
 pub mod uninit_error;
+
+#[cfg(any(feature = "global", feature = "thread-local"))]
+pub mod handlers;
 
 pub mod adapters;
 
