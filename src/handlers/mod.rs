@@ -4,6 +4,7 @@ use crate::{DynFallibleTryDropStrategy, GlobalDynFallibleTryDropStrategy, Global
 pub mod primary;
 pub mod fallback;
 mod common;
+mod shim;
 
 pub fn install_global_handlers(
     primary: impl GlobalDynFallibleTryDropStrategy,
