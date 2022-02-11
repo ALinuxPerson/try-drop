@@ -7,21 +7,21 @@ mod private {
     pub trait Sealed {}
 }
 
-pub trait ShimOnUninit: private::Sealed {
+pub trait OnUninitShim: private::Sealed {
     type ExtraData;
 }
 
-impl<T: OnUninit> ShimOnUninit for T {
+impl<T: OnUninit> OnUninitShim for T {
     type ExtraData = T::ExtraData;
 }
 impl<T: OnUninit> private::Sealed for T {}
 
 pub struct UseDefaultOnUninitShim<H: Handler>(PhantomData<H>);
 
-impl ShimOnUninit for UseDefaultOnUninitShim<PrimaryHandler> {
+impl OnUninitShim for UseDefaultOnUninitShim<PrimaryHandler> {
     type ExtraData = WriteDropStrategy<io::Stderr>;
 }
-impl ShimOnUninit for UseDefaultOnUninitShim<FallbackHandler> {
+impl OnUninitShim for UseDefaultOnUninitShim<FallbackHandler> {
     type ExtraData = PanicDropStrategy;
 }
 
