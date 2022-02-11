@@ -110,6 +110,7 @@ impl FallibleTryDropStrategy for GlobalPrimaryDropStrategy<PanicOnUninit> {
     }
 }
 
+#[cfg(feature = "ds-write")]
 impl FallibleTryDropStrategy for GlobalPrimaryDropStrategy<UseDefaultOnUninit> {
     type Error = anyhow::Error;
 

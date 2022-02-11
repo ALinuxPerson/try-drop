@@ -1,4 +1,3 @@
-use crate::drop_strategies::PanicDropStrategy;
 use crate::on_uninit::{FlagOnUninit, OnUninit, PanicOnUninit, UseDefaultOnUninit};
 use crate::uninit_error::UninitializedError;
 use crate::{GlobalTryDropStrategy, TryDropStrategy};
@@ -183,6 +182,8 @@ pub fn write() -> MappedRwLockWriteGuard<'static, Box<dyn GlobalTryDropStrategy>
 #[cfg(feature = "ds-panic")]
 pub fn write_or_default() -> MappedRwLockWriteGuard<'static, Box<dyn GlobalTryDropStrategy>>
 {
+    use crate::drop_strategies::PanicDropStrategy;
+
     RwLockWriteGuard::map(FALLBACK_DROP_STRATEGY.write(), |drop_strategy| {
         drop_strategy.get_or_insert_with(|| Box::new(PanicDropStrategy::DEFAULT))
     })

@@ -25,7 +25,9 @@ mod arc_error {
     impl Error for ArcError {}
 }
 
+#[cfg(feature = "std")]
 pub use arc_error::ArcError;
+
 use core::marker::PhantomData;
 use crate::{DynFallibleTryDropStrategy, FallibleTryDropStrategy, PureTryDrop, RepeatableTryDrop, TryDropStrategy};
 
@@ -40,7 +42,7 @@ derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
 #[cfg_attr(feature = "shrinkwraprs", derive(Shrinkwrap))]
 pub struct InfallibleToFallibleTryDropStrategyAdapter<T: TryDropStrategy, E: Into<anyhow::Error>> {
     /// The inner value.
-    #[shrinkwrap(main_field)]
+    #[cfg_attr(feature = "shrinkwraprs", shrinkwrap(main_field))]
     pub inner: T,
 
     _error: PhantomData<E>,

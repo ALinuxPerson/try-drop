@@ -1,12 +1,5 @@
 use crate::prelude::*;
-pub use crate::handlers::{
-    install_global_handlers_dyn,
-    install_global_handlers,
-    install_thread_local_handlers_dyn,
-    install_thread_local_handlers,
-    uninstall_globally,
-    uninstall_for_thread
-};
+pub use crate::handlers::fns::*;
 use crate::handlers::{DEFAULT_FALLBACK_DROP_STRATEGY, DEFAULT_PRIMARY_DROP_STRATEGY, PrimaryDropStrategy, FallbackDropStrategy};
 
 impl<TD: ImpureTryDrop> PureTryDrop for TD {
