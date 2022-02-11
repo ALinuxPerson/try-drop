@@ -1,4 +1,4 @@
-use crate::on_uninit::{FlagOnUninit, OnUninit, PanicOnUninit, UseDefaultOnUninit};
+use crate::on_uninit::{FlagOnUninit, OnUninit, PanicOnUninit};
 use crate::uninit_error::UninitializedError;
 use crate::{GlobalTryDropStrategy, TryDropStrategy};
 use anyhow::Error;
