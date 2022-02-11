@@ -9,7 +9,7 @@ pub fn install_global_handlers(
     primary: impl GlobalDynFallibleTryDropStrategy,
     fallback: impl GlobalTryDropStrategy,
 ) {
-    install_global_handlers_dyn(primary, fallback)
+    install_global_handlers_dyn(Box::new(primary), Box::new(fallback))
 }
 
 pub fn install_global_handlers_dyn(
@@ -26,10 +26,10 @@ pub fn uninstall_globally() {
 }
 
 pub fn install_thread_local_handlers(
-    primary: impl DynFallibleTryDropStrategy,
-    fallback: impl TryDropStrategy,
+    primary: impl DynFallibleTryDropStrategy + 'static,
+    fallback: impl TryDropStrategy + 'static
 ) {
-    install_thread_local_handlers_dyn(primary, fallback)
+    install_thread_local_handlers_dyn(Box::new(primary), Box::new(fallback))
 }
 
 pub fn install_thread_local_handlers_dyn(
