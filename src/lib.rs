@@ -13,6 +13,9 @@ extern crate std;
 pub mod fallback;
 
 #[cfg(feature = "global")]
+pub mod primary;
+
+#[cfg(feature = "global")]
 pub mod global;
 
 pub mod prelude;
