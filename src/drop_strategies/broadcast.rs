@@ -16,6 +16,7 @@ use tokio::sync::broadcast::error::SendError;
 use tokio::sync::broadcast::error::{RecvError, TryRecvError};
 pub use tokio::sync::broadcast::Receiver as AsyncReceiver;
 use tokio::sync::broadcast::{Receiver, Sender};
+use crate::adapters::ArcError;
 
 /// An async receiver, which is made sync via blocking on a handle to the tokio runtime.
 #[cfg_attr(feature = "derives", derive(Debug))]
@@ -39,26 +40,6 @@ impl<T: Clone> BlockingReceiver<T> {
         self.receiver.try_recv()
     }
 }
-
-/// An atomically reference counted wrapper against [`crate::Error`], implementing
-/// [`std::error::Error`], which can be cloned.
-#[derive(Debug, Clone)]
-pub struct ArcError(pub Arc<crate::Error>);
-
-impl ArcError {
-    /// Create a new [`ArcError`] from a [`crate::Error`].
-    pub fn new(error: crate::Error) -> Self {
-        ArcError(Arc::new(error))
-    }
-}
-
-impl fmt::Display for ArcError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
-impl Error for ArcError {}
 
 /// How to handle errors when sending a message to all receivers.
 pub trait Mode: private::Sealed {}

@@ -1,3 +1,31 @@
+#[cfg(feature = "std")]
+mod arc_error {
+    use std::error::Error;
+    use std::fmt;
+    use std::sync::Arc;
+
+    /// An atomically reference counted wrapper against [`crate::Error`], implementing
+    /// [`std::error::Error`], which can be cloned.
+    #[derive(Debug, Clone)]
+    pub struct ArcError(pub Arc<crate::Error>);
+
+    impl ArcError {
+        /// Create a new [`ArcError`] from a [`crate::Error`].
+        pub fn new(error: crate::Error) -> Self {
+            ArcError(Arc::new(error))
+        }
+    }
+
+    impl fmt::Display for ArcError {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
+    impl Error for ArcError {}
+}
+
+pub use arc_error::ArcError;
 use core::marker::PhantomData;
 use crate::{DynFallibleTryDropStrategy, FallibleTryDropStrategy, PureTryDrop, RepeatableTryDrop, TryDropStrategy};
 
