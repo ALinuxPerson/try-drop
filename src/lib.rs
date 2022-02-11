@@ -45,9 +45,6 @@ pub mod test_utils;
 #[cfg(feature = "thread-local")]
 pub mod thread_local;
 
-#[cfg(all(feature = "global", feature = "thread-local"))]
-pub mod shim;
-
 #[cfg(any(feature = "global", feature = "thread-local"))]
 pub mod on_uninit;
 
