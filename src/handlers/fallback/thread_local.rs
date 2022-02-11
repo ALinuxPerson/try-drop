@@ -121,6 +121,8 @@ impl TryDropStrategy for ThreadLocalFallbackDropStrategy<FlagOnUninit> {
         try_read(|strategy| strategy.handle_error(error))
         {
             self.set_last_drop_failed(true)
+        } else {
+            self.set_last_drop_failed(false)
         }
     }
 }
