@@ -236,8 +236,21 @@ impl<TDS: TryDropStrategy> FallibleTryDropStrategy for TDS {
 
 /// A trait which signifies a try drop strategy which can be used as the primary or fallback
 /// handler.
+#[cfg(feature = "global")]
+#[cfg(not(feature = "downcast-rs"))]
 pub trait GlobalTryDropStrategy: ThreadSafe + TryDropStrategy {}
 
+/// A trait which signifies a try drop strategy which can be used as the primary or fallback
+/// handler. Can be downcast.
+#[cfg(feature = "global")]
+#[cfg(feature = "downcast-rs")]
+pub trait GlobalTryDropStrategy: ThreadSafe + downcast_rs::DowncastSync + TryDropStrategy {}
+
+#[cfg(feature = "global")]
+#[cfg(feature = "downcast-rs")]
+downcast_rs::impl_downcast!(sync GlobalTryDropStrategy);
+
+#[cfg(feature = "global")]
 impl<T: ThreadSafe + TryDropStrategy> GlobalTryDropStrategy for T {}
 
 /// A trait which signifies a thread safe type. Can be used in a `static`.
