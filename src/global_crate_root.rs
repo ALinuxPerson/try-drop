@@ -24,7 +24,7 @@ impl<TD: ImpureTryDrop> PureTryDrop for TD {
 /// Install a drop strategy and fallback drop strategy globally.
 pub fn install(
     drop_strategy: impl GlobalDynFallibleTryDropStrategy,
-    fallback_drop_strategy: impl GlobalFallbackTryDropStrategy,
+    fallback_drop_strategy: impl GlobalTryDropStrategy,
 ) {
     install_dyn(Box::new(drop_strategy), Box::new(fallback_drop_strategy))
 }
@@ -33,7 +33,7 @@ pub fn install(
 /// trait object.
 pub fn install_dyn(
     drop_strategy: Box<dyn GlobalDynFallibleTryDropStrategy>,
-    fallback_drop_strategy: Box<dyn GlobalFallbackTryDropStrategy>,
+    fallback_drop_strategy: Box<dyn GlobalTryDropStrategy>,
 ) {
     crate::global::install_dyn(drop_strategy);
     crate::fallback::global::install_dyn(fallback_drop_strategy);

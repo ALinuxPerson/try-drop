@@ -1,5 +1,5 @@
 use std::marker::PhantomData;
-use crate::{DynFallibleTryDropStrategy, FallbackTryDropStrategy, FallibleTryDropStrategy, PureTryDrop, RepeatableTryDrop, TryDropStrategy};
+use crate::{DynFallibleTryDropStrategy, FallibleTryDropStrategy, PureTryDrop, RepeatableTryDrop, TryDropStrategy};
 
 /// An adapter which makes a type which implements [`TryDropStrategy`], an infallible or try drop
 /// strategy which never fails, fallible.
@@ -231,11 +231,11 @@ feature = "derives",
 derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
 )]
 #[cfg_attr(feature = "shrinkwraprs", derive(Shrinkwrap))]
-pub struct FallbackTryDropStrategyRef<'a, T: FallbackTryDropStrategy>(pub &'a T);
+pub struct FallbackTryDropStrategyRef<'a, T: TryDropStrategy>(pub &'a T);
 
-impl<'a, T: FallbackTryDropStrategy> FallbackTryDropStrategy for FallbackTryDropStrategyRef<'a, T> {
-    fn handle_error_in_strategy(&self, error: anyhow::Error) {
-        self.0.handle_error_in_strategy(error)
+impl<'a, T: TryDropStrategy> TryDropStrategy for FallbackTryDropStrategyRef<'a, T> {
+    fn handle_error(&self, error: anyhow::Error) {
+        self.0.handle_error(error)
     }
 }
 
@@ -250,7 +250,7 @@ derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
 )]
 pub struct FallbackTryDropStrategyHandler<FDS, FTDS>
     where
-        FDS: FallbackTryDropStrategy,
+        FDS: TryDropStrategy,
         FTDS: FallibleTryDropStrategy,
 {
     /// The fallback try drop strategy. This will be called if the first try drop strategy fails and
@@ -263,7 +263,7 @@ pub struct FallbackTryDropStrategyHandler<FDS, FTDS>
 
 impl<FDS, FTDS> FallbackTryDropStrategyHandler<FDS, FTDS>
     where
-        FDS: FallbackTryDropStrategy,
+        FDS: TryDropStrategy,
         FTDS: FallibleTryDropStrategy,
 {
     /// Create a new fallback try drop strategy handler.

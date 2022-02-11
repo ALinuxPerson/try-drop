@@ -24,7 +24,6 @@ pub mod drop_strategies;
 
 mod infallible;
 
-use crate::fallback::FallbackTryDropStrategy;
 pub use anyhow::Error;
 pub use infallible::Infallible;
 
@@ -73,7 +72,7 @@ pub trait PureTryDrop {
     type Error: Into<anyhow::Error>;
 
     /// The type which will be used if the drop strategy fails.
-    type FallbackTryDropStrategy: FallbackTryDropStrategy;
+    type FallbackTryDropStrategy: TryDropStrategy;
 
     /// The type which will be used if dropping fails.
     type TryDropStrategy: FallibleTryDropStrategy;
