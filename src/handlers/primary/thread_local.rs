@@ -32,13 +32,13 @@ pub type DefaultOnUninit = UseDefaultOnUninit;
 feature = "derives",
 derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
 )]
-pub struct ThreadLocalDropStrategy<OU: OnUninit = PanicOnUninit>(PhantomData<(OU, NotSendNotSync)>);
+pub struct ThreadLocalPrimaryTryDropStrategy<OU: OnUninit = PanicOnUninit>(PhantomData<(OU, NotSendNotSync)>);
 
-impl ThreadLocalDropStrategy<DefaultOnUninit> {
+impl ThreadLocalPrimaryTryDropStrategy<DefaultOnUninit> {
     pub const DEFAULT: Self = Self(PhantomData);
 }
 
-impl ThreadLocalDropStrategy<ErrorOnUninit> {
+impl ThreadLocalPrimaryTryDropStrategy<ErrorOnUninit> {
     /// Create a new interface to the thread local drop strategy. If the thread local drop strategy
     /// is not initialized, this will error.
     pub const fn on_uninit_error() -> Self {
@@ -46,7 +46,7 @@ impl ThreadLocalDropStrategy<ErrorOnUninit> {
     }
 }
 
-impl ThreadLocalDropStrategy<PanicOnUninit> {
+impl ThreadLocalPrimaryTryDropStrategy<PanicOnUninit> {
     /// Create a new interface to the thread local drop strategy. If the thread local drop strategy
     /// is not initialized, this will panic.
     pub const fn on_uninit_panic() -> Self {
@@ -55,7 +55,7 @@ impl ThreadLocalDropStrategy<PanicOnUninit> {
 }
 
 #[cfg(feature = "ds-write")]
-impl ThreadLocalDropStrategy<UseDefaultOnUninit> {
+impl ThreadLocalPrimaryTryDropStrategy<UseDefaultOnUninit> {
     /// Create a new interface to the thread local drop strategy. If the thread local drop strategy
     /// is not initialized, this will set it to the default drop strategy.
     pub const fn on_uninit_use_default() -> Self {
@@ -63,7 +63,7 @@ impl ThreadLocalDropStrategy<UseDefaultOnUninit> {
     }
 }
 
-impl FallibleTryDropStrategy for ThreadLocalDropStrategy<ErrorOnUninit> {
+impl FallibleTryDropStrategy for ThreadLocalPrimaryTryDropStrategy<ErrorOnUninit> {
     type Error = anyhow::Error;
 
     fn try_handle_error(&self, error: crate::Error) -> Result<(), Self::Error> {
@@ -73,7 +73,7 @@ impl FallibleTryDropStrategy for ThreadLocalDropStrategy<ErrorOnUninit> {
     }
 }
 
-impl FallibleTryDropStrategy for ThreadLocalDropStrategy<PanicOnUninit> {
+impl FallibleTryDropStrategy for ThreadLocalPrimaryTryDropStrategy<PanicOnUninit> {
     type Error = anyhow::Error;
 
     fn try_handle_error(&self, error: crate::Error) -> Result<(), Self::Error> {
@@ -82,7 +82,7 @@ impl FallibleTryDropStrategy for ThreadLocalDropStrategy<PanicOnUninit> {
 }
 
 #[cfg(feature = "ds-write")]
-impl FallibleTryDropStrategy for ThreadLocalDropStrategy<UseDefaultOnUninit> {
+impl FallibleTryDropStrategy for ThreadLocalPrimaryTryDropStrategy<UseDefaultOnUninit> {
     type Error = anyhow::Error;
 
     fn try_handle_error(&self, error: crate::Error) -> Result<(), Self::Error> {
