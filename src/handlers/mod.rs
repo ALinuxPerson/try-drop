@@ -3,6 +3,12 @@ pub mod fallback;
 mod common;
 mod shim;
 pub(crate) mod fns {
+    use std::boxed::Box;
+    use crate::{DynFallibleTryDropStrategy, TryDropStrategy};
+
+    #[cfg(feature = "global")]
+    use crate::{GlobalDynFallibleTryDropStrategy, GlobalTryDropStrategy};
+
     #[cfg(feature = "global")]
     pub fn install_global_handlers(
         primary: impl GlobalDynFallibleTryDropStrategy,
@@ -51,8 +57,6 @@ pub(crate) mod fns {
 }
 
 pub use fns::*;
-use std::boxed::Box;
-use crate::{DynFallibleTryDropStrategy, GlobalDynFallibleTryDropStrategy, GlobalTryDropStrategy, TryDropStrategy};
 
 #[cfg(all(feature = "global", not(feature = "thread-local")))]
 pub type PrimaryDropStrategy = primary::global::GlobalPrimaryDropStrategy;
