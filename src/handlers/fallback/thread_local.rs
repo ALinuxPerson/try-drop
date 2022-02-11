@@ -20,6 +20,7 @@ pub type DefaultOnUninit = PanicOnUninit;
 #[cfg(feature = "ds-panic")]
 pub type DefaultOnUninit = UseDefaultOnUninit;
 
+pub static DEFAULT_THREAD_LOCAL_FALLBACK_STRATEGY: ThreadLocalFallbackDropStrategy = ThreadLocalFallbackDropStrategy::DEFAULT;
 const UNINITIALIZED_ERROR: &str = "the thread local fallback drop strategy is not initialized yet";
 
 /// The thread local fallback try drop strategy. This doesn't store anything, it just provides an
@@ -30,8 +31,8 @@ const UNINITIALIZED_ERROR: &str = "the thread local fallback drop strategy is no
 /// have the same drop strategies as the thread that created this object; it could potentially be a
 /// logic error. You can just create it on another thread as creating this is zero cost.
 #[cfg_attr(
-feature = "derives",
-derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
+    feature = "derives",
+    derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
 )]
 pub struct ThreadLocalFallbackDropStrategy<OU: OnUninit = DefaultOnUninit> {
     extra_data: OU::ExtraData,

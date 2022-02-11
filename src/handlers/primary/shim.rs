@@ -66,6 +66,8 @@ mod imp {
 pub use imp::DefaultOnUninit;
 use crate::adapters::ArcError;
 
+pub static DEFAULT_SHIM_PRIMARY_DROP_STRATEGY: ShimPrimaryDropStrategy = ShimPrimaryDropStrategy::DEFAULT;
+
 pub struct ShimPrimaryDropStrategy<OU: OnUninitShim = DefaultOnUninit> {
     global: GlobalPrimaryDropStrategy<FlagOnUninit>,
     thread_local: ThreadLocalPrimaryTryDropStrategy<FlagOnUninit>,

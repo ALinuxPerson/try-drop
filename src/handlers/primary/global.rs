@@ -9,6 +9,7 @@ use std::boxed::Box;
 use std::marker::PhantomData;
 use std::sync::atomic::{AtomicBool, Ordering};
 
+pub static DEFAULT_GLOBAL_PRIMARY_DROP_STRATEGY: GlobalPrimaryDropStrategy = GlobalPrimaryDropStrategy::DEFAULT;
 static DROP_STRATEGY: RwLock<Option<Box<dyn GlobalDynFallibleTryDropStrategy>>> =
     parking_lot::const_rwlock(None);
 

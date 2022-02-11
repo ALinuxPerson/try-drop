@@ -21,11 +21,13 @@ pub type DefaultOnUninit = PanicOnUninit;
 #[cfg(feature = "ds-panic")]
 pub type DefaultOnUninit = UseDefaultOnUninit;
 
+pub static DEFAULT_GLOBAL_FALLBACK_STRATEGY: GlobalFallbackDropStrategy = GlobalFallbackDropStrategy::DEFAULT;
+
 /// The global fallback try drop strategy. This doesn't store anything, it just provides an
 /// interface to the global fallback try drop strategy, stored in a `static`.
 #[cfg_attr(
-feature = "derives",
-derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
+    feature = "derives",
+    derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
 )]
 pub struct GlobalFallbackDropStrategy<OU: OnUninit = DefaultOnUninit> {
     extra_data: OU::ExtraData,

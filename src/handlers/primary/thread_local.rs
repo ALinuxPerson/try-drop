@@ -21,6 +21,8 @@ pub type DefaultOnUninit = PanicOnUninit;
 #[cfg(feature = "ds-write")]
 pub type DefaultOnUninit = UseDefaultOnUninit;
 
+pub static DEFAULT_THREAD_LOCAL_PRIMARY_DROP_STRATEGY: ThreadLocalPrimaryTryDropStrategy = ThreadLocalPrimaryTryDropStrategy::DEFAULT;
+
 /// The thread local try drop strategy. This doesn't store anything, it just provides an interface
 /// to the thread local try drop strategy, stored in a `static`.
 ///
@@ -32,7 +34,7 @@ pub type DefaultOnUninit = UseDefaultOnUninit;
 feature = "derives",
 derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
 )]
-pub struct ThreadLocalPrimaryTryDropStrategy<OU: OnUninit = PanicOnUninit> {
+pub struct ThreadLocalPrimaryTryDropStrategy<OU: OnUninit = DefaultOnUninit> {
     extra_data: OU::ExtraData,
     _on_uninit: PhantomData<OU>,
 }
