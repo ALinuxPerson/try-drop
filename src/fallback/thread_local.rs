@@ -6,7 +6,9 @@ use crate::{FallbackTryDropStrategy, TryDropStrategy};
 use crate::utils::NotSendNotSync;
 use std::{fmt, thread_local};
 use std::marker::PhantomData;
+use std::sync::atomic::{AtomicBool, Ordering};
 use anyhow::Error;
+use crate::fallback::{FlagOnUninit, OnUninitFallback};
 use crate::on_uninit::{ErrorOnUninit, OnUninit, PanicOnUninit, UseDefaultOnUninit};
 use crate::uninit_error::UninitializedError;
 
@@ -33,17 +35,20 @@ const UNINITIALIZED_ERROR: &str = "the thread local fallback drop strategy is no
     feature = "derives",
     derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
 )]
-pub struct ThreadLocalFallbackDropStrategy<OU: OnUninit = DefaultOnUninit>(PhantomData<(OU, NotSendNotSync)>);
+pub struct ThreadLocalFallbackDropStrategy<OU: OnUninitFallback = DefaultOnUninit> {
+    extra_data: OU::ExtraData,
+    _marker: PhantomData<(OU, NotSendNotSync)>,
+}
 
 impl ThreadLocalFallbackDropStrategy<DefaultOnUninit> {
-    pub const DEFAULT: Self = Self(PhantomData);
+    pub const DEFAULT: Self = Self { extra_data: (), _marker: PhantomData };
 }
 
 impl ThreadLocalFallbackDropStrategy<ErrorOnUninit> {
     /// Create a new interface to the thread local fallback drop strategy. If the thread local drop
     /// strategy is not initialized, this will error.
     pub const fn on_uninit_error() -> Self {
-        Self(PhantomData)
+        Self { extra_data: (), _marker: PhantomData }
     }
 }
 
@@ -51,7 +56,7 @@ impl ThreadLocalFallbackDropStrategy<PanicOnUninit> {
     /// Create a new interface to the thread local fallback drop strategy. If the thread local drop
     /// strategy is not initialized, this will panic.
     pub const fn on_uninit_panic() -> Self {
-        Self(PhantomData)
+        Self { extra_data: (), _marker: PhantomData }
     }
 }
 
@@ -60,7 +65,25 @@ impl ThreadLocalFallbackDropStrategy<UseDefaultOnUninit> {
     /// Create a new interface to the thread local fallback drop strategy. If the thread local drop
     /// strategy is not initialized, this will set it to the default drop strategy.
     pub const fn on_uninit_use_default() -> Self {
-        Self(PhantomData)
+        Self { extra_data: (), _marker: PhantomData }
+    }
+}
+
+impl ThreadLocalFallbackDropStrategy<FlagOnUninit> {
+    /// Create a new interface to the thread local fallback drop strategy. If the thread local drop
+    /// strategy is not initialized, a flag `last_drop_failed` will be set to true.
+    pub const fn on_uninit_flag() -> Self {
+        Self { extra_data: AtomicBool::new(false), _marker: PhantomData }
+    }
+
+    /// Check if the last drop failed due to the thread local fallback drop strategy not being
+    /// initialized.
+    pub fn last_drop_failed(&self) -> bool {
+        self.extra_data.load(Ordering::Acquire)
+    }
+
+    fn set_last_drop_failed(&self, value: bool) {
+        self.extra_data.store(value, Ordering::Release)
     }
 }
 
@@ -74,6 +97,14 @@ impl TryDropStrategy for ThreadLocalFallbackDropStrategy<PanicOnUninit> {
 impl TryDropStrategy for ThreadLocalFallbackDropStrategy<UseDefaultOnUninit> {
     fn handle_error(&self, error: Error) {
         read_or_default(|strategy| strategy.handle_error_in_strategy(error))
+    }
+}
+
+impl TryDropStrategy for ThreadLocalFallbackDropStrategy<FlagOnUninit> {
+    fn handle_error(&self, error: Error) {
+        if let Err(UninitializedError(())) = try_read(|strategy| strategy.handle_error_in_strategy(error)) {
+            self.set_last_drop_failed(true)
+        }
     }
 }
 

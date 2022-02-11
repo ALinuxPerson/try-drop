@@ -9,8 +9,14 @@ pub mod thread_local;
 #[cfg(all(feature = "global", feature = "thread-local"))]
 pub mod shim;
 
+mod private {
+    pub trait Sealed {}
+}
+
+use std::sync::atomic::AtomicBool;
 use crate::{DynFallibleTryDropStrategy, FallibleTryDropStrategy, TryDropStrategy};
 use anyhow::Error;
+use crate::on_uninit::OnUninit;
 
 /// An error handler for drop strategies. If a struct implements [`TryDropStrategy`], it can also
 /// be used as a [`FallbackTryDropStrategy`]. This **cannot** fail.
@@ -108,3 +114,20 @@ where
         }
     }
 }
+
+pub trait OnUninitFallback: private::Sealed {
+    type ExtraData;
+}
+
+impl<OU: OnUninit> OnUninitFallback for OU {
+    type ExtraData = ();
+}
+
+impl<OU: OnUninit> private::Sealed for OU {}
+
+pub enum FlagOnUninit {}
+
+impl OnUninitFallback for FlagOnUninit {
+    type ExtraData = AtomicBool;
+}
+impl private::Sealed for FlagOnUninit {}
