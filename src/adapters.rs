@@ -111,7 +111,7 @@ impl<T: PureTryDrop> RepeatableTryDropAdapter<T> {
 impl<T: PureTryDrop> RepeatableTryDropAdapter<T> {
     /// Choose whether or not to panic when the [`RepeatableTryDropAdapter`] is dropped twice or
     /// multiple times.
-    pub fn with_panic_on_double_drop(self, panic_on_double_drop: bool) -> Self {
+    pub fn with_panic_on_double_drop(mut self, panic_on_double_drop: bool) -> Self {
         self.panic_on_double_drop = panic_on_double_drop;
         self
     }
