@@ -6,6 +6,24 @@ pub mod fallback;
 mod common;
 mod shim;
 
+#[cfg(all(feature = "global", not(feature = "thread-local")))]
+pub type PrimaryDropStrategy = primary::global::GlobalPrimaryDropStrategy;
+
+#[cfg(all(feature = "thread-local", not(feature = "global")))]
+pub type PrimaryDropStrategy = primary::thread_local::ThreadLocalPrimaryTryDropStrategy;
+
+#[cfg(all(feature = "thread-local", feature = "global"))]
+pub type PrimaryDropStrategy = primary::shim::ShimPrimaryDropStrategy;
+
+#[cfg(all(feature = "global", not(feature = "thread-local")))]
+pub type FallbackDropStrategy = fallback::global::GlobalFallbackDropStrategy;
+
+#[cfg(all(feature = "thread-local", not(feature = "global")))]
+pub type FallbackDropStrategy = fallback::thread_local::ThreadLocalFallbackDropStrategy;
+
+#[cfg(all(feature = "thread-local", feature = "global"))]
+pub type FallbackDropStrategy = fallback::shim::ShimFallbackDropStrategy;
+
 #[cfg(feature = "global")]
 pub fn install_global_handlers(
     primary: impl GlobalDynFallibleTryDropStrategy,
