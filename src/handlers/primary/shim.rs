@@ -1,16 +1,68 @@
-use std::io;
 use std::sync::atomic::{AtomicBool, Ordering};
 use anyhow::Error;
-use once_cell::unsync::Lazy;
 use crate::handlers::primary::global::GlobalPrimaryDropStrategy;
 use crate::handlers::primary::thread_local::ThreadLocalPrimaryTryDropStrategy;
 use crate::on_uninit::{DoNothingOnUninit, ErrorOnUninit, FlagOnUninit, PanicOnUninit};
 use crate::FallibleTryDropStrategy;
 use crate::drop_strategies::broadcast::ArcError;
-use crate::drop_strategies::WriteDropStrategy;
-use crate::handlers::shim::{OnUninitShim, PrimaryHandler, UseDefaultOnUninitShim};
+use crate::handlers::shim::OnUninitShim;
+#[cfg(feature = "ds-write")]
+mod imp {
+    use std::io;
+    use once_cell::unsync::Lazy;
+    use crate::drop_strategies::WriteDropStrategy;
+    use crate::FallibleTryDropStrategy;
+    use crate::handlers::primary::global::GlobalPrimaryDropStrategy;
+    use crate::handlers::primary::shim::ShimPrimaryDropStrategy;
+    use crate::handlers::primary::thread_local::ThreadLocalPrimaryTryDropStrategy;
+    use crate::handlers::shim::{PrimaryHandler, UseDefaultOnUninitShim};
 
-pub struct ShimPrimaryDropStrategy<OU: OnUninitShim> {
+    pub type DefaultOnUninit = UseDefaultOnUninitShim<PrimaryHandler>;
+
+    impl ShimPrimaryDropStrategy<UseDefaultOnUninitShim<PrimaryHandler>> {
+        pub const USE_DEFAULT_ON_UNINIT: Self = Self {
+            global: GlobalPrimaryDropStrategy::FLAG_ON_UNINIT,
+            thread_local: ThreadLocalPrimaryTryDropStrategy::FLAG_ON_UNINIT,
+            extra_data: Lazy::new(|| {
+                let mut strategy = WriteDropStrategy::stderr();
+                strategy.prelude("error: ");
+                strategy
+            }),
+        };
+
+        pub const fn use_default_on_uninit() -> Self {
+            Self::USE_DEFAULT_ON_UNINIT
+        }
+
+        fn cache(&self) -> &WriteDropStrategy<io::Stderr> {
+            &self.extra_data
+        }
+    }
+
+    impl FallibleTryDropStrategy for ShimPrimaryDropStrategy<UseDefaultOnUninitShim<PrimaryHandler>> {
+        type Error = anyhow::Error;
+
+        fn try_handle_error(&self, error: crate::Error) -> Result<(), Self::Error> {
+            self.on_all_uninit(error, |_, error| self.cache().try_handle_error(error.into()).map_err(Into::into))
+        }
+    }
+}
+
+#[cfg(not(feature = "ds-write"))]
+mod imp {
+    use crate::handlers::primary::shim::ShimPrimaryDropStrategy;
+    use crate::on_uninit::PanicOnUninit;
+
+    pub type DefaultOnUninit = PanicOnUninit;
+
+    impl ShimPrimaryDropStrategy<DefaultOnUninit> {
+        pub const DEFAULT: Self = Self::PANIC_ON_UNINIT;
+    }
+}
+
+pub use imp::DefaultOnUninit;
+
+pub struct ShimPrimaryDropStrategy<OU: OnUninitShim = DefaultOnUninit> {
     global: GlobalPrimaryDropStrategy<FlagOnUninit>,
     thread_local: ThreadLocalPrimaryTryDropStrategy<FlagOnUninit>,
     extra_data: OU::ExtraData,
@@ -72,26 +124,6 @@ impl ShimPrimaryDropStrategy<FlagOnUninit> {
     }
 }
 
-impl ShimPrimaryDropStrategy<UseDefaultOnUninitShim<PrimaryHandler>> {
-    pub const USE_DEFAULT_ON_UNINIT: Self = Self {
-        global: GlobalPrimaryDropStrategy::FLAG_ON_UNINIT,
-        thread_local: ThreadLocalPrimaryTryDropStrategy::FLAG_ON_UNINIT,
-        extra_data: Lazy::new(|| {
-            let mut strategy = WriteDropStrategy::stderr();
-            strategy.prelude("error: ");
-            strategy
-        }),
-    };
-
-    pub const fn use_default_on_uninit() -> Self {
-        Self::USE_DEFAULT_ON_UNINIT
-    }
-
-    fn cache(&self) -> &WriteDropStrategy<io::Stderr> {
-        &self.extra_data
-    }
-}
-
 impl<OU: OnUninitShim> ShimPrimaryDropStrategy<OU> {
     fn on_all_uninit(&self, error: anyhow::Error, f: impl FnOnce(anyhow::Error, ArcError) -> anyhow::Result<()>) -> anyhow::Result<()> {
         let error = ArcError::new(error);
@@ -148,13 +180,5 @@ impl FallibleTryDropStrategy for ShimPrimaryDropStrategy<FlagOnUninit> {
         self.set_last_drop_failed(last_drop_failed);
 
         result
-    }
-}
-
-impl FallibleTryDropStrategy for ShimPrimaryDropStrategy<UseDefaultOnUninitShim<PrimaryHandler>> {
-    type Error = anyhow::Error;
-
-    fn try_handle_error(&self, error: Error) -> Result<(), Self::Error> {
-        self.on_all_uninit(error, |_, error| self.cache().try_handle_error(error.into()).map_err(Into::into))
     }
 }
