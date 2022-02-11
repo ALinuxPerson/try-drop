@@ -1,4 +1,4 @@
-use crate::on_uninit::{ErrorOnUninit, OnUninit, PanicOnUninit, UseDefaultOnUninit};
+use crate::on_uninit::{ErrorOnUninit, FlagOnUninit, OnUninit, PanicOnUninit, UseDefaultOnUninit};
 use crate::uninit_error::UninitializedError;
 use crate::{FallibleTryDropStrategy, GlobalDynFallibleTryDropStrategy};
 use anyhow::Error;
@@ -7,6 +7,7 @@ use parking_lot::{
 };
 use std::boxed::Box;
 use std::marker::PhantomData;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 static DROP_STRATEGY: RwLock<Option<Box<dyn GlobalDynFallibleTryDropStrategy>>> =
     parking_lot::const_rwlock(None);
@@ -25,10 +26,13 @@ pub type DefaultOnUninit = UseDefaultOnUninit;
 feature = "derives",
 derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
 )]
-pub struct GlobalPrimaryDropStrategy<OU: OnUninit = DefaultOnUninit>(PhantomData<OU>);
+pub struct GlobalPrimaryDropStrategy<OU: OnUninit = DefaultOnUninit> {
+    extra_data: OU::ExtraData,
+    _on_uninit: PhantomData<OU>,
+}
 
 impl GlobalPrimaryDropStrategy<DefaultOnUninit> {
-    pub const DEFAULT: Self = Self(PhantomData);
+    pub const DEFAULT: Self = Self { extra_data: (), _on_uninit: PhantomData };
 }
 
 impl GlobalPrimaryDropStrategy<ErrorOnUninit> {
@@ -38,7 +42,7 @@ impl GlobalPrimaryDropStrategy<ErrorOnUninit> {
     /// Get an interface to the global try drop strategy. If there is no global try drop strategy
     /// initialized, this will error.
     pub const fn on_uninit_error() -> Self {
-        Self(PhantomData)
+        Self { extra_data: (), _on_uninit: PhantomData }
     }
 }
 
@@ -49,7 +53,7 @@ impl GlobalPrimaryDropStrategy<PanicOnUninit> {
     /// Get an interface to the global try drop strategy. If there is no global try drop strategy
     /// initialized, this will panic.
     pub const fn on_uninit_panic() -> Self {
-        Self(PhantomData)
+        Self { extra_data: (), _on_uninit: PhantomData }
     }
 }
 
@@ -61,7 +65,28 @@ impl GlobalPrimaryDropStrategy<UseDefaultOnUninit> {
     /// Get an interface to the global try drop strategy. If there is no global try drop strategy
     /// initialized, this will set it to the default.
     pub const fn on_uninit_use_default() -> Self {
-        Self(PhantomData)
+        Self { extra_data: (), _on_uninit: PhantomData }
+    }
+}
+
+impl GlobalPrimaryDropStrategy<FlagOnUninit> {
+    /// See [`Self::on_uninit_flag`].
+    pub const FLAG_ON_UNINIT: Self = Self::on_uninit_flag();
+
+    /// Get an interface to the global try drop strategy. If there is no global try drop strategy
+    /// initialized, this will set an internal flag stating that the drop failed.
+    pub const fn on_uninit_flag() -> Self {
+        Self { extra_data: AtomicBool::new(false), _on_uninit: PhantomData }
+    }
+
+    /// Check if acquiring a reference to the global drop strategy failed due to it not being
+    /// initialized.
+    pub fn last_drop_failed(&self) -> bool {
+        self.extra_data.load(Ordering::Acquire)
+    }
+
+    fn set_last_drop_failed(&self, value: bool) {
+        self.extra_data.store(value, Ordering::Release)
     }
 }
 
@@ -89,6 +114,20 @@ impl FallibleTryDropStrategy for GlobalPrimaryDropStrategy<UseDefaultOnUninit> {
 
     fn try_handle_error(&self, error: Error) -> Result<(), Self::Error> {
         read_or_default().dyn_try_handle_error(error)
+    }
+}
+
+impl FallibleTryDropStrategy for GlobalPrimaryDropStrategy<FlagOnUninit> {
+    type Error = anyhow::Error;
+
+    fn try_handle_error(&self, error: crate::Error) -> Result<(), Self::Error> {
+        let (last_drop_failed, ret) = match try_read().map(|s| s.dyn_try_handle_error(error)) {
+            Ok(Ok(())) => (false, Ok(())),
+            Ok(Err(error)) => (false, Err(error)),
+            Err(error) => (true, Err(error.into())),
+        };
+        self.set_last_drop_failed(last_drop_failed);
+        ret
     }
 }
 
