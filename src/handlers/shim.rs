@@ -1,5 +1,6 @@
 use std::io;
 use std::marker::PhantomData;
+use once_cell::unsync::Lazy;
 use crate::drop_strategies::{PanicDropStrategy, WriteDropStrategy};
 use crate::on_uninit::OnUninit;
 
@@ -19,10 +20,10 @@ impl<T: OnUninit> private::Sealed for T {}
 pub struct UseDefaultOnUninitShim<H: Handler>(PhantomData<H>);
 
 impl OnUninitShim for UseDefaultOnUninitShim<PrimaryHandler> {
-    type ExtraData = WriteDropStrategy<io::Stderr>;
+    type ExtraData = Lazy<WriteDropStrategy<io::Stderr>>;
 }
 impl OnUninitShim for UseDefaultOnUninitShim<FallbackHandler> {
-    type ExtraData = PanicDropStrategy;
+    type ExtraData = Lazy<PanicDropStrategy>;
 }
 
 impl<H: Handler> private::Sealed for UseDefaultOnUninitShim<H> {}
