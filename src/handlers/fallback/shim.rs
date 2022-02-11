@@ -2,7 +2,6 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use anyhow::Error;
 use crate::on_uninit::{DoNothingOnUninit, FlagOnUninit, PanicOnUninit};
 use crate::TryDropStrategy;
-use crate::drop_strategies::broadcast::ArcError;
 use crate::handlers::fallback::global::GlobalFallbackDropStrategy;
 use crate::handlers::fallback::thread_local::ThreadLocalFallbackDropStrategy;
 use crate::handlers::shim::OnUninitShim;
@@ -57,6 +56,7 @@ mod imp {
 }
 
 pub use imp::DefaultOnUninit;
+use crate::adapters::ArcError;
 
 pub struct ShimFallbackDropStrategy<OU: OnUninitShim = DefaultOnUninit> {
     global: GlobalFallbackDropStrategy<FlagOnUninit>,

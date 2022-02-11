@@ -4,7 +4,6 @@ use crate::handlers::primary::global::GlobalPrimaryDropStrategy;
 use crate::handlers::primary::thread_local::ThreadLocalPrimaryTryDropStrategy;
 use crate::on_uninit::{DoNothingOnUninit, ErrorOnUninit, FlagOnUninit, PanicOnUninit};
 use crate::FallibleTryDropStrategy;
-use crate::drop_strategies::broadcast::ArcError;
 use crate::handlers::shim::OnUninitShim;
 #[cfg(feature = "ds-write")]
 mod imp {
@@ -61,6 +60,7 @@ mod imp {
 }
 
 pub use imp::DefaultOnUninit;
+use crate::adapters::ArcError;
 
 pub struct ShimPrimaryDropStrategy<OU: OnUninitShim = DefaultOnUninit> {
     global: GlobalPrimaryDropStrategy<FlagOnUninit>,
