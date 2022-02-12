@@ -9,7 +9,7 @@ use crate::on_uninit::{ErrorOnUninit, FlagOnUninit, OnUninit, PanicOnUninit};
 use crate::uninit_error::UninitializedError;
 use crate::{DynFallibleTryDropStrategy, FallibleTryDropStrategy, LOAD_ORDERING, STORE_ORDERING};
 use std::marker::PhantomData;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::AtomicBool;
 use std::thread_local;
 
 #[cfg(feature = "ds-write")]
@@ -21,21 +21,21 @@ thread_local! {
 
 const UNINITIALIZED_ERROR: &str = "the thread local drop strategy is not initialized yet";
 
+/// The default thing to do when the primary thread local drop strategy is uninitialized, that is
+/// to panic.
 #[cfg(not(feature = "ds-write"))]
 pub type DefaultOnUninit = PanicOnUninit;
 
+/// The default thing to do when the primary thread local drop strategy is uninitialized, that is
+/// to use the default strategy. Note that this mutates the thread local drop strategy.
 #[cfg(feature = "ds-write")]
 pub type DefaultOnUninit = UseDefaultOnUninit;
 
+/// The default thread local primary drop strategy.
 pub static DEFAULT_THREAD_LOCAL_PRIMARY_DROP_STRATEGY: ThreadLocalPrimaryTryDropStrategy = ThreadLocalPrimaryTryDropStrategy::DEFAULT;
 
 /// The thread local try drop strategy. This doesn't store anything, it just provides an interface
 /// to the thread local try drop strategy, stored in a `static`.
-///
-/// # Note
-/// This does **NOT** implement Send nor Sync because it not guaranteed that another thread will
-/// have the same drop strategies as the thread that created this object; it could potentially be a
-/// logic error. You can just create it on another thread as creating this is zero cost.
 #[cfg_attr(
 feature = "derives",
 derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
@@ -46,6 +46,7 @@ pub struct ThreadLocalPrimaryTryDropStrategy<OU: OnUninit = DefaultOnUninit> {
 }
 
 impl ThreadLocalPrimaryTryDropStrategy<DefaultOnUninit> {
+    /// The default thread local primary drop strategy.
     pub const DEFAULT: Self = Self { extra_data: (), _on_uninit: PhantomData };
 }
 
