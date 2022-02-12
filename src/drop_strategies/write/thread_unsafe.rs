@@ -8,7 +8,10 @@ use std::vec::Vec;
 
 /// A drop strategy which writes the message of an error to a writer. While more efficient than
 /// it's thread safe counterpart, it's less flexible.
-#[cfg_attr(feature = "derives", derive(Debug))]
+#[cfg_attr(
+    feature = "derives",
+    derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)
+)]
 pub struct ThreadUnsafeWriteDropStrategy<W: Write> {
     /// The writer to write to.
     pub writer: RefCell<W>,
