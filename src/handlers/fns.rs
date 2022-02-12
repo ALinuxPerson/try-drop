@@ -1,6 +1,6 @@
-use std::boxed::Box;
-use crate::{DynFallibleTryDropStrategy, TryDropStrategy};
 use super::{fallback, primary};
+use crate::{DynFallibleTryDropStrategy, TryDropStrategy};
+use std::boxed::Box;
 
 #[cfg(feature = "global")]
 use crate::{GlobalDynFallibleTryDropStrategy, GlobalTryDropStrategy};
@@ -35,7 +35,7 @@ pub fn uninstall_globally() {
 #[cfg(feature = "thread-local")]
 pub fn install_thread_local_handlers(
     primary: impl DynFallibleTryDropStrategy + 'static,
-    fallback: impl TryDropStrategy + 'static
+    fallback: impl TryDropStrategy + 'static,
 ) {
     install_thread_local_handlers_dyn(Box::new(primary), Box::new(fallback))
 }
@@ -56,7 +56,10 @@ pub fn install_thread_local_handlers_dyn(
 pub fn install_thread_local_handlers_for_this_scope(
     primary: impl DynFallibleTryDropStrategy + 'static,
     fallback: impl TryDropStrategy + 'static,
-) -> (primary::thread_local::ScopeGuard, fallback::thread_local::ScopeGuard) {
+) -> (
+    primary::thread_local::ScopeGuard,
+    fallback::thread_local::ScopeGuard,
+) {
     install_thread_local_handlers_for_this_scope_dyn(Box::new(primary), Box::new(fallback))
 }
 
@@ -66,7 +69,10 @@ pub fn install_thread_local_handlers_for_this_scope(
 pub fn install_thread_local_handlers_for_this_scope_dyn(
     primary: Box<dyn DynFallibleTryDropStrategy>,
     fallback: Box<dyn TryDropStrategy>,
-) -> (primary::thread_local::ScopeGuard, fallback::thread_local::ScopeGuard) {
+) -> (
+    primary::thread_local::ScopeGuard,
+    fallback::thread_local::ScopeGuard,
+) {
     (
         primary::thread_local::scope_dyn(primary),
         fallback::thread_local::scope_dyn(fallback),

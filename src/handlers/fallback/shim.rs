@@ -1,22 +1,22 @@
 //! Manage the shim fallback handler.
 
 #![allow(clippy::declare_interior_mutable_const)]
-use std::sync::atomic::{AtomicBool};
-use anyhow::Error;
-use crate::handlers::on_uninit::{DoNothingOnUninit, FlagOnUninit, PanicOnUninit};
-use crate::{LOAD_ORDERING, STORE_ORDERING, TryDropStrategy};
 use crate::handlers::fallback::global::GlobalFallbackDropStrategy;
 use crate::handlers::fallback::thread_local::ThreadLocalFallbackDropStrategy;
+use crate::handlers::on_uninit::{DoNothingOnUninit, FlagOnUninit, PanicOnUninit};
 use crate::handlers::shim::OnUninitShim;
+use crate::{TryDropStrategy, LOAD_ORDERING, STORE_ORDERING};
+use anyhow::Error;
+use std::sync::atomic::AtomicBool;
 #[cfg(feature = "ds-panic")]
 mod imp {
-    use once_cell::sync::Lazy;
     use crate::drop_strategies::PanicDropStrategy;
     use crate::handlers::fallback::global::GlobalFallbackDropStrategy;
     use crate::handlers::fallback::shim::ShimFallbackDropStrategy;
     use crate::handlers::fallback::thread_local::ThreadLocalFallbackDropStrategy;
     use crate::handlers::shim::{FallbackHandler, UseDefaultOnUninitShim};
     use crate::TryDropStrategy;
+    use once_cell::sync::Lazy;
 
     /// The default thing to do when both the primary and fallback strategies are uninitialized,
     /// that is to use the inner cache to handle the error instead.
@@ -67,16 +67,14 @@ mod imp {
     }
 }
 
-pub use imp::DefaultOnUninit;
 use crate::adapters::ArcError;
+pub use imp::DefaultOnUninit;
 
 /// The default shim fallback drop strategy.
-pub static DEFAULT_SHIM_FALLBACK_DROP_STRATEGY: ShimFallbackDropStrategy = ShimFallbackDropStrategy::DEFAULT;
+pub static DEFAULT_SHIM_FALLBACK_DROP_STRATEGY: ShimFallbackDropStrategy =
+    ShimFallbackDropStrategy::DEFAULT;
 
-#[cfg_attr(
-    feature = "derives",
-    derive(Debug)
-)]
+#[cfg_attr(feature = "derives", derive(Debug))]
 /// A shim which abstracts the global and thread local handlers together, with the thread local
 /// handlers taking precedence over the global handlers.
 pub struct ShimFallbackDropStrategy<OU: OnUninitShim = DefaultOnUninit> {
@@ -141,7 +139,8 @@ impl ShimFallbackDropStrategy<FlagOnUninit> {
 impl<OU: OnUninitShim> ShimFallbackDropStrategy<OU> {
     fn on_all_uninit(&self, error: anyhow::Error, f: impl FnOnce(ArcError)) {
         let error = ArcError::new(error);
-        self.thread_local.handle_error(ArcError::clone(&error).into());
+        self.thread_local
+            .handle_error(ArcError::clone(&error).into());
 
         if self.thread_local.last_drop_failed() {
             self.global.handle_error(ArcError::clone(&error).into());

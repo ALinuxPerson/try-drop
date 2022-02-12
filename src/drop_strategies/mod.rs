@@ -54,8 +54,9 @@ pub use adhoc::{
 #[cfg(feature = "ds-adhoc-mut")]
 pub use adhoc::{
     AdHocMutFallibleTryDropStrategy, AdHocMutTryDropStrategy, IntoAdHocMutFallibleTryDropStrategy,
-    IntoAdHocMutTryDropStrategy, ThreadUnsafeAdHocMutFallibleDropStrategy, ThreadUnsafeAdHocMutDropStrategy,
-    IntoThreadUnsafeAdHocMutDropStrategy, IntoThreadUnsafeAdHocMutFallibleDropStrategy,
+    IntoAdHocMutTryDropStrategy, IntoThreadUnsafeAdHocMutDropStrategy,
+    IntoThreadUnsafeAdHocMutFallibleDropStrategy, ThreadUnsafeAdHocMutDropStrategy,
+    ThreadUnsafeAdHocMutFallibleDropStrategy,
 };
 
 #[cfg(feature = "ds-once-cell")]

@@ -7,16 +7,15 @@ mod private {
 
 use crate::{FallibleTryDropStrategy, TryDropStrategy};
 
-
 use std::marker::PhantomData;
 
+use crate::adapters::ArcError;
 pub use tokio::runtime::Handle;
 use tokio::sync::broadcast;
 use tokio::sync::broadcast::error::SendError;
 use tokio::sync::broadcast::error::{RecvError, TryRecvError};
 pub use tokio::sync::broadcast::Receiver as AsyncReceiver;
 use tokio::sync::broadcast::{Receiver, Sender};
-use crate::adapters::ArcError;
 
 /// An async receiver, which is made sync via blocking on a handle to the tokio runtime.
 #[cfg_attr(feature = "derives", derive(Debug))]

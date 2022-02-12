@@ -1,6 +1,6 @@
+use try_drop::adapters::DropAdapter;
 use try_drop::drop_strategies::NoOpDropStrategy;
 use try_drop::test_utils::{ErrorsOnDrop, Fallible};
-use try_drop::adapters::DropAdapter;
 
 fn main() {
     let errors = DropAdapter(ErrorsOnDrop::<Fallible, _>::given(

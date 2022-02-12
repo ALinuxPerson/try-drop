@@ -1,6 +1,6 @@
-use std::cell::RefCell;
-use anyhow::Error;
 use crate::{FallibleTryDropStrategy, TryDropStrategy};
+use anyhow::Error;
+use std::cell::RefCell;
 
 /// A drop strategy which uses a function to handle errors. This is less flexible than its thread
 /// safe counterpart however there is less overhead.
@@ -54,9 +54,9 @@ where
 }
 
 impl<F, E> FallibleTryDropStrategy for ThreadUnsafeAdHocMutFallibleDropStrategy<F, E>
-    where
-        F: FnMut(crate::Error) -> Result<(), E>,
-        E: Into<crate::Error>
+where
+    F: FnMut(crate::Error) -> Result<(), E>,
+    E: Into<crate::Error>,
 {
     type Error = E;
 
@@ -66,7 +66,9 @@ impl<F, E> FallibleTryDropStrategy for ThreadUnsafeAdHocMutFallibleDropStrategy<
 }
 
 /// Turn this type into a [`ThreadUnsafeAdHocMutFallibleDropStrategy`].
-pub trait IntoThreadUnsafeAdHocMutFallibleDropStrategy: FnMut(crate::Error) -> Result<(), Self::Error> + Sized {
+pub trait IntoThreadUnsafeAdHocMutFallibleDropStrategy:
+    FnMut(crate::Error) -> Result<(), Self::Error> + Sized
+{
     /// The error type which will be used.
     type Error: Into<crate::Error>;
 

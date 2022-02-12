@@ -17,8 +17,8 @@ pub mod drop_strategies;
 
 mod infallible;
 
-use core::sync::atomic::Ordering;
 pub use anyhow::Error;
+use core::sync::atomic::Ordering;
 pub use infallible::Infallible;
 
 #[cfg(any(feature = "global", feature = "thread-local"))]
@@ -169,8 +169,6 @@ pub trait FallibleTryDropStrategy {
     /// Try and handle a drop error.
     fn try_handle_error(&self, error: anyhow::Error) -> Result<(), Self::Error>;
 }
-
-
 
 /// A trait which signifies a try drop strategy which can fail. Can be dynamically dispatched.
 pub trait DynFallibleTryDropStrategy {

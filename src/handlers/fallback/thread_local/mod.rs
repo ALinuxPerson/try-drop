@@ -1,15 +1,15 @@
 //! Manage the thread local fallback drop strategy.
 mod scope_guard;
 
+use crate::handlers::on_uninit::{ErrorOnUninit, FlagOnUninit, OnUninit, PanicOnUninit};
+use crate::handlers::uninit_error::UninitializedError;
+use crate::{TryDropStrategy, LOAD_ORDERING, STORE_ORDERING};
+use anyhow::Error;
 pub use scope_guard::ScopeGuard;
 use std::boxed::Box;
 use std::cell::RefCell;
-use crate::handlers::on_uninit::{ErrorOnUninit, FlagOnUninit, OnUninit, PanicOnUninit};
-use crate::handlers::uninit_error::UninitializedError;
-use crate::{LOAD_ORDERING, STORE_ORDERING, TryDropStrategy};
-use anyhow::Error;
 use std::marker::PhantomData;
-use std::sync::atomic::{AtomicBool};
+use std::sync::atomic::AtomicBool;
 use std::thread_local;
 
 #[cfg(feature = "ds-panic")]
@@ -28,7 +28,8 @@ pub type DefaultOnUninit = PanicOnUninit;
 pub type DefaultOnUninit = UseDefaultOnUninit;
 
 /// The default thread local fallback strategy.
-pub static DEFAULT_THREAD_LOCAL_FALLBACK_STRATEGY: ThreadLocalFallbackDropStrategy = ThreadLocalFallbackDropStrategy::DEFAULT;
+pub static DEFAULT_THREAD_LOCAL_FALLBACK_STRATEGY: ThreadLocalFallbackDropStrategy =
+    ThreadLocalFallbackDropStrategy::DEFAULT;
 
 const UNINITIALIZED_ERROR: &str = "the thread local fallback drop strategy is not initialized yet";
 
@@ -134,9 +135,7 @@ impl TryDropStrategy for ThreadLocalFallbackDropStrategy<UseDefaultOnUninit> {
 
 impl TryDropStrategy for ThreadLocalFallbackDropStrategy<FlagOnUninit> {
     fn handle_error(&self, error: Error) {
-        if let Err(UninitializedError(())) =
-        try_read(|strategy| strategy.handle_error(error))
-        {
+        if let Err(UninitializedError(())) = try_read(|strategy| strategy.handle_error(error)) {
             self.set_last_drop_failed(true)
         } else {
             self.set_last_drop_failed(false)
@@ -175,9 +174,7 @@ pub fn read_or_default<T>(f: impl FnOnce(&dyn TryDropStrategy) -> T) -> T {
 
 /// Get a reference to the thread local try drop strategy. This will return an error if the
 /// thread local drop strategy has no value in it.
-pub fn try_read<T>(
-    f: impl FnOnce(&dyn TryDropStrategy) -> T,
-) -> Result<T, UninitializedError> {
+pub fn try_read<T>(f: impl FnOnce(&dyn TryDropStrategy) -> T) -> Result<T, UninitializedError> {
     DROP_STRATEGY.with(|cell| {
         cell.borrow()
             .as_deref()
@@ -218,7 +215,6 @@ pub fn install_dyn(strategy: Box<dyn TryDropStrategy>) {
     })
 }
 
-
 /// Uninstall this fallback drop strategy from the current thread.
 pub fn uninstall() {
     take();
@@ -256,4 +252,3 @@ pub fn scope(strategy: impl TryDropStrategy + 'static) -> ScopeGuard {
 pub fn scope_dyn(strategy: Box<dyn TryDropStrategy>) -> ScopeGuard {
     ScopeGuard::new_dyn(strategy)
 }
-

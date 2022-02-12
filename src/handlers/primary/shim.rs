@@ -1,22 +1,22 @@
 //! Manage the primary shim handler.
 
-use std::sync::atomic::{AtomicBool};
-use anyhow::Error;
+use crate::handlers::on_uninit::{DoNothingOnUninit, ErrorOnUninit, FlagOnUninit, PanicOnUninit};
 use crate::handlers::primary::global::GlobalPrimaryDropStrategy;
 use crate::handlers::primary::thread_local::ThreadLocalPrimaryTryDropStrategy;
-use crate::handlers::on_uninit::{DoNothingOnUninit, ErrorOnUninit, FlagOnUninit, PanicOnUninit};
-use crate::{FallibleTryDropStrategy, LOAD_ORDERING, STORE_ORDERING};
 use crate::handlers::shim::OnUninitShim;
+use crate::{FallibleTryDropStrategy, LOAD_ORDERING, STORE_ORDERING};
+use anyhow::Error;
+use std::sync::atomic::AtomicBool;
 #[cfg(feature = "ds-write")]
 mod imp {
-    use std::io;
-    use once_cell::sync::Lazy;
     use crate::drop_strategies::WriteDropStrategy;
-    use crate::FallibleTryDropStrategy;
     use crate::handlers::primary::global::GlobalPrimaryDropStrategy;
     use crate::handlers::primary::shim::ShimPrimaryDropStrategy;
     use crate::handlers::primary::thread_local::ThreadLocalPrimaryTryDropStrategy;
     use crate::handlers::shim::{PrimaryHandler, UseDefaultOnUninitShim};
+    use crate::FallibleTryDropStrategy;
+    use once_cell::sync::Lazy;
+    use std::io;
 
     /// The default thing to do when both the global and thread-local drop strategies are
     /// uninitialized, that is to use the internal cache.
@@ -56,15 +56,19 @@ mod imp {
         type Error = anyhow::Error;
 
         fn try_handle_error(&self, error: crate::Error) -> Result<(), Self::Error> {
-            self.on_all_uninit(error, |_, error| self.cache().try_handle_error(error.into()).map_err(Into::into))
+            self.on_all_uninit(error, |_, error| {
+                self.cache()
+                    .try_handle_error(error.into())
+                    .map_err(Into::into)
+            })
         }
     }
 }
 
 #[cfg(not(feature = "ds-write"))]
 mod imp {
-    use crate::handlers::primary::shim::ShimPrimaryDropStrategy;
     use crate::handlers::on_uninit::PanicOnUninit;
+    use crate::handlers::primary::shim::ShimPrimaryDropStrategy;
 
     /// The default thing to do when both the global and thread-local drop strategies are
     /// uninitialized, that is to panic.
@@ -75,18 +79,16 @@ mod imp {
     }
 }
 
-pub use imp::DefaultOnUninit;
 use crate::adapters::ArcError;
+pub use imp::DefaultOnUninit;
 
 /// The default shim primary drop strategy.
-pub static DEFAULT_SHIM_PRIMARY_DROP_STRATEGY: ShimPrimaryDropStrategy = ShimPrimaryDropStrategy::DEFAULT;
+pub static DEFAULT_SHIM_PRIMARY_DROP_STRATEGY: ShimPrimaryDropStrategy =
+    ShimPrimaryDropStrategy::DEFAULT;
 
 /// A primary drop strategy which merges the global and thread-local drop strategies together, with
 /// the thread-local drop strategy taking precedence.
-#[cfg_attr(
-    feature = "derives",
-    derive(Debug)
-)]
+#[cfg_attr(feature = "derives", derive(Debug))]
 pub struct ShimPrimaryDropStrategy<OU: OnUninitShim = DefaultOnUninit> {
     global: GlobalPrimaryDropStrategy<FlagOnUninit>,
     thread_local: ThreadLocalPrimaryTryDropStrategy<FlagOnUninit>,
@@ -167,15 +169,24 @@ impl ShimPrimaryDropStrategy<FlagOnUninit> {
 }
 
 impl<OU: OnUninitShim> ShimPrimaryDropStrategy<OU> {
-    fn on_all_uninit(&self, error: anyhow::Error, f: impl FnOnce(anyhow::Error, ArcError) -> anyhow::Result<()>) -> anyhow::Result<()> {
+    fn on_all_uninit(
+        &self,
+        error: anyhow::Error,
+        f: impl FnOnce(anyhow::Error, ArcError) -> anyhow::Result<()>,
+    ) -> anyhow::Result<()> {
         let error = ArcError::new(error);
 
-        match self.thread_local.try_handle_error(ArcError::clone(&error).into()) {
+        match self
+            .thread_local
+            .try_handle_error(ArcError::clone(&error).into())
+        {
             Ok(()) => Ok(()),
-            Err(_) if self.thread_local.last_drop_failed() => match self.global.try_handle_error(ArcError::clone(&error).into()) {
-                Ok(()) => Ok(()),
-                Err(uninit_error) if self.global.last_drop_failed() => f(uninit_error, error),
-                Err(error) => Err(error),
+            Err(_) if self.thread_local.last_drop_failed() => {
+                match self.global.try_handle_error(ArcError::clone(&error).into()) {
+                    Ok(()) => Ok(()),
+                    Err(uninit_error) if self.global.last_drop_failed() => f(uninit_error, error),
+                    Err(error) => Err(error),
+                }
             }
             Err(error) => Err(error),
         }

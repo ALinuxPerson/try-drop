@@ -3,8 +3,8 @@ use std::rc::Rc;
 use std::thread;
 use try_drop::drop_strategies::{AdHocFallibleTryDropStrategy, AdHocTryDropStrategy};
 
-use try_drop::PureTryDrop;
 use try_drop::test_utils::{ErrorsOnDrop, Fallible};
+use try_drop::PureTryDrop;
 
 fn main() {
     println!("install thread local handlers from main thread");
@@ -35,5 +35,7 @@ fn main() {
     thread::spawn(|| {
         println!("start new thread with no thread handlers, should just write the error");
         let _errors = ErrorsOnDrop::<Fallible, _>::not_given().adapt();
-    }).join().unwrap();
+    })
+    .join()
+    .unwrap();
 }

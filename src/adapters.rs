@@ -30,16 +30,19 @@ mod arc_error {
 #[cfg(feature = "std")]
 pub use arc_error::ArcError;
 
+use crate::{
+    DynFallibleTryDropStrategy, FallibleTryDropStrategy, PureTryDrop, RepeatableTryDrop,
+    TryDropStrategy,
+};
 use core::marker::PhantomData;
-use crate::{DynFallibleTryDropStrategy, FallibleTryDropStrategy, PureTryDrop, RepeatableTryDrop, TryDropStrategy};
 
 /// An adapter which makes a type which implements [`TryDropStrategy`], an infallible or try drop
 /// strategy which never fails, fallible.
 ///
 /// Note that it's *still* infallible, it's just that it will return an [`Ok`].
 #[cfg_attr(
-feature = "derives",
-derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
+    feature = "derives",
+    derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
 )]
 #[cfg_attr(feature = "shrinkwraprs", derive(Shrinkwrap))]
 pub struct InfallibleToFallibleTryDropStrategyAdapter<T: TryDropStrategy, E: Into<anyhow::Error>> {
@@ -67,7 +70,7 @@ impl<T: TryDropStrategy, E: Into<anyhow::Error>> InfallibleToFallibleTryDropStra
 }
 
 impl<T: TryDropStrategy, E: Into<anyhow::Error>> FallibleTryDropStrategy
-for InfallibleToFallibleTryDropStrategyAdapter<T, E>
+    for InfallibleToFallibleTryDropStrategyAdapter<T, E>
 {
     type Error = E;
 
@@ -76,7 +79,6 @@ for InfallibleToFallibleTryDropStrategyAdapter<T, E>
         Ok(())
     }
 }
-
 
 /// This type is an adapter for types which implement [`TryDrop`] which allow their
 /// [`TryDrop::try_drop`] functions to be repeated multiple times.
@@ -265,8 +267,8 @@ impl<'a, T: FallibleTryDropStrategy> FallibleTryDropStrategy for FallibleTryDrop
 /// A reference to a type which implements [`FallbackTryDropStrategy`]. Used as a workaround for
 /// implementing [`FallbackTryDropStrategy`] on references.
 #[cfg_attr(
-feature = "derives",
-derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
+    feature = "derives",
+    derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
 )]
 #[cfg_attr(feature = "shrinkwraprs", derive(Shrinkwrap))]
 pub struct FallbackTryDropStrategyRef<'a, T: TryDropStrategy>(pub &'a T);
@@ -283,13 +285,13 @@ impl<'a, T: TryDropStrategy> TryDropStrategy for FallbackTryDropStrategyRef<'a, 
 /// This type implements [`TryDropStrategy`] because, as said before, any and all errors in the
 /// fallible try drop strategy will be redirected to the fallback, which can never fail.
 #[cfg_attr(
-feature = "derives",
-derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
+    feature = "derives",
+    derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
 )]
 pub struct FallbackTryDropStrategyHandler<FDS, FTDS>
-    where
-        FDS: TryDropStrategy,
-        FTDS: FallibleTryDropStrategy,
+where
+    FDS: TryDropStrategy,
+    FTDS: FallibleTryDropStrategy,
 {
     /// The fallback try drop strategy. This will be called if the first try drop strategy fails and
     /// is a last resort to recovering sanely.
@@ -300,9 +302,9 @@ pub struct FallbackTryDropStrategyHandler<FDS, FTDS>
 }
 
 impl<FDS, FTDS> FallbackTryDropStrategyHandler<FDS, FTDS>
-    where
-        FDS: TryDropStrategy,
-        FTDS: FallibleTryDropStrategy,
+where
+    FDS: TryDropStrategy,
+    FTDS: FallibleTryDropStrategy,
 {
     /// Create a new fallback try drop strategy handler.
     pub fn new(fallback_try_drop_strategy: FDS, fallible_try_drop_strategy: FTDS) -> Self {
@@ -314,14 +316,13 @@ impl<FDS, FTDS> FallbackTryDropStrategyHandler<FDS, FTDS>
 }
 
 impl<FDS, FTDS> TryDropStrategy for FallbackTryDropStrategyHandler<FDS, FTDS>
-    where
-        FDS: TryDropStrategy,
-        FTDS: FallibleTryDropStrategy,
+where
+    FDS: TryDropStrategy,
+    FTDS: FallibleTryDropStrategy,
 {
     fn handle_error(&self, error: anyhow::Error) {
         if let Err(error) = self.fallible_try_drop_strategy.dyn_try_handle_error(error) {
-            self.fallback_try_drop_strategy
-                .handle_error(error)
+            self.fallback_try_drop_strategy.handle_error(error)
         }
     }
 }

@@ -1,10 +1,10 @@
 mod thread_unsafe;
 
-pub use thread_unsafe::*;
 use crate::{FallibleTryDropStrategy, TryDropStrategy};
 use anyhow::Error;
 use parking_lot::Mutex;
 use std::marker::PhantomData;
+pub use thread_unsafe::*;
 
 /// A quick and dirty try drop strategy which uses a function.
 ///

@@ -91,7 +91,10 @@ impl TryDropStrategy for UnreachableDropStrategy<Safe> {
 impl TryDropStrategy for UnreachableDropStrategy<Unsafe> {
     fn handle_error(&self, error: crate::Error) {
         #[cfg(debug_assertions)]
-        unreachable!("panicking due to `debug_assertions` (debug profile), this error should not happen: {}", error);
+        unreachable!(
+            "panicking due to `debug_assertions` (debug profile), this error should not happen: {}",
+            error
+        );
 
         #[cfg(not(debug_assertions))]
         unsafe {

@@ -1,6 +1,9 @@
-use crate::prelude::*;
 pub use crate::handlers::fns::*;
-use crate::handlers::{DEFAULT_FALLBACK_DROP_STRATEGY, DEFAULT_PRIMARY_DROP_STRATEGY, PrimaryDropStrategy, FallbackDropStrategy};
+use crate::handlers::{
+    FallbackDropStrategy, PrimaryDropStrategy, DEFAULT_FALLBACK_DROP_STRATEGY,
+    DEFAULT_PRIMARY_DROP_STRATEGY,
+};
+use crate::prelude::*;
 
 impl<TD: ImpureTryDrop> PureTryDrop for TD {
     type Error = TD::Error;

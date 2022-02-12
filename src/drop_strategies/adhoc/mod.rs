@@ -6,7 +6,6 @@ pub use fn_mut::*;
 
 use crate::{FallibleTryDropStrategy, TryDropStrategy};
 
-
 /// A quick and dirty try drop strategy which uses a function.
 #[cfg_attr(
     feature = "derives",

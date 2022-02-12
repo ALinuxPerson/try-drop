@@ -1,11 +1,11 @@
 use std::cell::RefCell;
 use std::rc::Rc;
-use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 use std::thread;
 use try_drop::drop_strategies::{AdHocFallibleTryDropStrategy, AdHocTryDropStrategy};
-use try_drop::PureTryDrop;
 use try_drop::test_utils::{ErrorsOnDrop, Fallible};
+use try_drop::PureTryDrop;
 
 fn main() {
     println!("install thread local handlers from main thread");
@@ -63,5 +63,7 @@ fn main() {
         global_fail.store(true, Ordering::Release);
         let thing = ErrorsOnDrop::<Fallible, _>::not_given().adapt();
         drop(thing);
-    }).join().unwrap();
+    })
+    .join()
+    .unwrap();
 }

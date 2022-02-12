@@ -2,14 +2,14 @@
 
 use crate::handlers::on_uninit::{FlagOnUninit, OnUninit, PanicOnUninit};
 use crate::handlers::uninit_error::UninitializedError;
-use crate::{GlobalTryDropStrategy, LOAD_ORDERING, STORE_ORDERING, TryDropStrategy};
+use crate::{GlobalTryDropStrategy, TryDropStrategy, LOAD_ORDERING, STORE_ORDERING};
 use anyhow::Error;
 use parking_lot::{
     MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLock, RwLockReadGuard, RwLockWriteGuard,
 };
 use std::boxed::Box;
 use std::marker::PhantomData;
-use std::sync::atomic::{AtomicBool};
+use std::sync::atomic::AtomicBool;
 
 #[cfg(feature = "ds-panic")]
 use crate::handlers::on_uninit::UseDefaultOnUninit;
@@ -28,7 +28,8 @@ pub type DefaultOnUninit = PanicOnUninit;
 pub type DefaultOnUninit = UseDefaultOnUninit;
 
 /// The default global fallback drop strategy.
-pub static DEFAULT_GLOBAL_FALLBACK_STRATEGY: GlobalFallbackDropStrategy = GlobalFallbackDropStrategy::DEFAULT;
+pub static DEFAULT_GLOBAL_FALLBACK_STRATEGY: GlobalFallbackDropStrategy =
+    GlobalFallbackDropStrategy::DEFAULT;
 
 /// The global fallback try drop strategy. This doesn't store anything, it just provides an
 /// interface to the global fallback try drop strategy, stored in a `static`.
@@ -43,7 +44,10 @@ pub struct GlobalFallbackDropStrategy<OU: OnUninit = DefaultOnUninit> {
 
 impl GlobalFallbackDropStrategy<DefaultOnUninit> {
     /// The default global fallback drop strategy.
-    pub const DEFAULT: Self = Self { extra_data: (), _on_uninit: PhantomData };
+    pub const DEFAULT: Self = Self {
+        extra_data: (),
+        _on_uninit: PhantomData,
+    };
 }
 
 impl GlobalFallbackDropStrategy<PanicOnUninit> {
@@ -134,10 +138,8 @@ pub fn install(strategy: impl GlobalTryDropStrategy) {
 
 /// Get a reference to the try drop strategy. If there is no global fallback try drop strategy
 /// initialized, this will return an error.
-pub fn try_read() -> Result<
-    MappedRwLockReadGuard<'static, Box<dyn GlobalTryDropStrategy>>,
-    UninitializedError,
-> {
+pub fn try_read(
+) -> Result<MappedRwLockReadGuard<'static, Box<dyn GlobalTryDropStrategy>>, UninitializedError> {
     let drop_strategy = FALLBACK_DROP_STRATEGY.read();
 
     if drop_strategy.is_some() {
@@ -165,10 +167,8 @@ pub fn read_or_default() -> MappedRwLockReadGuard<'static, Box<dyn GlobalTryDrop
 
 /// Get a mutable reference to the try drop strategy. If there is no global fallback try drop
 /// strategy initialized, this will return an error.
-pub fn try_write() -> Result<
-    MappedRwLockWriteGuard<'static, Box<dyn GlobalTryDropStrategy>>,
-    UninitializedError,
-> {
+pub fn try_write(
+) -> Result<MappedRwLockWriteGuard<'static, Box<dyn GlobalTryDropStrategy>>, UninitializedError> {
     let drop_strategy = FALLBACK_DROP_STRATEGY.write();
 
     if drop_strategy.is_some() {
@@ -189,8 +189,7 @@ pub fn write() -> MappedRwLockWriteGuard<'static, Box<dyn GlobalTryDropStrategy>
 /// Get a mutable reference to the try drop strategy. If there is no global fallback try drop
 /// strategy initialized, this will set it to the default then return it.
 #[cfg(feature = "ds-panic")]
-pub fn write_or_default() -> MappedRwLockWriteGuard<'static, Box<dyn GlobalTryDropStrategy>>
-{
+pub fn write_or_default() -> MappedRwLockWriteGuard<'static, Box<dyn GlobalTryDropStrategy>> {
     use crate::drop_strategies::PanicDropStrategy;
 
     RwLockWriteGuard::map(FALLBACK_DROP_STRATEGY.write(), |drop_strategy| {

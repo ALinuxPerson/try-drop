@@ -1,8 +1,8 @@
+use super::*;
+use crate::handlers::common::NestedScopeError;
+use crate::DynFallibleTryDropStrategy;
 use std::boxed::Box;
 use std::fmt;
-use crate::DynFallibleTryDropStrategy;
-use crate::handlers::common::NestedScopeError;
-use super::*;
 
 thread_local! {
     static LOCKED: RefCell<bool> = RefCell::new(false);
@@ -34,7 +34,9 @@ impl ScopeGuard {
     ///
     /// # Errors
     /// This returns an error if the scope guard was nested.
-    pub fn try_new(strategy: impl DynFallibleTryDropStrategy + 'static) -> Result<Self, NestedScopeError> {
+    pub fn try_new(
+        strategy: impl DynFallibleTryDropStrategy + 'static,
+    ) -> Result<Self, NestedScopeError> {
         Self::try_new_dyn(Box::new(strategy))
     }
 
@@ -42,12 +44,16 @@ impl ScopeGuard {
     ///
     /// # Errors
     /// This returns an error if the scope guard was nested.
-    pub fn try_new_dyn(strategy: Box<dyn DynFallibleTryDropStrategy>) -> Result<Self, NestedScopeError> {
+    pub fn try_new_dyn(
+        strategy: Box<dyn DynFallibleTryDropStrategy>,
+    ) -> Result<Self, NestedScopeError> {
         if LOCKED.with(|cell| *cell.borrow()) {
             Err(NestedScopeError(()))
         } else {
             LOCKED.with(|cell| *cell.borrow_mut() = true);
-            Ok(Self { last_strategy: replace_dyn(strategy) })
+            Ok(Self {
+                last_strategy: replace_dyn(strategy),
+            })
         }
     }
 }

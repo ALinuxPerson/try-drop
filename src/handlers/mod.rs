@@ -1,9 +1,9 @@
 //! Manage the primary and fallback handlers and their scopes.
 
+mod common;
+pub mod fallback;
 pub(crate) mod fns;
 pub mod primary;
-pub mod fallback;
-mod common;
 mod shim;
 
 #[cfg(any(feature = "global", feature = "thread-local"))]
@@ -52,4 +52,3 @@ pub use fallback::shim::ShimFallbackDropStrategy as FallbackDropStrategy;
 
 #[cfg(all(feature = "thread-local", feature = "global"))]
 pub use fallback::shim::DEFAULT_SHIM_FALLBACK_DROP_STRATEGY as DEFAULT_FALLBACK_DROP_STRATEGY;
-

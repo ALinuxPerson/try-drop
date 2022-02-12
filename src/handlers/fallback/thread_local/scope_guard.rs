@@ -1,8 +1,8 @@
+use super::*;
+use crate::handlers::common::NestedScopeError;
+use crate::TryDropStrategy;
 use std::boxed::Box;
 use std::fmt;
-use crate::TryDropStrategy;
-use crate::handlers::common::NestedScopeError;
-use super::*;
 
 thread_local! {
     static LOCKED: RefCell<bool> = RefCell::new(false);
@@ -47,7 +47,9 @@ impl ScopeGuard {
             Err(NestedScopeError(()))
         } else {
             LOCKED.with(|cell| *cell.borrow_mut() = true);
-            Ok(Self { last_strategy: replace_dyn(strategy) })
+            Ok(Self {
+                last_strategy: replace_dyn(strategy),
+            })
         }
     }
 }

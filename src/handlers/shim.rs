@@ -5,10 +5,10 @@ mod private {
 }
 #[cfg(any(feature = "ds-write", feature = "ds-panic"))]
 mod use_default {
-    use std::marker::PhantomData;
-    use once_cell::sync::Lazy;
-    use crate::handlers::shim::OnUninitShim;
     use super::private;
+    use crate::handlers::shim::OnUninitShim;
+    use once_cell::sync::Lazy;
+    use std::marker::PhantomData;
 
     #[cfg_attr(
         feature = "derives",
@@ -45,7 +45,6 @@ mod use_default {
     pub enum PrimaryHandler {}
     impl Handler for PrimaryHandler {}
     impl private::Sealed for PrimaryHandler {}
-
 }
 
 #[cfg(any(feature = "ds-write", feature = "ds-panic"))]

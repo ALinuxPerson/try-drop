@@ -32,13 +32,14 @@ pub type DefaultOnUninit = PanicOnUninit;
 pub type DefaultOnUninit = UseDefaultOnUninit;
 
 /// The default thread local primary drop strategy.
-pub static DEFAULT_THREAD_LOCAL_PRIMARY_DROP_STRATEGY: ThreadLocalPrimaryTryDropStrategy = ThreadLocalPrimaryTryDropStrategy::DEFAULT;
+pub static DEFAULT_THREAD_LOCAL_PRIMARY_DROP_STRATEGY: ThreadLocalPrimaryTryDropStrategy =
+    ThreadLocalPrimaryTryDropStrategy::DEFAULT;
 
 /// The thread local try drop strategy. This doesn't store anything, it just provides an interface
 /// to the thread local try drop strategy, stored in a `static`.
 #[cfg_attr(
-feature = "derives",
-derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
+    feature = "derives",
+    derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
 )]
 pub struct ThreadLocalPrimaryTryDropStrategy<OU: OnUninit = DefaultOnUninit> {
     extra_data: OU::ExtraData,
@@ -47,7 +48,10 @@ pub struct ThreadLocalPrimaryTryDropStrategy<OU: OnUninit = DefaultOnUninit> {
 
 impl ThreadLocalPrimaryTryDropStrategy<DefaultOnUninit> {
     /// The default thread local primary drop strategy.
-    pub const DEFAULT: Self = Self { extra_data: (), _on_uninit: PhantomData };
+    pub const DEFAULT: Self = Self {
+        extra_data: (),
+        _on_uninit: PhantomData,
+    };
 }
 
 impl Default for ThreadLocalPrimaryTryDropStrategy<DefaultOnUninit> {
@@ -63,7 +67,10 @@ impl ThreadLocalPrimaryTryDropStrategy<ErrorOnUninit> {
     /// Create a new interface to the thread local drop strategy. If the thread local drop strategy
     /// is not initialized, this will error.
     pub const fn on_uninit_error() -> Self {
-        Self { extra_data: (), _on_uninit: PhantomData }
+        Self {
+            extra_data: (),
+            _on_uninit: PhantomData,
+        }
     }
 }
 
@@ -74,7 +81,10 @@ impl ThreadLocalPrimaryTryDropStrategy<PanicOnUninit> {
     /// Create a new interface to the thread local drop strategy. If the thread local drop strategy
     /// is not initialized, this will panic.
     pub const fn on_uninit_panic() -> Self {
-        Self { extra_data: (), _on_uninit: PhantomData }
+        Self {
+            extra_data: (),
+            _on_uninit: PhantomData,
+        }
     }
 }
 
@@ -86,7 +96,10 @@ impl ThreadLocalPrimaryTryDropStrategy<UseDefaultOnUninit> {
     /// Create a new interface to the thread local drop strategy. If the thread local drop strategy
     /// is not initialized, this will set it to the default drop strategy.
     pub const fn on_uninit_use_default() -> Self {
-        Self { extra_data: (), _on_uninit: PhantomData }
+        Self {
+            extra_data: (),
+            _on_uninit: PhantomData,
+        }
     }
 }
 
@@ -97,7 +110,10 @@ impl ThreadLocalPrimaryTryDropStrategy<FlagOnUninit> {
     /// Create a new interface to the thread local drop strategy. If the thread local drop strategy
     /// is not initialized, this will set an internal flag stating that the drop failed.
     pub const fn on_uninit_flag() -> Self {
-        Self { extra_data: AtomicBool::new(false), _on_uninit: PhantomData }
+        Self {
+            extra_data: AtomicBool::new(false),
+            _on_uninit: PhantomData,
+        }
     }
 
     /// Check if the last drop failed due to the primary thread local drop strategy not being
@@ -240,13 +256,17 @@ pub fn take() -> Option<Box<dyn DynFallibleTryDropStrategy>> {
 
 /// Replace the current primary drop strategy with another, returning the previous drop strategy if
 /// any.
-pub fn replace(new: impl DynFallibleTryDropStrategy + 'static) -> Option<Box<dyn DynFallibleTryDropStrategy>> {
+pub fn replace(
+    new: impl DynFallibleTryDropStrategy + 'static,
+) -> Option<Box<dyn DynFallibleTryDropStrategy>> {
     replace_dyn(Box::new(new))
 }
 
 /// Replace the current primary drop strategy with another, returning the previous drop strategy if
 /// any. Must be a dynamic trait object.
-pub fn replace_dyn(new: Box<dyn DynFallibleTryDropStrategy>) -> Option<Box<dyn DynFallibleTryDropStrategy>> {
+pub fn replace_dyn(
+    new: Box<dyn DynFallibleTryDropStrategy>,
+) -> Option<Box<dyn DynFallibleTryDropStrategy>> {
     DROP_STRATEGY.with(|previous| previous.borrow_mut().replace(new))
 }
 
