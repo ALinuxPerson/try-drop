@@ -1,3 +1,5 @@
+//! Manage the primary shim handler.
+
 use std::sync::atomic::{AtomicBool, Ordering};
 use anyhow::Error;
 use crate::handlers::primary::global::GlobalPrimaryDropStrategy;
