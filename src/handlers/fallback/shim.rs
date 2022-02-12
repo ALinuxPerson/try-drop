@@ -60,6 +60,10 @@ use crate::adapters::ArcError;
 
 pub static DEFAULT_SHIM_FALLBACK_DROP_STRATEGY: ShimFallbackDropStrategy = ShimFallbackDropStrategy::DEFAULT;
 
+#[cfg_attr(
+    feature = "derives",
+    derive(Debug)
+)]
 pub struct ShimFallbackDropStrategy<OU: OnUninitShim = DefaultOnUninit> {
     global: GlobalFallbackDropStrategy<FlagOnUninit>,
     thread_local: ThreadLocalFallbackDropStrategy<FlagOnUninit>,
@@ -148,3 +152,8 @@ impl TryDropStrategy for ShimFallbackDropStrategy<FlagOnUninit> {
     }
 }
 
+impl Default for ShimFallbackDropStrategy<DefaultOnUninit> {
+    fn default() -> Self {
+        Self::DEFAULT
+    }
+}
