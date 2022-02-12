@@ -1,3 +1,5 @@
+//! Manage the primary handler.
+
 #[cfg(feature = "global")]
 pub mod global;
 
