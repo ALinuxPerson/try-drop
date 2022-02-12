@@ -14,12 +14,20 @@ use std::sync::Arc;
 pub use thread_unsafe::*;
 
 /// Ignore the occupied error value and continue.
+#[cfg_attr(
+    feature = "derives",
+    derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
+)]
 pub enum Ignore {}
 
 impl Mode for Ignore {}
 impl private::Sealed for Ignore {}
 
 /// Return an error with the underlying error value if the cell is occupied.
+#[cfg_attr(
+    feature = "derives",
+    derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
+)]
 pub enum Error {}
 
 impl Mode for Error {}
