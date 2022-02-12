@@ -10,6 +10,10 @@ mod use_default {
     use crate::handlers::shim::OnUninitShim;
     use super::private;
 
+    #[cfg_attr(
+        feature = "derives",
+        derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
+    )]
     pub struct UseDefaultOnUninitShim<H: Handler>(PhantomData<H>);
 
     #[cfg(feature = "ds-write")]
@@ -26,10 +30,18 @@ mod use_default {
 
     pub trait Handler: private::Sealed {}
 
+    #[cfg_attr(
+        feature = "derives",
+        derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
+    )]
     pub enum FallbackHandler {}
     impl Handler for FallbackHandler {}
     impl private::Sealed for FallbackHandler {}
 
+    #[cfg_attr(
+        feature = "derives",
+        derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
+    )]
     pub enum PrimaryHandler {}
     impl Handler for PrimaryHandler {}
     impl private::Sealed for PrimaryHandler {}
