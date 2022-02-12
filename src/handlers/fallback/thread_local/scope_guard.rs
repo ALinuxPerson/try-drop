@@ -8,7 +8,7 @@ thread_local! {
     static LOCKED: RefCell<bool> = RefCell::new(false);
 }
 
-/// This installs a thread local fallback drop strategy for the current scope.
+/// This installs a thread local fallback handler for the current scope.
 pub struct ScopeGuard {
     last_strategy: Option<Box<dyn TryDropStrategy>>,
 }
