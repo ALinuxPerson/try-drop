@@ -7,20 +7,24 @@ use parking_lot::{
 };
 use std::boxed::Box;
 use std::marker::PhantomData;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::AtomicBool;
 
 #[cfg(feature = "ds-write")]
 use crate::on_uninit::UseDefaultOnUninit;
 
+/// The default global primary drop strategy.
 pub static DEFAULT_GLOBAL_PRIMARY_DROP_STRATEGY: GlobalPrimaryDropStrategy = GlobalPrimaryDropStrategy::DEFAULT;
 static DROP_STRATEGY: RwLock<Option<Box<dyn GlobalDynFallibleTryDropStrategy>>> =
     parking_lot::const_rwlock(None);
 
 const UNINITIALIZED_ERROR: &str = "the global drop strategy is not initialized yet";
 
+/// The default thing to do when the primary global drop strategy is uninitialized, that is to panic.
 #[cfg(not(feature = "ds-write"))]
 pub type DefaultOnUninit = PanicOnUninit;
 
+/// The default thing to do when the primary global drop strategy is uninitialized, that is to use
+/// the default. Note that this mutates the global drop strategy.
 #[cfg(feature = "ds-write")]
 pub type DefaultOnUninit = UseDefaultOnUninit;
 
@@ -36,6 +40,7 @@ pub struct GlobalPrimaryDropStrategy<OU: OnUninit = DefaultOnUninit> {
 }
 
 impl GlobalPrimaryDropStrategy<DefaultOnUninit> {
+    /// The default global primary drop strategy.
     pub const DEFAULT: Self = Self { extra_data: (), _on_uninit: PhantomData };
 }
 
