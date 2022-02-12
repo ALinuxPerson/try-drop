@@ -68,6 +68,10 @@ use crate::adapters::ArcError;
 
 pub static DEFAULT_SHIM_PRIMARY_DROP_STRATEGY: ShimPrimaryDropStrategy = ShimPrimaryDropStrategy::DEFAULT;
 
+#[cfg_attr(
+    feature = "derives",
+    derive(Debug)
+)]
 pub struct ShimPrimaryDropStrategy<OU: OnUninitShim = DefaultOnUninit> {
     global: GlobalPrimaryDropStrategy<FlagOnUninit>,
     thread_local: ThreadLocalPrimaryTryDropStrategy<FlagOnUninit>,
