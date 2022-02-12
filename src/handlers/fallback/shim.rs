@@ -117,7 +117,10 @@ impl<OU: OnUninitShim> ShimFallbackDropStrategy<OU> {
 
         if self.thread_local.last_drop_failed() {
             self.global.handle_error(ArcError::clone(&error).into());
-            f(error)
+
+            if self.global.last_drop_failed() {
+                f(error)
+            }
         }
     }
 }
