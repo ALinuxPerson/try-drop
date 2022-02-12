@@ -1,3 +1,5 @@
+//! Manage the fallback handler.
+
 #[cfg(feature = "global")]
 pub mod global;
 
