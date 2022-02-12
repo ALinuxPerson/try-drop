@@ -14,6 +14,10 @@ use core::marker::PhantomData;
 pub trait Safety: private::Sealed {}
 
 /// Just panic when an error occurs.
+#[cfg_attr(
+    feature = "derives",
+    derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
+)]
 pub enum Safe {}
 impl Safety for Safe {}
 impl private::Sealed for Safe {}
@@ -23,6 +27,10 @@ impl private::Sealed for Safe {}
 ///
 /// Note that when `debug_assertions` or the debug profile is used, this will just panic instead.
 #[cfg(feature = "ds-unreachable-unsafe")]
+#[cfg_attr(
+    feature = "derives",
+    derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
+)]
 pub enum Unsafe {}
 
 #[cfg(feature = "ds-unreachable-unsafe")]
