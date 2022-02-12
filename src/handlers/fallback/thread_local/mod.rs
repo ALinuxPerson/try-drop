@@ -9,7 +9,7 @@ use crate::handlers::uninit_error::UninitializedError;
 use crate::{LOAD_ORDERING, STORE_ORDERING, TryDropStrategy};
 use anyhow::Error;
 use std::marker::PhantomData;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool};
 use std::thread_local;
 
 #[cfg(feature = "ds-panic")]

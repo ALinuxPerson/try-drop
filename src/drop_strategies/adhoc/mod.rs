@@ -5,7 +5,7 @@ mod fn_mut;
 pub use fn_mut::*;
 
 use crate::{FallibleTryDropStrategy, TryDropStrategy};
-use core::marker::PhantomData;
+
 
 /// A quick and dirty try drop strategy which uses a function.
 #[cfg_attr(

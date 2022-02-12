@@ -1,7 +1,7 @@
 //! Manage the shim fallback handler.
 
 #![allow(clippy::declare_interior_mutable_const)]
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool};
 use anyhow::Error;
 use crate::handlers::on_uninit::{DoNothingOnUninit, FlagOnUninit, PanicOnUninit};
 use crate::{LOAD_ORDERING, STORE_ORDERING, TryDropStrategy};

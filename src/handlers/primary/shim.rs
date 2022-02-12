@@ -1,6 +1,6 @@
 //! Manage the primary shim handler.
 
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool};
 use anyhow::Error;
 use crate::handlers::primary::global::GlobalPrimaryDropStrategy;
 use crate::handlers::primary::thread_local::ThreadLocalPrimaryTryDropStrategy;
