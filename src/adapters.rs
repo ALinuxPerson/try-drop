@@ -210,7 +210,7 @@ impl<TD: PureTryDrop> Drop for DropAdapter<TD> {
         let result = unsafe { self.0.try_drop() };
         if let Err(error) = result {
             let handler = FallbackTryDropStrategyHandler::new(
-                FallbackTryDropStrategyRef(self.0.fallback_try_drop_strategy()),
+                TryDropStrategyRef(self.0.fallback_try_drop_strategy()),
                 FallibleTryDropStrategyRef(self.0.try_drop_strategy()),
             );
 
@@ -264,16 +264,16 @@ impl<'a, T: FallibleTryDropStrategy> FallibleTryDropStrategy for FallibleTryDrop
     }
 }
 
-/// A reference to a type which implements [`FallbackTryDropStrategy`]. Used as a workaround for
-/// implementing [`FallbackTryDropStrategy`] on references.
+/// A reference to a type which implements [`TryDropStrategy`]. Used as a workaround for
+/// implementing [`TryDropStrategy`] on references.
 #[cfg_attr(
     feature = "derives",
     derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
 )]
 #[cfg_attr(feature = "shrinkwraprs", derive(Shrinkwrap))]
-pub struct FallbackTryDropStrategyRef<'a, T: TryDropStrategy>(pub &'a T);
+pub struct TryDropStrategyRef<'a, T: TryDropStrategy>(pub &'a T);
 
-impl<'a, T: TryDropStrategy> TryDropStrategy for FallbackTryDropStrategyRef<'a, T> {
+impl<'a, T: TryDropStrategy> TryDropStrategy for TryDropStrategyRef<'a, T> {
     fn handle_error(&self, error: anyhow::Error) {
         self.0.handle_error(error)
     }
