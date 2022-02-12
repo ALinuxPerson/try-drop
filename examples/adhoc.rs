@@ -3,7 +3,7 @@ use try_drop::test_utils::{ErrorsOnDrop, Fallible};
 use try_drop::PureTryDrop;
 
 fn main() {
-    let fallible_try_drop_strategy = AdHocFallibleTryDropStrategy::new(|error| {
+    let fallible_try_drop_strategy = AdHocFallibleTryDropStrategy(|error| {
         println!("an error occurred from a drop: {error}");
         anyhow::bail!("this try drop strategy failed")
     });
