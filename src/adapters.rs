@@ -32,8 +32,12 @@ pub use arc_error::ArcError;
 
 use crate::{
     DynFallibleTryDropStrategy, FallibleTryDropStrategy, PureTryDrop, RepeatableTryDrop,
-    TryDropStrategy, TryDrop,
+    TryDropStrategy,
 };
+
+#[allow(unused_imports)] // JUSTIFICATION: For docs
+use crate::TryDrop;
+
 use core::marker::PhantomData;
 
 /// An adapter which makes a type which implements [`TryDropStrategy`], an infallible or try drop
