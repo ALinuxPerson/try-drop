@@ -52,19 +52,6 @@ impl ThreadLocalFallbackHandler<DefaultOnUninit> {
     };
 }
 
-impl ThreadLocalFallbackHandler<ErrorOnUninit> {
-    /// See [`Self::on_uninit_error`].
-    pub const ERROR_ON_UNINIT: Self = Self::on_uninit_error();
-
-    /// Create a new interface to the thread local fallback handler. If the thread local fallback handler is not initialized, this will error.
-    pub const fn on_uninit_error() -> Self {
-        Self {
-            extra_data: (),
-            _on_uninit: PhantomData,
-        }
-    }
-}
-
 impl ThreadLocalFallbackHandler<PanicOnUninit> {
     /// See [`Self::on_uninit_panic`].
     pub const PANIC_ON_UNINIT: Self = Self::on_uninit_panic();
