@@ -4,13 +4,13 @@ use tokio::runtime::Runtime;
 use try_drop::drop_strategies::broadcast::OkIfAlone;
 use try_drop::drop_strategies::{BroadcastDropStrategy, PanicDropStrategy};
 use try_drop::test_utils::{ErrorsOnDrop, Random};
-use try_drop::DropAdapter;
+use try_drop::adapters::DropAdapter;
 
 fn main() -> Result<(), try_drop::Error> {
     let _guard = Runtime::new()?.enter();
     let (strategy, mut r1) = BroadcastDropStrategy::<OkIfAlone>::new(16);
     let mut r2 = strategy.subscribe();
-    try_drop::install(strategy, PanicDropStrategy::DEFAULT);
+    try_drop::install_global_handlers(strategy, PanicDropStrategy::DEFAULT);
     let errors = DropAdapter(ErrorsOnDrop::<Random, _>::not_given());
 
     thread::spawn(move || {
