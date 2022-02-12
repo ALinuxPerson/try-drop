@@ -28,11 +28,6 @@ const UNINITIALIZED_ERROR: &str = "the thread local fallback drop strategy is no
 
 /// The thread local fallback try drop strategy. This doesn't store anything, it just provides an
 /// interface to the thread local fallback try drop strategy, stored in a `static`.
-///
-/// # Note
-/// This does **NOT** implement Send nor Sync because it not guaranteed that another thread will
-/// have the same drop strategies as the thread that created this object; it could potentially be a
-/// logic error. You can just create it on another thread as creating this is zero cost.
 #[cfg_attr(
     feature = "derives",
     derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
