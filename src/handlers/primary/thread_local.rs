@@ -35,7 +35,7 @@ pub static DEFAULT_THREAD_LOCAL_PRIMARY_DROP_STRATEGY: ThreadLocalPrimaryTryDrop
 /// logic error. You can just create it on another thread as creating this is zero cost.
 #[cfg_attr(
 feature = "derives",
-derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
+derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
 )]
 pub struct ThreadLocalPrimaryTryDropStrategy<OU: OnUninit = DefaultOnUninit> {
     extra_data: OU::ExtraData,
@@ -44,6 +44,12 @@ pub struct ThreadLocalPrimaryTryDropStrategy<OU: OnUninit = DefaultOnUninit> {
 
 impl ThreadLocalPrimaryTryDropStrategy<DefaultOnUninit> {
     pub const DEFAULT: Self = Self { extra_data: (), _on_uninit: PhantomData };
+}
+
+impl Default for ThreadLocalPrimaryTryDropStrategy<DefaultOnUninit> {
+    fn default() -> Self {
+        Self::DEFAULT
+    }
 }
 
 impl ThreadLocalPrimaryTryDropStrategy<ErrorOnUninit> {
