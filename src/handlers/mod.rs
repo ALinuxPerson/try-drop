@@ -1,3 +1,5 @@
+//! Manage the primary and fallback handlers and their scopes.
+
 pub mod primary;
 pub mod fallback;
 mod common;
