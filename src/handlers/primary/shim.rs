@@ -16,13 +16,19 @@ mod imp {
     use crate::handlers::primary::thread_local::ThreadLocalPrimaryTryDropStrategy;
     use crate::handlers::shim::{PrimaryHandler, UseDefaultOnUninitShim};
 
+    /// The default thing to do when both the global and thread-local drop strategies are
+    /// uninitialized, that is to use the internal cache.
     pub type DefaultOnUninit = UseDefaultOnUninitShim<PrimaryHandler>;
 
     impl ShimPrimaryDropStrategy<DefaultOnUninit> {
+        /// The default shim primary drop strategy.
+        #[allow(clippy::declare_interior_mutable_const)]
         pub const DEFAULT: Self = Self::USE_DEFAULT_ON_UNINIT;
     }
 
     impl ShimPrimaryDropStrategy<UseDefaultOnUninitShim<PrimaryHandler>> {
+        /// See [`Self::use_default_on_uninit`].
+        #[allow(clippy::declare_interior_mutable_const)]
         pub const USE_DEFAULT_ON_UNINIT: Self = Self {
             global: GlobalPrimaryDropStrategy::FLAG_ON_UNINIT,
             thread_local: ThreadLocalPrimaryTryDropStrategy::FLAG_ON_UNINIT,
@@ -33,6 +39,8 @@ mod imp {
             }),
         };
 
+        /// When both the global and thread-local drop strategies are uninitialized, use the
+        /// internal cache.
         pub const fn use_default_on_uninit() -> Self {
             Self::USE_DEFAULT_ON_UNINIT
         }
@@ -56,6 +64,8 @@ mod imp {
     use crate::handlers::primary::shim::ShimPrimaryDropStrategy;
     use crate::on_uninit::PanicOnUninit;
 
+    /// The default thing to do when both the global and thread-local drop strategies are
+    /// uninitialized, that is to panic.
     pub type DefaultOnUninit = PanicOnUninit;
 
     impl ShimPrimaryDropStrategy<DefaultOnUninit> {
@@ -66,8 +76,11 @@ mod imp {
 pub use imp::DefaultOnUninit;
 use crate::adapters::ArcError;
 
+/// The default shim primary drop strategy.
 pub static DEFAULT_SHIM_PRIMARY_DROP_STRATEGY: ShimPrimaryDropStrategy = ShimPrimaryDropStrategy::DEFAULT;
 
+/// A primary drop strategy which merges the global and thread-local drop strategies together, with
+/// the thread-local drop strategy taking precedence.
 #[cfg_attr(
     feature = "derives",
     derive(Debug)
@@ -79,52 +92,69 @@ pub struct ShimPrimaryDropStrategy<OU: OnUninitShim = DefaultOnUninit> {
 }
 
 impl ShimPrimaryDropStrategy<ErrorOnUninit> {
+    /// See [`Self::on_uninit_error`].
+    #[allow(clippy::declare_interior_mutable_const)]
     pub const ERROR_ON_UNINIT: Self = Self {
         global: GlobalPrimaryDropStrategy::FLAG_ON_UNINIT,
         thread_local: ThreadLocalPrimaryTryDropStrategy::FLAG_ON_UNINIT,
         extra_data: (),
     };
 
+    /// If both the global and thread-local primary drop strategies are uninitialized, then return
+    /// an error.
     pub const fn on_uninit_error() -> Self {
         Self::ERROR_ON_UNINIT
     }
 }
 
 impl ShimPrimaryDropStrategy<PanicOnUninit> {
+    /// See [`Self::on_uninit_panic`].
+    #[allow(clippy::declare_interior_mutable_const)]
     pub const PANIC_ON_UNINIT: Self = Self {
         global: GlobalPrimaryDropStrategy::FLAG_ON_UNINIT,
         thread_local: ThreadLocalPrimaryTryDropStrategy::FLAG_ON_UNINIT,
         extra_data: (),
     };
 
+    /// If both the global and thread-local primary drop strategies are uninitialized, then panic.
     pub const fn on_uninit_panic() -> Self {
         Self::PANIC_ON_UNINIT
     }
 }
 
 impl ShimPrimaryDropStrategy<DoNothingOnUninit> {
+    /// See [`Self::on_uninit_do_nothing`].
+    #[allow(clippy::declare_interior_mutable_const)]
     pub const DO_NOTHING_ON_UNINIT: Self = Self {
         global: GlobalPrimaryDropStrategy::FLAG_ON_UNINIT,
         thread_local: ThreadLocalPrimaryTryDropStrategy::FLAG_ON_UNINIT,
         extra_data: (),
     };
 
+    /// If both the global and thread-local primary drop strategies are uninitialized, then do
+    /// nothing.
     pub const fn on_uninit_do_nothing() -> Self {
         Self::DO_NOTHING_ON_UNINIT
     }
 }
 
 impl ShimPrimaryDropStrategy<FlagOnUninit> {
+    /// See [`Self::on_uninit_flag`].
+    #[allow(clippy::declare_interior_mutable_const)]
     pub const FLAG_ON_UNINIT: Self = Self {
         global: GlobalPrimaryDropStrategy::FLAG_ON_UNINIT,
         thread_local: ThreadLocalPrimaryTryDropStrategy::FLAG_ON_UNINIT,
         extra_data: AtomicBool::new(false),
     };
 
+    /// If both the global and thread-local primary drop strategies are uninitialized, then
+    /// `last_drop_failed` will be set to `true`.
     pub const fn on_uninit_flag() -> Self {
         Self::FLAG_ON_UNINIT
     }
 
+    /// If the last attempt to handle a drop error failed due to both the global and thread-local
+    /// primary drop strategies being uninitialized, then this method will return `true`.
     pub fn last_drop_failed(&self) -> bool {
         self.extra_data.load(LOAD_ORDERING)
     }
@@ -184,7 +214,7 @@ impl FallibleTryDropStrategy for ShimPrimaryDropStrategy<FlagOnUninit> {
         let mut last_drop_failed = false;
         let result = self.on_all_uninit(error, |uninit_error, _| {
             last_drop_failed = true;
-            Err(uninit_error.into())
+            Err(uninit_error)
         });
 
         self.set_last_drop_failed(last_drop_failed);
