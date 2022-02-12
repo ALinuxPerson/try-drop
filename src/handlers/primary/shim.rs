@@ -11,24 +11,23 @@ use std::sync::atomic::AtomicBool;
 mod imp {
     use crate::drop_strategies::WriteDropStrategy;
     use crate::handlers::primary::global::GlobalPrimaryHandler;
-    use crate::handlers::primary::shim::ShimPrimaryDropStrategy;
+    use crate::handlers::primary::shim::ShimPrimaryHandler;
     use crate::handlers::primary::thread_local::ThreadLocalPrimaryHandler;
     use crate::handlers::shim::{PrimaryHandler, UseDefaultOnUninitShim};
     use crate::FallibleTryDropStrategy;
     use once_cell::sync::Lazy;
     use std::io;
 
-    /// The default thing to do when both the global and thread-local drop strategies are
+    /// The default thing to do when both the global and thread-local primary handlers are
     /// uninitialized, that is to use the internal cache.
     pub type DefaultOnUninit = UseDefaultOnUninitShim<PrimaryHandler>;
 
-    impl ShimPrimaryDropStrategy<DefaultOnUninit> {
-        /// The default shim primary drop strategy.
-        #[allow(clippy::declare_interior_mutable_const)]
+    impl ShimPrimaryHandler<DefaultOnUninit> {
+        /// The default shim primary handler.
         pub const DEFAULT: Self = Self::USE_DEFAULT_ON_UNINIT;
     }
 
-    impl ShimPrimaryDropStrategy<UseDefaultOnUninitShim<PrimaryHandler>> {
+    impl ShimPrimaryHandler<UseDefaultOnUninitShim<PrimaryHandler>> {
         /// See [`Self::use_default_on_uninit`].
         #[allow(clippy::declare_interior_mutable_const)]
         pub const USE_DEFAULT_ON_UNINIT: Self = Self {
@@ -41,7 +40,7 @@ mod imp {
             }),
         };
 
-        /// When both the global and thread-local drop strategies are uninitialized, use the
+        /// When both the global and thread-local primary handlers are uninitialized, use the
         /// internal cache.
         pub const fn use_default_on_uninit() -> Self {
             Self::USE_DEFAULT_ON_UNINIT
@@ -52,7 +51,7 @@ mod imp {
         }
     }
 
-    impl FallibleTryDropStrategy for ShimPrimaryDropStrategy<UseDefaultOnUninitShim<PrimaryHandler>> {
+    impl FallibleTryDropStrategy for ShimPrimaryHandler<UseDefaultOnUninitShim<PrimaryHandler>> {
         type Error = anyhow::Error;
 
         fn try_handle_error(&self, error: crate::Error) -> Result<(), Self::Error> {
@@ -68,13 +67,13 @@ mod imp {
 #[cfg(not(feature = "ds-write"))]
 mod imp {
     use crate::handlers::on_uninit::PanicOnUninit;
-    use crate::handlers::primary::shim::ShimPrimaryDropStrategy;
+    use crate::handlers::primary::shim::ShimPrimaryHandler;
 
-    /// The default thing to do when both the global and thread-local drop strategies are
+    /// The default thing to do when both the global and thread-local primary handlers are
     /// uninitialized, that is to panic.
     pub type DefaultOnUninit = PanicOnUninit;
 
-    impl ShimPrimaryDropStrategy<DefaultOnUninit> {
+    impl ShimPrimaryHandler<DefaultOnUninit> {
         pub const DEFAULT: Self = Self::PANIC_ON_UNINIT;
     }
 }
@@ -82,20 +81,20 @@ mod imp {
 use crate::adapters::ArcError;
 pub use imp::DefaultOnUninit;
 
-/// The default shim primary drop strategy.
-pub static DEFAULT_SHIM_PRIMARY_DROP_STRATEGY: ShimPrimaryDropStrategy =
-    ShimPrimaryDropStrategy::DEFAULT;
+/// The default shim primary handler.
+pub static DEFAULT_SHIM_PRIMARY_HANDLER: ShimPrimaryHandler =
+    ShimPrimaryHandler::DEFAULT;
 
-/// A primary drop strategy which merges the global and thread-local drop strategies together, with
-/// the thread-local drop strategy taking precedence.
+/// A primary handler which merges the global and thread-local primary handlers together, with
+/// the thread-local primary handler taking precedence.
 #[cfg_attr(feature = "derives", derive(Debug))]
-pub struct ShimPrimaryDropStrategy<OU: OnUninitShim = DefaultOnUninit> {
+pub struct ShimPrimaryHandler<OU: OnUninitShim = DefaultOnUninit> {
     global: GlobalPrimaryHandler<FlagOnUninit>,
     thread_local: ThreadLocalPrimaryHandler<FlagOnUninit>,
     extra_data: OU::ExtraData,
 }
 
-impl ShimPrimaryDropStrategy<ErrorOnUninit> {
+impl ShimPrimaryHandler<ErrorOnUninit> {
     /// See [`Self::on_uninit_error`].
     #[allow(clippy::declare_interior_mutable_const)]
     pub const ERROR_ON_UNINIT: Self = Self {
@@ -104,14 +103,14 @@ impl ShimPrimaryDropStrategy<ErrorOnUninit> {
         extra_data: (),
     };
 
-    /// If both the global and thread-local primary drop strategies are uninitialized, then return
-    /// an error.
+    /// If both the global and thread-local primary handlers are uninitialized, then return an
+    /// error.
     pub const fn on_uninit_error() -> Self {
         Self::ERROR_ON_UNINIT
     }
 }
 
-impl ShimPrimaryDropStrategy<PanicOnUninit> {
+impl ShimPrimaryHandler<PanicOnUninit> {
     /// See [`Self::on_uninit_panic`].
     #[allow(clippy::declare_interior_mutable_const)]
     pub const PANIC_ON_UNINIT: Self = Self {
@@ -120,13 +119,13 @@ impl ShimPrimaryDropStrategy<PanicOnUninit> {
         extra_data: (),
     };
 
-    /// If both the global and thread-local primary drop strategies are uninitialized, then panic.
+    /// If both the global and thread-local primary handlers are uninitialized, then panic.
     pub const fn on_uninit_panic() -> Self {
         Self::PANIC_ON_UNINIT
     }
 }
 
-impl ShimPrimaryDropStrategy<DoNothingOnUninit> {
+impl ShimPrimaryHandler<DoNothingOnUninit> {
     /// See [`Self::on_uninit_do_nothing`].
     #[allow(clippy::declare_interior_mutable_const)]
     pub const DO_NOTHING_ON_UNINIT: Self = Self {
@@ -135,14 +134,13 @@ impl ShimPrimaryDropStrategy<DoNothingOnUninit> {
         extra_data: (),
     };
 
-    /// If both the global and thread-local primary drop strategies are uninitialized, then do
-    /// nothing.
+    /// If both the global and thread-local primary handlers are uninitialized, then do nothing.
     pub const fn on_uninit_do_nothing() -> Self {
         Self::DO_NOTHING_ON_UNINIT
     }
 }
 
-impl ShimPrimaryDropStrategy<FlagOnUninit> {
+impl ShimPrimaryHandler<FlagOnUninit> {
     /// See [`Self::on_uninit_flag`].
     #[allow(clippy::declare_interior_mutable_const)]
     pub const FLAG_ON_UNINIT: Self = Self {
@@ -151,14 +149,14 @@ impl ShimPrimaryDropStrategy<FlagOnUninit> {
         extra_data: AtomicBool::new(false),
     };
 
-    /// If both the global and thread-local primary drop strategies are uninitialized, then
+    /// If both the global and thread-local primary handlers are uninitialized, then
     /// `last_drop_failed` will be set to `true`.
     pub const fn on_uninit_flag() -> Self {
         Self::FLAG_ON_UNINIT
     }
 
     /// If the last attempt to handle a drop error failed due to both the global and thread-local
-    /// primary drop strategies being uninitialized, then this method will return `true`.
+    /// primary handlers being uninitialized, then this method will return `true`.
     pub fn last_drop_failed(&self) -> bool {
         self.extra_data.load(LOAD_ORDERING)
     }
@@ -168,7 +166,7 @@ impl ShimPrimaryDropStrategy<FlagOnUninit> {
     }
 }
 
-impl<OU: OnUninitShim> ShimPrimaryDropStrategy<OU> {
+impl<OU: OnUninitShim> ShimPrimaryHandler<OU> {
     fn on_all_uninit(
         &self,
         error: anyhow::Error,
@@ -193,7 +191,7 @@ impl<OU: OnUninitShim> ShimPrimaryDropStrategy<OU> {
     }
 }
 
-impl FallibleTryDropStrategy for ShimPrimaryDropStrategy<ErrorOnUninit> {
+impl FallibleTryDropStrategy for ShimPrimaryHandler<ErrorOnUninit> {
     type Error = anyhow::Error;
 
     fn try_handle_error(&self, error: crate::Error) -> Result<(), Self::Error> {
@@ -201,18 +199,18 @@ impl FallibleTryDropStrategy for ShimPrimaryDropStrategy<ErrorOnUninit> {
     }
 }
 
-impl FallibleTryDropStrategy for ShimPrimaryDropStrategy<PanicOnUninit> {
+impl FallibleTryDropStrategy for ShimPrimaryHandler<PanicOnUninit> {
     type Error = anyhow::Error;
 
     fn try_handle_error(&self, error: crate::Error) -> Result<(), Self::Error> {
         self.on_all_uninit(
             error,
-            |_, error| panic!("neither the thread local nor the global drop strategies are initialized (but here's the drop error anyway: {error})")
+            |_, error| panic!("neither the thread local nor the global primary handlers are initialized (but here's the drop error anyway: {error})")
         )
     }
 }
 
-impl FallibleTryDropStrategy for ShimPrimaryDropStrategy<DoNothingOnUninit> {
+impl FallibleTryDropStrategy for ShimPrimaryHandler<DoNothingOnUninit> {
     type Error = anyhow::Error;
 
     fn try_handle_error(&self, error: Error) -> Result<(), Self::Error> {
@@ -220,7 +218,7 @@ impl FallibleTryDropStrategy for ShimPrimaryDropStrategy<DoNothingOnUninit> {
     }
 }
 
-impl FallibleTryDropStrategy for ShimPrimaryDropStrategy<FlagOnUninit> {
+impl FallibleTryDropStrategy for ShimPrimaryHandler<FlagOnUninit> {
     type Error = anyhow::Error;
 
     fn try_handle_error(&self, error: Error) -> Result<(), Self::Error> {
