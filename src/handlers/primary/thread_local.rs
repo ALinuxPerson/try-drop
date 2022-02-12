@@ -1,4 +1,79 @@
 //! Manage the thread local drop strategy.
+mod scope_guard {
+    use std::boxed::Box;
+    use std::fmt;
+    use crate::DynFallibleTryDropStrategy;
+    use crate::handlers::common::NestedScopeError;
+    use super::*;
+
+    thread_local! {
+        static LOCKED: RefCell<bool> = RefCell::new(false);
+    }
+
+    /// This installs a thread local primary drop strategy for the current scope.
+    pub struct ScopeGuard {
+        last_strategy: Option<Box<dyn DynFallibleTryDropStrategy>>,
+    }
+
+    impl ScopeGuard {
+        /// Create a new scope guard.
+        ///
+        /// # Panics
+        /// This panics if the scope guard was nested.
+        pub fn new(strategy: impl DynFallibleTryDropStrategy + 'static) -> Self {
+            Self::new_dyn(Box::new(strategy))
+        }
+
+        /// Create a new scope guard. Must be a dynamic trait object.
+        ///
+        /// # Panics
+        /// This panics if the scope guard was nested
+        pub fn new_dyn(strategy: Box<dyn DynFallibleTryDropStrategy>) -> Self {
+            Self::try_new_dyn(strategy).expect("you cannot nest scope guards")
+        }
+
+        /// Try and create a new scope guard.
+        ///
+        /// # Errors
+        /// This returns an error if the scope guard was nested.
+        pub fn try_new(strategy: impl DynFallibleTryDropStrategy + 'static) -> Result<Self, NestedScopeError> {
+            Self::try_new_dyn(Box::new(strategy))
+        }
+
+        /// Try and create a new scope guard. Must be a dynamic trait object.
+        ///
+        /// # Errors
+        /// This returns an error if the scope guard was nested.
+        pub fn try_new_dyn(strategy: Box<dyn DynFallibleTryDropStrategy>) -> Result<Self, NestedScopeError> {
+            if LOCKED.with(|cell| *cell.borrow()) {
+                Err(NestedScopeError(()))
+            } else {
+                LOCKED.with(|cell| *cell.borrow_mut() = true);
+                Ok(Self { last_strategy: replace_dyn(strategy) })
+            }
+        }
+    }
+
+    impl fmt::Debug for ScopeGuard {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            f.debug_struct("ScopeGuard")
+                .field("last_strategy", &"Option<Box<dyn DynFallibleDropStrategy>>")
+                .finish()
+        }
+    }
+
+    impl Drop for ScopeGuard {
+        fn drop(&mut self) {
+            if let Some(last_strategy) = self.last_strategy.take() {
+                install_dyn(last_strategy)
+            }
+
+            LOCKED.with(|cell| *cell.borrow_mut() = false)
+        }
+    }
+}
+
+pub use scope_guard::ScopeGuard;
 use std::boxed::Box;
 use std::cell::RefCell;
 
@@ -232,4 +307,32 @@ pub fn uninstall() {
 /// Take this drop strategy from the current thread, if there is any.
 pub fn take() -> Option<Box<dyn DynFallibleTryDropStrategy>> {
     DROP_STRATEGY.with(|drop_strategy| drop_strategy.borrow_mut().take())
+}
+
+/// Replace the current primary drop strategy with another, returning the previous drop strategy if
+/// any.
+pub fn replace(new: impl DynFallibleTryDropStrategy + 'static) -> Option<Box<dyn DynFallibleTryDropStrategy>> {
+    replace_dyn(Box::new(new))
+}
+
+/// Replace the current primary drop strategy with another, returning the previous drop strategy if
+/// any. Must be a dynamic trait object.
+pub fn replace_dyn(new: Box<dyn DynFallibleTryDropStrategy>) -> Option<Box<dyn DynFallibleTryDropStrategy>> {
+    DROP_STRATEGY.with(|previous| previous.borrow_mut().replace(new))
+}
+
+/// Install this strategy for the current scope.
+///
+/// # Panics
+/// This panics if a strategy was already installed for the previous scope.
+pub fn scope(strategy: impl DynFallibleTryDropStrategy + 'static) -> ScopeGuard {
+    scope_dyn(Box::new(strategy))
+}
+
+/// Install this strategy for the current scope. Must be a dynamic trait object.
+///
+/// # Panics
+/// This panics if a strategy was already installed for the previous scope.
+pub fn scope_dyn(strategy: Box<dyn DynFallibleTryDropStrategy>) -> ScopeGuard {
+    ScopeGuard::new_dyn(strategy)
 }
