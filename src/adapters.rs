@@ -32,7 +32,7 @@ pub use arc_error::ArcError;
 
 use crate::{
     DynFallibleTryDropStrategy, FallibleTryDropStrategy, PureTryDrop, RepeatableTryDrop,
-    TryDropStrategy,
+    TryDropStrategy, TryDrop,
 };
 use core::marker::PhantomData;
 
