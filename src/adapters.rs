@@ -78,7 +78,10 @@ for InfallibleToFallibleTryDropStrategyAdapter<T, E>
 
 /// This type is an adapter for types which implement [`TryDrop`] which allow their
 /// [`TryDrop::try_drop`] functions to be repeated multiple times.
-#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+#[cfg_attr(
+    feature = "derives",
+    derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
+)]
 #[cfg_attr(feature = "shrinkwraprs", derive(Shrinkwrap))]
 #[cfg_attr(feature = "shrinkwraprs", shrinkwrap(mutable))]
 pub struct RepeatableTryDropAdapter<T: PureTryDrop> {
@@ -189,7 +192,10 @@ unsafe impl<T: PureTryDrop> RepeatableTryDrop for RepeatableTryDropAdapter<T> {}
 /// # Implementation
 /// We call `try_drop`, which is safe because we only do it in [`Drop::drop`]. If it returns an
 /// error, we redirect the error to the fallback try drop strategy.
-#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)]
+#[cfg_attr(
+    feature = "derives",
+    derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
+)]
 #[cfg_attr(feature = "shrinkwraprs", derive(Shrinkwrap))]
 #[cfg_attr(feature = "shrinkwraprs", shrinkwrap(mutable))]
 pub struct DropAdapter<TD: PureTryDrop>(pub TD);
