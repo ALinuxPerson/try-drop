@@ -3,7 +3,7 @@ use std::sync::Arc;
 use try_drop::drop_strategies::once_cell::Ignore;
 use try_drop::drop_strategies::{OnceCellTryDropStrategy, PanicDropStrategy};
 use try_drop::test_utils::{ErrorsOnDrop, Mode, Random, TryDropTypes};
-use try_drop::{DropAdapter, PureTryDrop};
+use try_drop::{adapters::DropAdapter, PureTryDrop};
 
 fn drops_value<M: Mode, TDT: TryDropTypes>(value: DropAdapter<ErrorsOnDrop<M, TDT>>)
 where
