@@ -1,3 +1,5 @@
+//! Manage the global fallback handler.
+
 use crate::on_uninit::{FlagOnUninit, OnUninit, PanicOnUninit};
 use crate::uninit_error::UninitializedError;
 use crate::{GlobalTryDropStrategy, TryDropStrategy};
@@ -17,12 +19,15 @@ static FALLBACK_DROP_STRATEGY: RwLock<Option<Box<dyn GlobalTryDropStrategy>>> =
 
 const UNINITIALIZED_ERROR: &str = "the global drop strategy is not initialized yet";
 
+/// The default thing to do when the global drop strategy is not initialized.
 #[cfg(not(feature = "ds-panic"))]
 pub type DefaultOnUninit = PanicOnUninit;
 
+/// The default thing to do when the global drop strategy is not initialized.
 #[cfg(feature = "ds-panic")]
 pub type DefaultOnUninit = UseDefaultOnUninit;
 
+/// The default global fallback drop strategy.
 pub static DEFAULT_GLOBAL_FALLBACK_STRATEGY: GlobalFallbackDropStrategy = GlobalFallbackDropStrategy::DEFAULT;
 
 /// The global fallback try drop strategy. This doesn't store anything, it just provides an
@@ -37,6 +42,7 @@ pub struct GlobalFallbackDropStrategy<OU: OnUninit = DefaultOnUninit> {
 }
 
 impl GlobalFallbackDropStrategy<DefaultOnUninit> {
+    /// The default global fallback drop strategy.
     pub const DEFAULT: Self = Self { extra_data: (), _on_uninit: PhantomData };
 }
 
