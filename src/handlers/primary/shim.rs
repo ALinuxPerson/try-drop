@@ -121,7 +121,7 @@ impl ShimPrimaryDropStrategy<FlagOnUninit> {
         extra_data: AtomicBool::new(false),
     };
 
-    pub const fn flag_on_uninit() -> Self {
+    pub const fn on_uninit_flag() -> Self {
         Self::FLAG_ON_UNINIT
     }
 
