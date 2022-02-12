@@ -18,7 +18,7 @@ pub use uninit_error::UninitializedError;
 pub use fns::*;
 
 #[cfg(all(feature = "global", not(feature = "thread-local")))]
-pub use primary::global::GlobalPrimaryDropStrategy as PrimaryDropStrategy;
+pub use primary::global::GlobalPrimaryHandler as PrimaryDropStrategy;
 
 #[cfg(all(feature = "global", not(feature = "thread-local")))]
 pub use primary::global::DEFAULT_GLOBAL_PRIMARY_DROP_STRATEGY as DEFAULT_PRIMARY_DROP_STRATEGY;

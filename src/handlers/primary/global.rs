@@ -16,47 +16,48 @@ use std::sync::atomic::AtomicBool;
 #[cfg(feature = "ds-write")]
 use crate::handlers::on_uninit::UseDefaultOnUninit;
 
-/// The default global primary drop strategy.
-pub static DEFAULT_GLOBAL_PRIMARY_DROP_STRATEGY: GlobalPrimaryDropStrategy =
-    GlobalPrimaryDropStrategy::DEFAULT;
-static DROP_STRATEGY: RwLock<Option<Box<dyn GlobalDynFallibleTryDropStrategy>>> =
+/// The default global primary handler.
+pub static DEFAULT_GLOBAL_PRIMARY_DROP_STRATEGY: GlobalPrimaryHandler =
+    GlobalPrimaryHandler::DEFAULT;
+static PRIMARY_HANDLER: RwLock<Option<Box<dyn GlobalDynFallibleTryDropStrategy>>> =
     parking_lot::const_rwlock(None);
 
-const UNINITIALIZED_ERROR: &str = "the global drop strategy is not initialized yet";
+const UNINITIALIZED_ERROR: &str = "the global primary handler is not initialized yet";
 
-/// The default thing to do when the primary global drop strategy is uninitialized, that is to panic.
+/// The default thing to do when the global primary primary handler is uninitialized, that is to
+/// panic.
 #[cfg(not(feature = "ds-write"))]
 pub type DefaultOnUninit = PanicOnUninit;
 
-/// The default thing to do when the primary global drop strategy is uninitialized, that is to use
-/// the default. Note that this mutates the global drop strategy.
+/// The default thing to do when the global primary handler is uninitialized, that is to use the
+/// default. Note that this mutates the global primary handler.
 #[cfg(feature = "ds-write")]
 pub type DefaultOnUninit = UseDefaultOnUninit;
 
-/// The global try drop strategy. This doesn't store anything, it just provides an interface
-/// to the global try drop strategy, stored in a `static`.
+/// The global primary handler. This doesn't store anything, it just provides an interface
+/// to the global primary handler, stored in a `static`.
 #[cfg_attr(
     feature = "derives",
     derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
 )]
-pub struct GlobalPrimaryDropStrategy<OU: OnUninit = DefaultOnUninit> {
+pub struct GlobalPrimaryHandler<OU: OnUninit = DefaultOnUninit> {
     extra_data: OU::ExtraData,
     _on_uninit: PhantomData<OU>,
 }
 
-impl GlobalPrimaryDropStrategy<DefaultOnUninit> {
-    /// The default global primary drop strategy.
+impl GlobalPrimaryHandler<DefaultOnUninit> {
+    /// The default global primary handler.
     pub const DEFAULT: Self = Self {
         extra_data: (),
         _on_uninit: PhantomData,
     };
 }
 
-impl GlobalPrimaryDropStrategy<ErrorOnUninit> {
+impl GlobalPrimaryHandler<ErrorOnUninit> {
     /// See [`Self::on_uninit_error`].
     pub const ERROR_ON_UNINIT: Self = Self::on_uninit_error();
 
-    /// Get an interface to the global try drop strategy. If there is no global try drop strategy
+    /// Get an interface to the global primary handler. If there is no global primary handler
     /// initialized, this will error.
     pub const fn on_uninit_error() -> Self {
         Self {
@@ -66,11 +67,11 @@ impl GlobalPrimaryDropStrategy<ErrorOnUninit> {
     }
 }
 
-impl GlobalPrimaryDropStrategy<PanicOnUninit> {
+impl GlobalPrimaryHandler<PanicOnUninit> {
     /// See [`Self::on_uninit_panic`].
     pub const PANIC_ON_UNINIT: Self = Self::on_uninit_panic();
 
-    /// Get an interface to the global try drop strategy. If there is no global try drop strategy
+    /// Get an interface to the global primary handler. If there is no global primary handler
     /// initialized, this will panic.
     pub const fn on_uninit_panic() -> Self {
         Self {
@@ -81,11 +82,11 @@ impl GlobalPrimaryDropStrategy<PanicOnUninit> {
 }
 
 #[cfg(feature = "ds-write")]
-impl GlobalPrimaryDropStrategy<UseDefaultOnUninit> {
+impl GlobalPrimaryHandler<UseDefaultOnUninit> {
     /// See [`Self::on_uninit_use_default`].
     pub const USE_DEFAULT_ON_UNINIT: Self = Self::on_uninit_use_default();
 
-    /// Get an interface to the global try drop strategy. If there is no global try drop strategy
+    /// Get an interface to the global primary handler. If there is no global primary handler
     /// initialized, this will set it to the default.
     pub const fn on_uninit_use_default() -> Self {
         Self {
@@ -95,11 +96,11 @@ impl GlobalPrimaryDropStrategy<UseDefaultOnUninit> {
     }
 }
 
-impl GlobalPrimaryDropStrategy<FlagOnUninit> {
+impl GlobalPrimaryHandler<FlagOnUninit> {
     /// See [`Self::on_uninit_flag`].
     pub const FLAG_ON_UNINIT: Self = Self::on_uninit_flag();
 
-    /// Get an interface to the global try drop strategy. If there is no global try drop strategy
+    /// Get an interface to the global primary handler. If there is no global primary handler
     /// initialized, this will set an internal flag stating that the drop failed.
     pub const fn on_uninit_flag() -> Self {
         Self {
@@ -108,7 +109,7 @@ impl GlobalPrimaryDropStrategy<FlagOnUninit> {
         }
     }
 
-    /// Check if acquiring a reference to the global drop strategy failed due to it not being
+    /// Check if acquiring a reference to the global primary handler failed due to it not being
     /// initialized.
     pub fn last_drop_failed(&self) -> bool {
         self.extra_data.load(LOAD_ORDERING)
@@ -119,7 +120,7 @@ impl GlobalPrimaryDropStrategy<FlagOnUninit> {
     }
 }
 
-impl FallibleTryDropStrategy for GlobalPrimaryDropStrategy<ErrorOnUninit> {
+impl FallibleTryDropStrategy for GlobalPrimaryHandler<ErrorOnUninit> {
     type Error = anyhow::Error;
 
     fn try_handle_error(&self, error: Error) -> Result<(), Self::Error> {
@@ -130,7 +131,7 @@ impl FallibleTryDropStrategy for GlobalPrimaryDropStrategy<ErrorOnUninit> {
     }
 }
 
-impl FallibleTryDropStrategy for GlobalPrimaryDropStrategy<PanicOnUninit> {
+impl FallibleTryDropStrategy for GlobalPrimaryHandler<PanicOnUninit> {
     type Error = anyhow::Error;
 
     fn try_handle_error(&self, error: Error) -> Result<(), Self::Error> {
@@ -139,7 +140,7 @@ impl FallibleTryDropStrategy for GlobalPrimaryDropStrategy<PanicOnUninit> {
 }
 
 #[cfg(feature = "ds-write")]
-impl FallibleTryDropStrategy for GlobalPrimaryDropStrategy<UseDefaultOnUninit> {
+impl FallibleTryDropStrategy for GlobalPrimaryHandler<UseDefaultOnUninit> {
     type Error = anyhow::Error;
 
     fn try_handle_error(&self, error: Error) -> Result<(), Self::Error> {
@@ -147,7 +148,7 @@ impl FallibleTryDropStrategy for GlobalPrimaryDropStrategy<UseDefaultOnUninit> {
     }
 }
 
-impl FallibleTryDropStrategy for GlobalPrimaryDropStrategy<FlagOnUninit> {
+impl FallibleTryDropStrategy for GlobalPrimaryHandler<FlagOnUninit> {
     type Error = anyhow::Error;
 
     fn try_handle_error(&self, error: crate::Error) -> Result<(), Self::Error> {
@@ -161,26 +162,26 @@ impl FallibleTryDropStrategy for GlobalPrimaryDropStrategy<FlagOnUninit> {
     }
 }
 
-/// Install a new global try drop strategy. Must be a dynamic trait object.
+/// Install a new global primary handler. Must be a dynamic trait object.
 pub fn install_dyn(strategy: Box<dyn GlobalDynFallibleTryDropStrategy>) {
-    DROP_STRATEGY.write().replace(strategy);
+    PRIMARY_HANDLER.write().replace(strategy);
 }
 
-/// Install a new global try drop strategy.
+/// Install a new global primary handler.
 pub fn install(strategy: impl GlobalDynFallibleTryDropStrategy) {
     install_dyn(Box::new(strategy))
 }
 
-/// Get a reference to the try drop strategy. If there is no global try drop strategy initialized,
+/// Get a reference to the primary handler. If there is no global primary handler initialized,
 /// this will return an error.
 pub fn try_read() -> Result<
     MappedRwLockReadGuard<'static, Box<dyn GlobalDynFallibleTryDropStrategy>>,
     UninitializedError,
 > {
-    let drop_strategy = DROP_STRATEGY.read();
+    let primary_handler = PRIMARY_HANDLER.read();
 
-    if drop_strategy.is_some() {
-        Ok(RwLockReadGuard::map(drop_strategy, |drop_strategy| {
+    if primary_handler.is_some() {
+        Ok(RwLockReadGuard::map(primary_handler, |drop_strategy| {
             drop_strategy.as_ref().unwrap()
         }))
     } else {
@@ -188,13 +189,13 @@ pub fn try_read() -> Result<
     }
 }
 
-/// Get a reference to the try drop strategy. If there is no global try drop strategy initialized,
+/// Get a reference to the primary handler. If there is no global primary handler initialized,
 /// this will panic.
 pub fn read() -> MappedRwLockReadGuard<'static, Box<dyn GlobalDynFallibleTryDropStrategy>> {
     try_read().expect(UNINITIALIZED_ERROR)
 }
 
-/// Get a reference to the try drop strategy. If there is no global try drop strategy initialized,
+/// Get a reference to the primary handler. If there is no global primary handler initialized,
 /// this will set it to the default then return it.
 #[cfg(feature = "ds-write")]
 pub fn read_or_default() -> MappedRwLockReadGuard<'static, Box<dyn GlobalDynFallibleTryDropStrategy>>
@@ -203,16 +204,16 @@ pub fn read_or_default() -> MappedRwLockReadGuard<'static, Box<dyn GlobalDynFall
     read()
 }
 
-/// Get a mutable reference to the try drop strategy. If there is no global try drop strategy
+/// Get a mutable reference to the primary handler. If there is no global primary handler
 /// initialized, this will return an error.
 pub fn try_write() -> Result<
     MappedRwLockWriteGuard<'static, Box<dyn GlobalDynFallibleTryDropStrategy>>,
     UninitializedError,
 > {
-    let drop_strategy = DROP_STRATEGY.write();
+    let primary_handler = PRIMARY_HANDLER.write();
 
-    if drop_strategy.is_some() {
-        Ok(RwLockWriteGuard::map(drop_strategy, |drop_strategy| {
+    if primary_handler.is_some() {
+        Ok(RwLockWriteGuard::map(primary_handler, |drop_strategy| {
             drop_strategy.as_mut().unwrap()
         }))
     } else {
@@ -220,20 +221,20 @@ pub fn try_write() -> Result<
     }
 }
 
-/// Get a mutable reference to the try drop strategy. If there is no global try drop strategy
+/// Get a mutable reference to the global primary handler. If there is no global primary handler
 /// initialized, this will panic.
 pub fn write() -> MappedRwLockWriteGuard<'static, Box<dyn GlobalDynFallibleTryDropStrategy>> {
     try_write().expect(UNINITIALIZED_ERROR)
 }
 
-/// Get a mutable reference to the try drop strategy. If there is no global try drop strategy
+/// Get a mutable reference to the global primary handler. If there is no global primary handler
 /// initialized, this will set it to the default then return it.
 #[cfg(feature = "ds-write")]
 pub fn write_or_default(
 ) -> MappedRwLockWriteGuard<'static, Box<dyn GlobalDynFallibleTryDropStrategy>> {
     use crate::drop_strategies::WriteDropStrategy;
 
-    RwLockWriteGuard::map(DROP_STRATEGY.write(), |drop_strategy| {
+    RwLockWriteGuard::map(PRIMARY_HANDLER.write(), |drop_strategy| {
         drop_strategy.get_or_insert_with(|| {
             let mut strategy = WriteDropStrategy::stderr();
             strategy.prelude("error: ");
@@ -242,7 +243,7 @@ pub fn write_or_default(
     })
 }
 
-/// Uninstall or remove the global try drop strategy.
+/// Uninstall or remove the global primary handler.
 pub fn uninstall() {
-    *DROP_STRATEGY.write() = None
+    *PRIMARY_HANDLER.write() = None
 }
