@@ -4,7 +4,7 @@ mod scope_guard;
 pub use scope_guard::ScopeGuard;
 use std::boxed::Box;
 use std::cell::RefCell;
-use crate::on_uninit::{ErrorOnUninit, FlagOnUninit, OnUninit, PanicOnUninit};
+use crate::handlers::on_uninit::{ErrorOnUninit, FlagOnUninit, OnUninit, PanicOnUninit};
 use crate::uninit_error::UninitializedError;
 use crate::{LOAD_ORDERING, STORE_ORDERING, TryDropStrategy};
 use anyhow::Error;
@@ -13,7 +13,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread_local;
 
 #[cfg(feature = "ds-panic")]
-use crate::on_uninit::UseDefaultOnUninit;
+use crate::handlers::on_uninit::UseDefaultOnUninit;
 
 thread_local! {
     static DROP_STRATEGY: RefCell<Option<Box<dyn TryDropStrategy>>> = RefCell::new(None);

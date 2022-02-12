@@ -1,4 +1,4 @@
-use crate::on_uninit::OnUninit;
+use crate::handlers::on_uninit::OnUninit;
 
 mod private {
     pub trait Sealed {}

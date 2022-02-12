@@ -5,7 +5,7 @@ pub use scope_guard::ScopeGuard;
 use std::boxed::Box;
 use std::cell::RefCell;
 
-use crate::on_uninit::{ErrorOnUninit, FlagOnUninit, OnUninit, PanicOnUninit};
+use crate::handlers::on_uninit::{ErrorOnUninit, FlagOnUninit, OnUninit, PanicOnUninit};
 use crate::uninit_error::UninitializedError;
 use crate::{DynFallibleTryDropStrategy, FallibleTryDropStrategy, LOAD_ORDERING, STORE_ORDERING};
 use std::marker::PhantomData;
@@ -13,7 +13,7 @@ use std::sync::atomic::AtomicBool;
 use std::thread_local;
 
 #[cfg(feature = "ds-write")]
-use crate::on_uninit::UseDefaultOnUninit;
+use crate::handlers::on_uninit::UseDefaultOnUninit;
 
 thread_local! {
     static DROP_STRATEGY: RefCell<Option<Box<dyn DynFallibleTryDropStrategy>>> = RefCell::new(None);

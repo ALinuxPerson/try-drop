@@ -4,7 +4,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use anyhow::Error;
 use crate::handlers::primary::global::GlobalPrimaryDropStrategy;
 use crate::handlers::primary::thread_local::ThreadLocalPrimaryTryDropStrategy;
-use crate::on_uninit::{DoNothingOnUninit, ErrorOnUninit, FlagOnUninit, PanicOnUninit};
+use crate::handlers::on_uninit::{DoNothingOnUninit, ErrorOnUninit, FlagOnUninit, PanicOnUninit};
 use crate::{FallibleTryDropStrategy, LOAD_ORDERING, STORE_ORDERING};
 use crate::handlers::shim::OnUninitShim;
 #[cfg(feature = "ds-write")]
@@ -64,7 +64,7 @@ mod imp {
 #[cfg(not(feature = "ds-write"))]
 mod imp {
     use crate::handlers::primary::shim::ShimPrimaryDropStrategy;
-    use crate::on_uninit::PanicOnUninit;
+    use crate::handlers::on_uninit::PanicOnUninit;
 
     /// The default thing to do when both the global and thread-local drop strategies are
     /// uninitialized, that is to panic.

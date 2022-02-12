@@ -3,7 +3,7 @@
 #![allow(clippy::declare_interior_mutable_const)]
 use std::sync::atomic::{AtomicBool, Ordering};
 use anyhow::Error;
-use crate::on_uninit::{DoNothingOnUninit, FlagOnUninit, PanicOnUninit};
+use crate::handlers::on_uninit::{DoNothingOnUninit, FlagOnUninit, PanicOnUninit};
 use crate::{LOAD_ORDERING, STORE_ORDERING, TryDropStrategy};
 use crate::handlers::fallback::global::GlobalFallbackDropStrategy;
 use crate::handlers::fallback::thread_local::ThreadLocalFallbackDropStrategy;
@@ -55,7 +55,7 @@ mod imp {
 #[cfg(not(feature = "ds-panic"))]
 mod imp {
     use crate::handlers::fallback::shim::ShimFallbackDropStrategy;
-    use crate::on_uninit::PanicOnUninit;
+    use crate::handlers::on_uninit::PanicOnUninit;
 
     /// The default thing to do when the primary and fallback strategies are uninitialized, that is
     /// to panic.

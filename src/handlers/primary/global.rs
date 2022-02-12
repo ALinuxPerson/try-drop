@@ -1,6 +1,6 @@
 //! Manage the primary global handler.
 
-use crate::on_uninit::{ErrorOnUninit, FlagOnUninit, OnUninit, PanicOnUninit};
+use crate::handlers::on_uninit::{ErrorOnUninit, FlagOnUninit, OnUninit, PanicOnUninit};
 use crate::uninit_error::UninitializedError;
 use crate::{FallibleTryDropStrategy, GlobalDynFallibleTryDropStrategy, LOAD_ORDERING, STORE_ORDERING};
 use anyhow::Error;
@@ -12,7 +12,7 @@ use std::marker::PhantomData;
 use std::sync::atomic::AtomicBool;
 
 #[cfg(feature = "ds-write")]
-use crate::on_uninit::UseDefaultOnUninit;
+use crate::handlers::on_uninit::UseDefaultOnUninit;
 
 /// The default global primary drop strategy.
 pub static DEFAULT_GLOBAL_PRIMARY_DROP_STRATEGY: GlobalPrimaryDropStrategy = GlobalPrimaryDropStrategy::DEFAULT;

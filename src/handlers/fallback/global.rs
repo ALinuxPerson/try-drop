@@ -1,6 +1,6 @@
 //! Manage the global fallback handler.
 
-use crate::on_uninit::{FlagOnUninit, OnUninit, PanicOnUninit};
+use crate::handlers::on_uninit::{FlagOnUninit, OnUninit, PanicOnUninit};
 use crate::uninit_error::UninitializedError;
 use crate::{GlobalTryDropStrategy, LOAD_ORDERING, STORE_ORDERING, TryDropStrategy};
 use anyhow::Error;
@@ -12,7 +12,7 @@ use std::marker::PhantomData;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 #[cfg(feature = "ds-panic")]
-use crate::on_uninit::UseDefaultOnUninit;
+use crate::handlers::on_uninit::UseDefaultOnUninit;
 
 static FALLBACK_DROP_STRATEGY: RwLock<Option<Box<dyn GlobalTryDropStrategy>>> =
     parking_lot::const_rwlock(None);

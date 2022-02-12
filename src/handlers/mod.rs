@@ -4,10 +4,13 @@ pub mod primary;
 pub mod fallback;
 mod common;
 mod shim;
+#[cfg(any(feature = "global", feature = "thread-local"))]
+pub mod on_uninit;
+
 pub(crate) mod fns {
     use std::boxed::Box;
     use crate::{DynFallibleTryDropStrategy, TryDropStrategy};
-    use super::{primary, fallback};
+    use super::{fallback, primary};
 
     #[cfg(feature = "global")]
     use crate::{GlobalDynFallibleTryDropStrategy, GlobalTryDropStrategy};
