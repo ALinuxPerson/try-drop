@@ -194,7 +194,7 @@ unsafe impl<T: PureTryDrop> RepeatableTryDrop for RepeatableTryDropAdapter<T> {}
 /// error, we redirect the error to the fallback try drop strategy.
 #[cfg_attr(
     feature = "derives",
-    derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
+    derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
 )]
 #[cfg_attr(feature = "shrinkwraprs", derive(Shrinkwrap))]
 #[cfg_attr(feature = "shrinkwraprs", shrinkwrap(mutable))]
