@@ -48,7 +48,7 @@ pub use fallback::thread_local::ThreadLocalFallbackHandler as FallbackDropStrate
 pub use fallback::thread_local::DEFAULT_THREAD_LOCAL_FALLBACK_HANDLER as DEFAULT_FALLBACK_DROP_STRATEGY;
 
 #[cfg(all(feature = "thread-local", feature = "global"))]
-pub use fallback::shim::ShimFallbackDropStrategy as FallbackDropStrategy;
+pub use fallback::shim::ShimFallbackHandler as FallbackDropStrategy;
 
 #[cfg(all(feature = "thread-local", feature = "global"))]
-pub use fallback::shim::DEFAULT_SHIM_FALLBACK_DROP_STRATEGY as DEFAULT_FALLBACK_DROP_STRATEGY;
+pub use fallback::shim::DEFAULT_SHIM_FALLBACK_HANDLER as DEFAULT_FALLBACK_DROP_STRATEGY;
