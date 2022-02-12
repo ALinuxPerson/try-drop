@@ -6,7 +6,7 @@ use std::boxed::Box;
 use std::cell::RefCell;
 
 use crate::handlers::on_uninit::{ErrorOnUninit, FlagOnUninit, OnUninit, PanicOnUninit};
-use crate::uninit_error::UninitializedError;
+use crate::handlers::uninit_error::UninitializedError;
 use crate::{DynFallibleTryDropStrategy, FallibleTryDropStrategy, LOAD_ORDERING, STORE_ORDERING};
 use std::marker::PhantomData;
 use std::sync::atomic::AtomicBool;

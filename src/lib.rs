@@ -37,9 +37,6 @@ pub use self::ImpureTryDrop as TryDrop;
 pub mod test_utils;
 
 #[cfg(any(feature = "global", feature = "thread-local"))]
-pub mod uninit_error;
-
-#[cfg(any(feature = "global", feature = "thread-local"))]
 pub mod handlers;
 
 pub mod adapters;

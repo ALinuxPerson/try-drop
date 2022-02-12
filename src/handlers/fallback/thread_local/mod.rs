@@ -5,7 +5,7 @@ pub use scope_guard::ScopeGuard;
 use std::boxed::Box;
 use std::cell::RefCell;
 use crate::handlers::on_uninit::{ErrorOnUninit, FlagOnUninit, OnUninit, PanicOnUninit};
-use crate::uninit_error::UninitializedError;
+use crate::handlers::uninit_error::UninitializedError;
 use crate::{LOAD_ORDERING, STORE_ORDERING, TryDropStrategy};
 use anyhow::Error;
 use std::marker::PhantomData;

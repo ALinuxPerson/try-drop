@@ -1,7 +1,7 @@
 //! Manage the primary global handler.
 
 use crate::handlers::on_uninit::{ErrorOnUninit, FlagOnUninit, OnUninit, PanicOnUninit};
-use crate::uninit_error::UninitializedError;
+use crate::handlers::uninit_error::UninitializedError;
 use crate::{FallibleTryDropStrategy, GlobalDynFallibleTryDropStrategy, LOAD_ORDERING, STORE_ORDERING};
 use anyhow::Error;
 use parking_lot::{

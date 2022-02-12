@@ -6,6 +6,8 @@ mod common;
 mod shim;
 #[cfg(any(feature = "global", feature = "thread-local"))]
 pub mod on_uninit;
+#[cfg(any(feature = "global", feature = "thread-local"))]
+pub mod uninit_error;
 
 pub(crate) mod fns {
     use std::boxed::Box;
