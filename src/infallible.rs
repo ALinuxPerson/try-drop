@@ -12,6 +12,10 @@ mod no_std {
     ///
     /// For more information, see [`core::convert::Infallible`].
     #[derive(Copy, Clone)]
+    #[cfg_attr(
+        feature = "derives",
+        derive(Debug, Ord, PartialOrd, Eq, PartialEq, Hash)
+    )]
     pub enum Infallible {}
 
     impl From<Infallible> for anyhow::Error {
