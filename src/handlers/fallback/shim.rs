@@ -1,3 +1,5 @@
+//! Manage the shim fallback handler.
+
 #![allow(clippy::declare_interior_mutable_const)]
 use std::sync::atomic::{AtomicBool, Ordering};
 use anyhow::Error;
