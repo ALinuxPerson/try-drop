@@ -1,6 +1,6 @@
 //! Types and utilities for the once cell try drop strategy.
-pub mod thread_unsafe;
-
+mod thread_unsafe;
+pub use thread_unsafe::ThreadUnsafeOnceCellTryDropStrategy;
 mod private {
     pub trait Sealed {}
 }
