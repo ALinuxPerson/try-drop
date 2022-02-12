@@ -10,7 +10,10 @@ mod shim;
 pub mod on_uninit;
 
 #[cfg(any(feature = "global", feature = "thread-local"))]
-pub mod uninit_error;
+mod uninit_error;
+
+#[cfg(any(feature = "global", feature = "thread-local"))]
+pub use uninit_error::UninitializedError;
 
 pub use fns::*;
 
