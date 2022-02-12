@@ -60,37 +60,37 @@ pub(crate) mod fns {
 pub use fns::*;
 
 #[cfg(all(feature = "global", not(feature = "thread-local")))]
-pub type PrimaryDropStrategy = primary::global::GlobalPrimaryDropStrategy;
+pub use primary::global::GlobalPrimaryDropStrategy as PrimaryDropStrategy;
 
 #[cfg(all(feature = "global", not(feature = "thread-local")))]
 pub use primary::global::DEFAULT_GLOBAL_PRIMARY_DROP_STRATEGY as DEFAULT_PRIMARY_DROP_STRATEGY;
 
 #[cfg(all(feature = "thread-local", not(feature = "global")))]
-pub type PrimaryDropStrategy = primary::thread_local::ThreadLocalPrimaryTryDropStrategy;
+pub use primary::thread_local::ThreadLocalPrimaryTryDropStrategy as PrimaryDropStrategy;
 
 #[cfg(all(feature = "thread-local", not(feature = "global")))]
 pub use primary::thread_local::DEFAULT_THREAD_LOCAL_PRIMARY_DROP_STRATEGY as DEFAULT_PRIMARY_DROP_STRATEGY;
 
 #[cfg(all(feature = "thread-local", feature = "global"))]
-pub type PrimaryDropStrategy = primary::shim::ShimPrimaryDropStrategy;
+pub use primary::shim::ShimPrimaryDropStrategy as PrimaryDropStrategy;
 
 #[cfg(all(feature = "thread-local", feature = "global"))]
 pub use primary::shim::DEFAULT_SHIM_PRIMARY_DROP_STRATEGY as DEFAULT_PRIMARY_DROP_STRATEGY;
 
 #[cfg(all(feature = "global", not(feature = "thread-local")))]
-pub type FallbackDropStrategy = fallback::global::GlobalFallbackDropStrategy;
+pub use fallback::global::GlobalFallbackDropStrategy as FallbackDropStrategy;
 
 #[cfg(all(feature = "global", not(feature = "thread-local")))]
 pub use fallback::global::DEFAULT_GLOBAL_FALLBACK_STRATEGY as DEFAULT_FALLBACK_DROP_STRATEGY;
 
 #[cfg(all(feature = "thread-local", not(feature = "global")))]
-pub type FallbackDropStrategy = fallback::thread_local::ThreadLocalFallbackDropStrategy;
+pub use fallback::thread_local::ThreadLocalFallbackDropStrategy as FallbackDropStrategy;
 
 #[cfg(all(feature = "thread-local", not(feature = "global")))]
 pub use fallback::thread_local::DEFAULT_THREAD_LOCAL_FALLBACK_STRATEGY as DEFAULT_FALLBACK_DROP_STRATEGY;
 
 #[cfg(all(feature = "thread-local", feature = "global"))]
-pub type FallbackDropStrategy = fallback::shim::ShimFallbackDropStrategy;
+pub use fallback::shim::ShimFallbackDropStrategy as FallbackDropStrategy;
 
 #[cfg(all(feature = "thread-local", feature = "global"))]
 pub use fallback::shim::DEFAULT_SHIM_FALLBACK_DROP_STRATEGY as DEFAULT_FALLBACK_DROP_STRATEGY;
