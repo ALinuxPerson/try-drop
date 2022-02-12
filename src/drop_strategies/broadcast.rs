@@ -45,6 +45,10 @@ impl<T: Clone> BlockingReceiver<T> {
 pub trait Mode: private::Sealed {}
 
 /// Continue on sending errors to nobody if no receivers are available.
+#[cfg_attr(
+    feature = "derives",
+    derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
+)]
 pub enum OkIfAlone {}
 
 impl Mode for OkIfAlone {}
@@ -52,6 +56,10 @@ impl Mode for OkIfAlone {}
 impl private::Sealed for OkIfAlone {}
 
 /// Return an error if there are no receivers to send errors to.
+#[cfg_attr(
+    feature = "derives",
+    derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
+)]
 pub enum NeedsReceivers {}
 
 impl Mode for NeedsReceivers {}
