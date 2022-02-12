@@ -71,3 +71,53 @@ impl Drop for ScopeGuard {
         LOCKED.with(|cell| *cell.borrow_mut() = false)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::rc::Rc;
+    use crate::drop_strategies::{AdHocFallibleTryDropStrategy, IntoAdHocTryDropStrategy, NoOpDropStrategy, PanicDropStrategy};
+    use crate::PureTryDrop;
+    use crate::test_utils::{ErrorsOnDrop, Fallible};
+    use super::*;
+
+    #[test]
+    fn test_scope_guard() {
+        crate::install_thread_local_handlers(
+            AdHocFallibleTryDropStrategy(Err),
+            PanicDropStrategy::DEFAULT,
+        );
+        let scope_guard_executed = Rc::new(RefCell::new(false));
+
+        {
+            let sge = Rc::clone(&scope_guard_executed);
+            let _guard = ScopeGuard::new((move |_| *sge.borrow_mut() = true).into_adhoc_try_drop_strategy());
+            let errors = ErrorsOnDrop::<Fallible, _>::not_given().adapt();
+            drop(errors);
+        }
+
+        assert!(*scope_guard_executed.borrow(), "scope guard was not executed");
+
+        crate::uninstall_for_thread()
+    }
+
+    #[test]
+    fn test_scope_guard_errors_if_scope_is_nested() {
+        {
+            let _guard = ScopeGuard::new(NoOpDropStrategy);
+            {
+                ScopeGuard::try_new(NoOpDropStrategy).expect_err("scope guard was did not error when nested");
+            }
+        }
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_scope_guard_panics_if_scope_is_nested() {
+        {
+            let _guard = ScopeGuard::new(NoOpDropStrategy);
+            {
+                let _guard = ScopeGuard::new(NoOpDropStrategy);
+            }
+        }
+    }
+}
