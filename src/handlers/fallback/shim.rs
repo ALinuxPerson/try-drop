@@ -1,7 +1,7 @@
 //! Manage the shim fallback handler.
 
 #![allow(clippy::declare_interior_mutable_const)]
-use crate::handlers::fallback::global::GlobalFallbackDropStrategy;
+use crate::handlers::fallback::global::GlobalFallbackHandler;
 use crate::handlers::fallback::thread_local::ThreadLocalFallbackDropStrategy;
 use crate::handlers::on_uninit::{DoNothingOnUninit, FlagOnUninit, PanicOnUninit};
 use crate::handlers::shim::OnUninitShim;
@@ -11,7 +11,7 @@ use std::sync::atomic::AtomicBool;
 #[cfg(feature = "ds-panic")]
 mod imp {
     use crate::drop_strategies::PanicDropStrategy;
-    use crate::handlers::fallback::global::GlobalFallbackDropStrategy;
+    use crate::handlers::fallback::global::GlobalFallbackHandler;
     use crate::handlers::fallback::shim::ShimFallbackDropStrategy;
     use crate::handlers::fallback::thread_local::ThreadLocalFallbackDropStrategy;
     use crate::handlers::shim::{FallbackHandler, UseDefaultOnUninitShim};
@@ -25,7 +25,7 @@ mod imp {
     impl ShimFallbackDropStrategy<UseDefaultOnUninitShim<FallbackHandler>> {
         /// See [`Self::use_default_on_uninit`].
         pub const USE_DEFAULT_ON_UNINIT: Self = Self {
-            global: GlobalFallbackDropStrategy::FLAG_ON_UNINIT,
+            global: GlobalFallbackHandler::FLAG_ON_UNINIT,
             thread_local: ThreadLocalFallbackDropStrategy::FLAG_ON_UNINIT,
             extra_data: Lazy::new(|| PanicDropStrategy::DEFAULT),
         };
@@ -78,7 +78,7 @@ pub static DEFAULT_SHIM_FALLBACK_DROP_STRATEGY: ShimFallbackDropStrategy =
 /// A shim which abstracts the global and thread local handlers together, with the thread local
 /// handlers taking precedence over the global handlers.
 pub struct ShimFallbackDropStrategy<OU: OnUninitShim = DefaultOnUninit> {
-    global: GlobalFallbackDropStrategy<FlagOnUninit>,
+    global: GlobalFallbackHandler<FlagOnUninit>,
     thread_local: ThreadLocalFallbackDropStrategy<FlagOnUninit>,
     extra_data: OU::ExtraData,
 }
@@ -86,7 +86,7 @@ pub struct ShimFallbackDropStrategy<OU: OnUninitShim = DefaultOnUninit> {
 impl ShimFallbackDropStrategy<PanicOnUninit> {
     /// See [`Self::on_uninit_panic`].
     pub const PANIC_ON_UNINIT: Self = Self {
-        global: GlobalFallbackDropStrategy::FLAG_ON_UNINIT,
+        global: GlobalFallbackHandler::FLAG_ON_UNINIT,
         thread_local: ThreadLocalFallbackDropStrategy::FLAG_ON_UNINIT,
         extra_data: (),
     };
@@ -100,7 +100,7 @@ impl ShimFallbackDropStrategy<PanicOnUninit> {
 impl ShimFallbackDropStrategy<DoNothingOnUninit> {
     /// See [`Self::on_uninit_do_nothing`].
     pub const DO_NOTHING_ON_UNINIT: Self = Self {
-        global: GlobalFallbackDropStrategy::FLAG_ON_UNINIT,
+        global: GlobalFallbackHandler::FLAG_ON_UNINIT,
         thread_local: ThreadLocalFallbackDropStrategy::FLAG_ON_UNINIT,
         extra_data: (),
     };
@@ -114,7 +114,7 @@ impl ShimFallbackDropStrategy<DoNothingOnUninit> {
 impl ShimFallbackDropStrategy<FlagOnUninit> {
     /// See [`Self::on_uninit_flag`].
     pub const FLAG_ON_UNINIT: Self = Self {
-        global: GlobalFallbackDropStrategy::FLAG_ON_UNINIT,
+        global: GlobalFallbackHandler::FLAG_ON_UNINIT,
         thread_local: ThreadLocalFallbackDropStrategy::FLAG_ON_UNINIT,
         extra_data: AtomicBool::new(false),
     };

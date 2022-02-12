@@ -36,10 +36,10 @@ pub use primary::shim::ShimPrimaryDropStrategy as PrimaryDropStrategy;
 pub use primary::shim::DEFAULT_SHIM_PRIMARY_DROP_STRATEGY as DEFAULT_PRIMARY_DROP_STRATEGY;
 
 #[cfg(all(feature = "global", not(feature = "thread-local")))]
-pub use fallback::global::GlobalFallbackDropStrategy as FallbackDropStrategy;
+pub use fallback::global::GlobalFallbackHandler as FallbackDropStrategy;
 
 #[cfg(all(feature = "global", not(feature = "thread-local")))]
-pub use fallback::global::DEFAULT_GLOBAL_FALLBACK_STRATEGY as DEFAULT_FALLBACK_DROP_STRATEGY;
+pub use fallback::global::DEFAULT_GLOBAL_FALLBACK_HANDLER as DEFAULT_FALLBACK_DROP_STRATEGY;
 
 #[cfg(all(feature = "thread-local", not(feature = "global")))]
 pub use fallback::thread_local::ThreadLocalFallbackDropStrategy as FallbackDropStrategy;
