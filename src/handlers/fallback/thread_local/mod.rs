@@ -6,7 +6,7 @@ use std::boxed::Box;
 use std::cell::RefCell;
 use crate::on_uninit::{ErrorOnUninit, FlagOnUninit, OnUninit, PanicOnUninit};
 use crate::uninit_error::UninitializedError;
-use crate::TryDropStrategy;
+use crate::{LOAD_ORDERING, STORE_ORDERING, TryDropStrategy};
 use anyhow::Error;
 use std::marker::PhantomData;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -111,11 +111,11 @@ impl ThreadLocalFallbackDropStrategy<FlagOnUninit> {
     /// Check if the last drop failed due to the thread local fallback drop strategy not being
     /// initialized.
     pub fn last_drop_failed(&self) -> bool {
-        self.extra_data.load(Ordering::Acquire)
+        self.extra_data.load(LOAD_ORDERING)
     }
 
     fn set_last_drop_failed(&self, value: bool) {
-        self.extra_data.store(value, Ordering::Release)
+        self.extra_data.store(value, STORE_ORDERING)
     }
 }
 

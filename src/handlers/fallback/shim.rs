@@ -4,7 +4,7 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 use anyhow::Error;
 use crate::on_uninit::{DoNothingOnUninit, FlagOnUninit, PanicOnUninit};
-use crate::TryDropStrategy;
+use crate::{LOAD_ORDERING, STORE_ORDERING, TryDropStrategy};
 use crate::handlers::fallback::global::GlobalFallbackDropStrategy;
 use crate::handlers::fallback::thread_local::ThreadLocalFallbackDropStrategy;
 use crate::handlers::shim::OnUninitShim;
@@ -130,11 +130,11 @@ impl ShimFallbackDropStrategy<FlagOnUninit> {
     /// Check whether or not the last drop failed due to the primary and fallback drop strategies
     /// not being initialized.
     pub fn last_drop_failed(&self) -> bool {
-        self.extra_data.load(Ordering::Acquire)
+        self.extra_data.load(LOAD_ORDERING)
     }
 
     fn set_last_drop_failed(&self, value: bool) {
-        self.extra_data.store(value, Ordering::Release)
+        self.extra_data.store(value, STORE_ORDERING)
     }
 }
 

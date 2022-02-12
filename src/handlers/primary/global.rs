@@ -1,6 +1,6 @@
 use crate::on_uninit::{ErrorOnUninit, FlagOnUninit, OnUninit, PanicOnUninit};
 use crate::uninit_error::UninitializedError;
-use crate::{FallibleTryDropStrategy, GlobalDynFallibleTryDropStrategy};
+use crate::{FallibleTryDropStrategy, GlobalDynFallibleTryDropStrategy, LOAD_ORDERING, STORE_ORDERING};
 use anyhow::Error;
 use parking_lot::{
     MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLock, RwLockReadGuard, RwLockWriteGuard,
@@ -86,11 +86,11 @@ impl GlobalPrimaryDropStrategy<FlagOnUninit> {
     /// Check if acquiring a reference to the global drop strategy failed due to it not being
     /// initialized.
     pub fn last_drop_failed(&self) -> bool {
-        self.extra_data.load(Ordering::Acquire)
+        self.extra_data.load(LOAD_ORDERING)
     }
 
     fn set_last_drop_failed(&self, value: bool) {
-        self.extra_data.store(value, Ordering::Release)
+        self.extra_data.store(value, STORE_ORDERING)
     }
 }
 

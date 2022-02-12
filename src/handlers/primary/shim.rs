@@ -3,7 +3,7 @@ use anyhow::Error;
 use crate::handlers::primary::global::GlobalPrimaryDropStrategy;
 use crate::handlers::primary::thread_local::ThreadLocalPrimaryTryDropStrategy;
 use crate::on_uninit::{DoNothingOnUninit, ErrorOnUninit, FlagOnUninit, PanicOnUninit};
-use crate::FallibleTryDropStrategy;
+use crate::{FallibleTryDropStrategy, LOAD_ORDERING, STORE_ORDERING};
 use crate::handlers::shim::OnUninitShim;
 #[cfg(feature = "ds-write")]
 mod imp {
@@ -126,11 +126,11 @@ impl ShimPrimaryDropStrategy<FlagOnUninit> {
     }
 
     pub fn last_drop_failed(&self) -> bool {
-        self.extra_data.load(Ordering::Acquire)
+        self.extra_data.load(LOAD_ORDERING)
     }
 
     fn set_last_drop_failed(&self, value: bool) {
-        self.extra_data.store(value, Ordering::Release)
+        self.extra_data.store(value, STORE_ORDERING)
     }
 }
 

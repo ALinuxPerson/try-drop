@@ -16,6 +16,7 @@ pub mod drop_strategies;
 
 mod infallible;
 
+use core::sync::atomic::Ordering;
 pub use anyhow::Error;
 pub use infallible::Infallible;
 
@@ -46,6 +47,9 @@ pub mod handlers;
 pub mod adapters;
 
 use adapters::DropAdapter;
+
+const LOAD_ORDERING: Ordering = Ordering::Acquire;
+const STORE_ORDERING: Ordering = Ordering::Release;
 
 /// A trait for types which can be dropped, but which may fail to do so.
 ///

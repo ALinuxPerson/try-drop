@@ -7,7 +7,7 @@ use std::cell::RefCell;
 
 use crate::on_uninit::{ErrorOnUninit, FlagOnUninit, OnUninit, PanicOnUninit};
 use crate::uninit_error::UninitializedError;
-use crate::{DynFallibleTryDropStrategy, FallibleTryDropStrategy};
+use crate::{DynFallibleTryDropStrategy, FallibleTryDropStrategy, LOAD_ORDERING, STORE_ORDERING};
 use std::marker::PhantomData;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread_local;
@@ -102,11 +102,11 @@ impl ThreadLocalPrimaryTryDropStrategy<FlagOnUninit> {
     /// Check if the last drop failed due to the primary thread local drop strategy not being
     /// initialized.
     pub fn last_drop_failed(&self) -> bool {
-        self.extra_data.load(Ordering::Acquire)
+        self.extra_data.load(LOAD_ORDERING)
     }
 
     fn set_last_drop_failed(&self, value: bool) {
-        self.extra_data.store(value, Ordering::Release)
+        self.extra_data.store(value, STORE_ORDERING)
     }
 }
 
