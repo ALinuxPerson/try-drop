@@ -216,7 +216,14 @@ pub fn install_dyn(strategy: Box<dyn TryDropStrategy>) {
     })
 }
 
+
 /// Uninstall this fallback drop strategy from the current thread.
 pub fn uninstall() {
-    DROP_STRATEGY.with(|drop_strategy| *drop_strategy.borrow_mut() = None)
+    take();
 }
+
+/// Take this fallback drop strategy from the current thread, if there is any.
+pub fn take() -> Option<Box<dyn TryDropStrategy>> {
+    DROP_STRATEGY.with(|drop_strategy| drop_strategy.borrow_mut().take())
+}
+

@@ -226,5 +226,10 @@ pub fn install_dyn(strategy: Box<dyn DynFallibleTryDropStrategy>) {
 
 /// Uninstall this drop strategy from the current thread.
 pub fn uninstall() {
-    DROP_STRATEGY.with(|drop_strategy| *drop_strategy.borrow_mut() = None)
+    take();
+}
+
+/// Take this drop strategy from the current thread, if there is any.
+pub fn take() -> Option<Box<dyn DynFallibleTryDropStrategy>> {
+    DROP_STRATEGY.with(|drop_strategy| drop_strategy.borrow_mut().take())
 }
