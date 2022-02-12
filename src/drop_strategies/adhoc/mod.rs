@@ -53,35 +53,20 @@ impl<T: Fn(crate::Error)> IntoAdHocTryDropStrategy for T {}
 )]
 #[cfg_attr(feature = "shrinkwraprs", derive(Shrinkwrap))]
 #[cfg_attr(feature = "shrinkwraprs", shrinkwrap(mutable))]
-pub struct AdHocFallibleTryDropStrategy<F, E>
+pub struct AdHocFallibleTryDropStrategy<F, E>(pub F)
 where
     F: Fn(crate::Error) -> Result<(), E>,
-    E: Into<anyhow::Error>,
-{
-    /// The inner function.
-    #[cfg_attr(feature = "shrinkwraprs", shrinkwrap(main_field))]
-    pub f: F,
-
-    _error: PhantomData<E>,
-}
+    E: Into<anyhow::Error>;
 
 impl<F, E> AdHocFallibleTryDropStrategy<F, E>
 where
     F: Fn(crate::Error) -> Result<(), E>,
     E: Into<anyhow::Error>,
 {
-    /// Create a new ad-hoc fallible try drop strategy.
-    pub fn new(f: F) -> Self {
-        Self {
-            f,
-            _error: PhantomData,
-        }
-    }
-
     /// Take the inner function.
     #[cfg(feature = "shrinkwraprs")]
     pub fn take(this: Self) -> F {
-        this.f
+        this.0
     }
 }
 
@@ -93,7 +78,7 @@ where
     type Error = E;
 
     fn try_handle_error(&self, error: crate::Error) -> Result<(), Self::Error> {
-        (self.f)(error)
+        (self.0)(error)
     }
 }
 
@@ -103,7 +88,7 @@ where
     E: Into<anyhow::Error>,
 {
     fn from(f: F) -> Self {
-        Self::new(f)
+        Self(f)
     }
 }
 
@@ -118,6 +103,6 @@ pub trait IntoAdHocFallibleTryDropStrategy:
     fn into_adhoc_fallible_try_drop_strategy(
         self,
     ) -> AdHocFallibleTryDropStrategy<Self, Self::Error> {
-        AdHocFallibleTryDropStrategy::new(self)
+        AdHocFallibleTryDropStrategy(self)
     }
 }
