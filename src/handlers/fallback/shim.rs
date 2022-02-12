@@ -1,3 +1,4 @@
+#![allow(clippy::declare_interior_mutable_const)]
 use std::sync::atomic::{AtomicBool, Ordering};
 use anyhow::Error;
 use crate::on_uninit::{DoNothingOnUninit, FlagOnUninit, PanicOnUninit};
@@ -15,15 +16,20 @@ mod imp {
     use crate::handlers::shim::{FallbackHandler, UseDefaultOnUninitShim};
     use crate::TryDropStrategy;
 
+    /// The default thing to do when both the primary and fallback strategies are uninitialized,
+    /// that is to use the inner cache to handle the error instead.
     pub type DefaultOnUninit = UseDefaultOnUninitShim<FallbackHandler>;
 
     impl ShimFallbackDropStrategy<UseDefaultOnUninitShim<FallbackHandler>> {
+        /// See [`Self::use_default_on_uninit`].
         pub const USE_DEFAULT_ON_UNINIT: Self = Self {
             global: GlobalFallbackDropStrategy::FLAG_ON_UNINIT,
             thread_local: ThreadLocalFallbackDropStrategy::FLAG_ON_UNINIT,
             extra_data: Lazy::new(|| PanicDropStrategy::DEFAULT),
         };
 
+        /// If both the primary and fallback strategies are uninitialized, use the inner cache to
+        /// handle the error instead.
         pub const fn use_default_on_uninit() -> Self {
             Self::USE_DEFAULT_ON_UNINIT
         }
@@ -34,6 +40,7 @@ mod imp {
     }
 
     impl ShimFallbackDropStrategy<DefaultOnUninit> {
+        /// The default thing to do when both the primary and fallback strategies are uninitialized.
         pub const DEFAULT: Self = Self::USE_DEFAULT_ON_UNINIT;
     }
 
@@ -48,9 +55,12 @@ mod imp {
     use crate::handlers::fallback::shim::ShimFallbackDropStrategy;
     use crate::on_uninit::PanicOnUninit;
 
+    /// The default thing to do when the primary and fallback strategies are uninitialized, that is
+    /// to panic.
     pub type DefaultOnUninit = PanicOnUninit;
 
     impl ShimFallbackDropStrategy<DefaultOnUninit> {
+        /// The default thing to do when the primary and fallback strategies are uninitialized.
         pub const DEFAULT: Self = Self::PANIC_ON_UNINIT;
     }
 }
@@ -58,12 +68,15 @@ mod imp {
 pub use imp::DefaultOnUninit;
 use crate::adapters::ArcError;
 
+/// The default shim fallback drop strategy.
 pub static DEFAULT_SHIM_FALLBACK_DROP_STRATEGY: ShimFallbackDropStrategy = ShimFallbackDropStrategy::DEFAULT;
 
 #[cfg_attr(
     feature = "derives",
     derive(Debug)
 )]
+/// A shim which abstracts the global and thread local handlers together, with the thread local
+/// handlers taking precedence over the global handlers.
 pub struct ShimFallbackDropStrategy<OU: OnUninitShim = DefaultOnUninit> {
     global: GlobalFallbackDropStrategy<FlagOnUninit>,
     thread_local: ThreadLocalFallbackDropStrategy<FlagOnUninit>,
@@ -71,40 +84,49 @@ pub struct ShimFallbackDropStrategy<OU: OnUninitShim = DefaultOnUninit> {
 }
 
 impl ShimFallbackDropStrategy<PanicOnUninit> {
+    /// See [`Self::on_uninit_panic`].
     pub const PANIC_ON_UNINIT: Self = Self {
         global: GlobalFallbackDropStrategy::FLAG_ON_UNINIT,
         thread_local: ThreadLocalFallbackDropStrategy::FLAG_ON_UNINIT,
         extra_data: (),
     };
 
+    /// When both the primary and fallback handlers are not initialized, panic.
     pub const fn on_uninit_panic() -> Self {
         Self::PANIC_ON_UNINIT
     }
 }
 
 impl ShimFallbackDropStrategy<DoNothingOnUninit> {
+    /// See [`Self::on_uninit_do_nothing`].
     pub const DO_NOTHING_ON_UNINIT: Self = Self {
         global: GlobalFallbackDropStrategy::FLAG_ON_UNINIT,
         thread_local: ThreadLocalFallbackDropStrategy::FLAG_ON_UNINIT,
         extra_data: (),
     };
 
+    /// When both the primary and fallback handlers are not initialized, do nothing.
     pub const fn on_uninit_do_nothing() -> Self {
         Self::DO_NOTHING_ON_UNINIT
     }
 }
 
 impl ShimFallbackDropStrategy<FlagOnUninit> {
+    /// See [`Self::on_uninit_flag`].
     pub const FLAG_ON_UNINIT: Self = Self {
         global: GlobalFallbackDropStrategy::FLAG_ON_UNINIT,
         thread_local: ThreadLocalFallbackDropStrategy::FLAG_ON_UNINIT,
         extra_data: AtomicBool::new(false),
     };
 
+    /// When both the primary and fallback handlers are not initialized, set `last_drop_failed` to
+    /// `true`.
     pub const fn on_uninit_flag() -> Self {
         Self::FLAG_ON_UNINIT
     }
 
+    /// Check whether or not the last drop failed due to the primary and fallback drop strategies
+    /// not being initialized.
     pub fn last_drop_failed(&self) -> bool {
         self.extra_data.load(Ordering::Acquire)
     }
