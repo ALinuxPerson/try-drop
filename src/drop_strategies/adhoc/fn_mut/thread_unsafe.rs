@@ -16,7 +16,7 @@ impl<F: FnMut(crate::Error)> TryDropStrategy for ThreadUnsafeAdHocMutDropStrateg
     }
 }
 
-pub trait IntoThreadUnsafeFnMutDropStrategy: FnMut(crate::Error) + Sized {
+pub trait IntoThreadUnsafeAdHocMutDropStrategy: FnMut(crate::Error) + Sized {
     fn into_drop_strategy(self) -> ThreadUnsafeAdHocMutDropStrategy<Self> {
         ThreadUnsafeAdHocMutDropStrategy::new(self)
     }
@@ -49,7 +49,7 @@ impl<F, E> FallibleTryDropStrategy for ThreadUnsafeAdHocMutFallibleDropStrategy<
     }
 }
 
-pub trait IntoThreadUnsafeFnMutFallibleDropStrategy: FnMut(crate::Error) -> Result<(), Self::Error> + Sized {
+pub trait IntoThreadUnsafeAdHocMutFallibleDropStrategy: FnMut(crate::Error) -> Result<(), Self::Error> + Sized {
     type Error: Into<crate::Error>;
 
     fn into_drop_strategy(self) -> ThreadUnsafeAdHocMutFallibleDropStrategy<Self, Self::Error> {
