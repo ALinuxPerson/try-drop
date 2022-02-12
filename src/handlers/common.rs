@@ -19,11 +19,11 @@ use std::fmt::Formatter;
     derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
 )]
 #[derive(Debug)]
-pub struct LockedError(pub(crate) ());
+pub struct NestedScopeError(pub(crate) ());
 
-impl Error for LockedError {}
+impl Error for NestedScopeError {}
 
-impl fmt::Display for LockedError {
+impl fmt::Display for NestedScopeError {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.write_str("you cannot nest scope guards")
     }
