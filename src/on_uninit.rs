@@ -9,6 +9,10 @@ mod use_default {
     use super::*;
 
     /// Use the default drop strategy if uninitialized
+    #[cfg_attr(
+        feature = "derives",
+        derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
+    )]
     pub enum UseDefaultOnUninit {}
 
     impl OnUninit for UseDefaultOnUninit {
@@ -28,6 +32,10 @@ pub trait OnUninit: private::Sealed {
 }
 
 /// Just error on the drop strategy if uninitialized.
+#[cfg_attr(
+    feature = "derives",
+    derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
+)]
 pub enum ErrorOnUninit {}
 
 impl OnUninit for ErrorOnUninit {
@@ -36,6 +44,10 @@ impl OnUninit for ErrorOnUninit {
 impl private::Sealed for ErrorOnUninit {}
 
 /// Panic on the drop strategy if uninitialized.
+#[cfg_attr(
+    feature = "derives",
+    derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
+)]
 pub enum PanicOnUninit {}
 
 impl OnUninit for PanicOnUninit {
@@ -44,6 +56,10 @@ impl OnUninit for PanicOnUninit {
 impl private::Sealed for PanicOnUninit {}
 
 /// Does nothing if uninitialized.
+#[cfg_attr(
+    feature = "derives",
+    derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
+)]
 pub enum DoNothingOnUninit {}
 
 impl OnUninit for DoNothingOnUninit {
@@ -52,6 +68,10 @@ impl OnUninit for DoNothingOnUninit {
 impl private::Sealed for DoNothingOnUninit {}
 
 /// Sets an internal flag if uninitialized.
+#[cfg_attr(
+    feature = "derives",
+    derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
+)]
 pub enum FlagOnUninit {}
 
 impl OnUninit for FlagOnUninit {
