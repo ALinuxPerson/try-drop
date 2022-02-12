@@ -2,6 +2,10 @@ use std::cell::RefCell;
 use anyhow::Error;
 use crate::{FallibleTryDropStrategy, TryDropStrategy};
 
+#[cfg_attr(
+    feature = "derives",
+    derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)
+)]
 pub struct ThreadUnsafeAdHocMutDropStrategy<F: FnMut(crate::Error)>(pub RefCell<F>);
 
 impl<F: FnMut(crate::Error)> ThreadUnsafeAdHocMutDropStrategy<F> {
@@ -22,6 +26,10 @@ pub trait IntoThreadUnsafeAdHocMutDropStrategy: FnMut(crate::Error) + Sized {
     }
 }
 
+#[cfg_attr(
+    feature = "derives",
+    derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)
+)]
 pub struct ThreadUnsafeAdHocMutFallibleDropStrategy<F, E>(pub RefCell<F>)
 where
     F: FnMut(crate::Error) -> Result<(), E>,
