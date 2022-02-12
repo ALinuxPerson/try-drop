@@ -1,5 +1,6 @@
 #![doc = include_str!("../README.md")]
 #![allow(drop_bounds)]
+#![allow(clippy::declare_interior_mutable_const)]
 #![warn(missing_docs)]
 #![no_std]
 
