@@ -17,13 +17,17 @@ thread_local! {
     static DROP_STRATEGY: RefCell<Option<Box<dyn TryDropStrategy>>> = RefCell::new(None);
 }
 
+/// The default thing to do when the fallback drop strategy is uninitialized.
 #[cfg(not(feature = "ds-panic"))]
 pub type DefaultOnUninit = PanicOnUninit;
 
+/// The default thing to do when the fallback drop strategy is uninitialized.
 #[cfg(feature = "ds-panic")]
 pub type DefaultOnUninit = UseDefaultOnUninit;
 
+/// The default thread local fallback strategy.
 pub static DEFAULT_THREAD_LOCAL_FALLBACK_STRATEGY: ThreadLocalFallbackDropStrategy = ThreadLocalFallbackDropStrategy::DEFAULT;
+
 const UNINITIALIZED_ERROR: &str = "the thread local fallback drop strategy is not initialized yet";
 
 /// The thread local fallback try drop strategy. This doesn't store anything, it just provides an
@@ -38,6 +42,7 @@ pub struct ThreadLocalFallbackDropStrategy<OU: OnUninit = DefaultOnUninit> {
 }
 
 impl ThreadLocalFallbackDropStrategy<DefaultOnUninit> {
+    /// The default thread local fallback try drop strategy.
     pub const DEFAULT: Self = Self {
         extra_data: (),
         _on_uninit: PhantomData,
@@ -89,6 +94,7 @@ impl ThreadLocalFallbackDropStrategy<UseDefaultOnUninit> {
 
 impl ThreadLocalFallbackDropStrategy<FlagOnUninit> {
     /// See [`Self::on_uninit_flag`].
+    #[allow(clippy::declare_interior_mutable_const)]
     pub const FLAG_ON_UNINIT: Self = Self::on_uninit_flag();
 
     /// Create a new interface to the thread local fallback drop strategy. If the thread local drop
