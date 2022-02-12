@@ -1,3 +1,5 @@
+//! This stores all the adapters that this crate and users of this crate may use.
+
 #[cfg(feature = "std")]
 mod arc_error {
     use std::error::Error;
