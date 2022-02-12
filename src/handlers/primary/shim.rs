@@ -2,7 +2,7 @@
 
 use crate::handlers::on_uninit::{DoNothingOnUninit, ErrorOnUninit, FlagOnUninit, PanicOnUninit};
 use crate::handlers::primary::global::GlobalPrimaryDropStrategy;
-use crate::handlers::primary::thread_local::ThreadLocalPrimaryTryDropStrategy;
+use crate::handlers::primary::thread_local::ThreadLocalPrimaryHandler;
 use crate::handlers::shim::OnUninitShim;
 use crate::{FallibleTryDropStrategy, LOAD_ORDERING, STORE_ORDERING};
 use anyhow::Error;
@@ -12,7 +12,7 @@ mod imp {
     use crate::drop_strategies::WriteDropStrategy;
     use crate::handlers::primary::global::GlobalPrimaryDropStrategy;
     use crate::handlers::primary::shim::ShimPrimaryDropStrategy;
-    use crate::handlers::primary::thread_local::ThreadLocalPrimaryTryDropStrategy;
+    use crate::handlers::primary::thread_local::ThreadLocalPrimaryHandler;
     use crate::handlers::shim::{PrimaryHandler, UseDefaultOnUninitShim};
     use crate::FallibleTryDropStrategy;
     use once_cell::sync::Lazy;
@@ -33,7 +33,7 @@ mod imp {
         #[allow(clippy::declare_interior_mutable_const)]
         pub const USE_DEFAULT_ON_UNINIT: Self = Self {
             global: GlobalPrimaryDropStrategy::FLAG_ON_UNINIT,
-            thread_local: ThreadLocalPrimaryTryDropStrategy::FLAG_ON_UNINIT,
+            thread_local: ThreadLocalPrimaryHandler::FLAG_ON_UNINIT,
             extra_data: Lazy::new(|| {
                 let mut strategy = WriteDropStrategy::stderr();
                 strategy.prelude("error: ");
@@ -91,7 +91,7 @@ pub static DEFAULT_SHIM_PRIMARY_DROP_STRATEGY: ShimPrimaryDropStrategy =
 #[cfg_attr(feature = "derives", derive(Debug))]
 pub struct ShimPrimaryDropStrategy<OU: OnUninitShim = DefaultOnUninit> {
     global: GlobalPrimaryDropStrategy<FlagOnUninit>,
-    thread_local: ThreadLocalPrimaryTryDropStrategy<FlagOnUninit>,
+    thread_local: ThreadLocalPrimaryHandler<FlagOnUninit>,
     extra_data: OU::ExtraData,
 }
 
@@ -100,7 +100,7 @@ impl ShimPrimaryDropStrategy<ErrorOnUninit> {
     #[allow(clippy::declare_interior_mutable_const)]
     pub const ERROR_ON_UNINIT: Self = Self {
         global: GlobalPrimaryDropStrategy::FLAG_ON_UNINIT,
-        thread_local: ThreadLocalPrimaryTryDropStrategy::FLAG_ON_UNINIT,
+        thread_local: ThreadLocalPrimaryHandler::FLAG_ON_UNINIT,
         extra_data: (),
     };
 
@@ -116,7 +116,7 @@ impl ShimPrimaryDropStrategy<PanicOnUninit> {
     #[allow(clippy::declare_interior_mutable_const)]
     pub const PANIC_ON_UNINIT: Self = Self {
         global: GlobalPrimaryDropStrategy::FLAG_ON_UNINIT,
-        thread_local: ThreadLocalPrimaryTryDropStrategy::FLAG_ON_UNINIT,
+        thread_local: ThreadLocalPrimaryHandler::FLAG_ON_UNINIT,
         extra_data: (),
     };
 
@@ -131,7 +131,7 @@ impl ShimPrimaryDropStrategy<DoNothingOnUninit> {
     #[allow(clippy::declare_interior_mutable_const)]
     pub const DO_NOTHING_ON_UNINIT: Self = Self {
         global: GlobalPrimaryDropStrategy::FLAG_ON_UNINIT,
-        thread_local: ThreadLocalPrimaryTryDropStrategy::FLAG_ON_UNINIT,
+        thread_local: ThreadLocalPrimaryHandler::FLAG_ON_UNINIT,
         extra_data: (),
     };
 
@@ -147,7 +147,7 @@ impl ShimPrimaryDropStrategy<FlagOnUninit> {
     #[allow(clippy::declare_interior_mutable_const)]
     pub const FLAG_ON_UNINIT: Self = Self {
         global: GlobalPrimaryDropStrategy::FLAG_ON_UNINIT,
-        thread_local: ThreadLocalPrimaryTryDropStrategy::FLAG_ON_UNINIT,
+        thread_local: ThreadLocalPrimaryHandler::FLAG_ON_UNINIT,
         extra_data: AtomicBool::new(false),
     };
 

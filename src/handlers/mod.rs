@@ -24,7 +24,7 @@ pub use primary::global::GlobalPrimaryDropStrategy as PrimaryDropStrategy;
 pub use primary::global::DEFAULT_GLOBAL_PRIMARY_DROP_STRATEGY as DEFAULT_PRIMARY_DROP_STRATEGY;
 
 #[cfg(all(feature = "thread-local", not(feature = "global")))]
-pub use primary::thread_local::ThreadLocalPrimaryTryDropStrategy as PrimaryDropStrategy;
+pub use primary::thread_local::ThreadLocalPrimaryHandler as PrimaryDropStrategy;
 
 #[cfg(all(feature = "thread-local", not(feature = "global")))]
 pub use primary::thread_local::DEFAULT_THREAD_LOCAL_PRIMARY_DROP_STRATEGY as DEFAULT_PRIMARY_DROP_STRATEGY;
