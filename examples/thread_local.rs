@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::thread;
 use try_drop::drop_strategies::{AdHocFallibleTryDropStrategy, AdHocTryDropStrategy};
-use try_drop::handlers::primary::shim::ShimPrimaryDropStrategy;
+
 use try_drop::PureTryDrop;
 use try_drop::test_utils::{ErrorsOnDrop, Fallible};
 
