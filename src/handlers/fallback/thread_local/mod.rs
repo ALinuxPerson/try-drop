@@ -1,7 +1,9 @@
 //! Manage the thread local fallback drop strategy.
+mod scope_guard;
+
+pub use scope_guard::ScopeGuard;
 use std::boxed::Box;
 use std::cell::RefCell;
-
 use crate::on_uninit::{ErrorOnUninit, FlagOnUninit, OnUninit, PanicOnUninit};
 use crate::uninit_error::UninitializedError;
 use crate::TryDropStrategy;
@@ -225,5 +227,33 @@ pub fn uninstall() {
 /// Take this fallback drop strategy from the current thread, if there is any.
 pub fn take() -> Option<Box<dyn TryDropStrategy>> {
     DROP_STRATEGY.with(|drop_strategy| drop_strategy.borrow_mut().take())
+}
+
+/// Replace the current fallback drop strategy with another, returning the previous drop strategy if
+/// any.
+pub fn replace(new: impl TryDropStrategy + 'static) -> Option<Box<dyn TryDropStrategy>> {
+    replace_dyn(Box::new(new))
+}
+
+/// Replace the current fallback drop strategy with another, returning the previous drop strategy if
+/// any. Must be a dynamic trait object.
+pub fn replace_dyn(new: Box<dyn TryDropStrategy>) -> Option<Box<dyn TryDropStrategy>> {
+    DROP_STRATEGY.with(|previous| previous.borrow_mut().replace(new))
+}
+
+/// Install this strategy for the current scope.
+///
+/// # Panics
+/// This panics if a strategy was already installed for the previous scope.
+pub fn scope(strategy: impl TryDropStrategy + 'static) -> ScopeGuard {
+    scope_dyn(Box::new(strategy))
+}
+
+/// Install this strategy for the current scope. Must be a dynamic trait object.
+///
+/// # Panics
+/// This panics if a strategy was already installed for the previous scope.
+pub fn scope_dyn(strategy: Box<dyn TryDropStrategy>) -> ScopeGuard {
+    ScopeGuard::new_dyn(strategy)
 }
 
