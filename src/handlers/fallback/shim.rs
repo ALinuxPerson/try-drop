@@ -4,7 +4,7 @@
 use crate::handlers::fallback::global::GlobalFallbackHandler;
 use crate::handlers::fallback::thread_local::ThreadLocalFallbackHandler;
 use crate::handlers::on_uninit::{DoNothingOnUninit, FlagOnUninit, PanicOnUninit};
-use crate::handlers::shim::OnUninitShim;
+use crate::handlers::common::shim::OnUninitShim;
 use crate::{TryDropStrategy, LOAD_ORDERING, STORE_ORDERING};
 use anyhow::Error;
 use std::sync::atomic::AtomicBool;
@@ -14,7 +14,7 @@ mod imp {
     use crate::handlers::fallback::global::GlobalFallbackHandler;
     use crate::handlers::fallback::shim::ShimFallbackHandler;
     use crate::handlers::fallback::thread_local::ThreadLocalFallbackHandler;
-    use crate::handlers::shim::{FallbackHandler, UseDefaultOnUninitShim};
+    use crate::handlers::common::shim::{FallbackHandler, UseDefaultOnUninitShim};
     use crate::TryDropStrategy;
     use once_cell::sync::Lazy;
 

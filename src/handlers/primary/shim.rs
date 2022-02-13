@@ -3,7 +3,7 @@
 use crate::handlers::on_uninit::{DoNothingOnUninit, ErrorOnUninit, FlagOnUninit, PanicOnUninit};
 use crate::handlers::primary::global::GlobalPrimaryHandler;
 use crate::handlers::primary::thread_local::ThreadLocalPrimaryHandler;
-use crate::handlers::shim::OnUninitShim;
+use crate::handlers::common::shim::OnUninitShim;
 use crate::{FallibleTryDropStrategy, LOAD_ORDERING, STORE_ORDERING};
 use anyhow::Error;
 use std::sync::atomic::AtomicBool;
@@ -13,7 +13,7 @@ mod imp {
     use crate::handlers::primary::global::GlobalPrimaryHandler;
     use crate::handlers::primary::shim::ShimPrimaryHandler;
     use crate::handlers::primary::thread_local::ThreadLocalPrimaryHandler;
-    use crate::handlers::shim::{PrimaryHandler, UseDefaultOnUninitShim};
+    use crate::handlers::common::shim::{PrimaryHandler, UseDefaultOnUninitShim};
     use crate::FallibleTryDropStrategy;
     use once_cell::sync::Lazy;
     use std::io;

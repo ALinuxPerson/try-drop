@@ -4,7 +4,6 @@ mod common;
 pub mod fallback;
 pub(crate) mod fns;
 pub mod primary;
-mod shim;
 
 #[cfg(any(feature = "global", feature = "thread-local"))]
 pub mod on_uninit;

@@ -6,7 +6,7 @@ mod private {
 #[cfg(any(feature = "ds-write", feature = "ds-panic"))]
 mod use_default {
     use super::private;
-    use crate::handlers::shim::OnUninitShim;
+    use crate::handlers::common::shim::OnUninitShim;
     use once_cell::sync::Lazy;
     use std::marker::PhantomData;
 

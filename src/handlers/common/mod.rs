@@ -2,6 +2,8 @@ use std::error::Error;
 use std::fmt;
 use std::fmt::Formatter;
 
+pub mod shim;
+
 /// This error occurs when you attempt to use a scope guard in a nested scope.
 ///
 /// # Examples
