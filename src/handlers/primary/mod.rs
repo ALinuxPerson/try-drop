@@ -10,3 +10,5 @@ pub mod handler;
 
 #[cfg(all(feature = "global", feature = "thread-local"))]
 pub mod shim;
+
+pub mod sshim;
