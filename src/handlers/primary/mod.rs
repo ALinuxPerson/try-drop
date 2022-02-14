@@ -15,8 +15,6 @@ pub mod thread_local;
 #[cfg(all(feature = "global", feature = "thread-local"))]
 pub mod shim;
 
-pub mod sshim;
-
 /// The default thing to do when the primary handler is uninitialized, that is
 /// to panic.
 #[cfg(not(feature = "ds-write"))]
