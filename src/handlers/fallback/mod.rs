@@ -1,9 +1,5 @@
 //! Manage the fallback handler.
 
-use crate::handlers::common::Fallback;
-use crate::handlers::common::proxy::TheGreatAbstracter;
-use crate::handlers::on_uninit::UseDefaultOnUninit;
-
 #[cfg(feature = "global")]
 pub mod global;
 
@@ -22,6 +18,12 @@ mod private {
     pub trait Sealed {}
 }
 
+use std::marker::PhantomData;
+use crate::handlers::common::{Fallback, Scope};
+use crate::handlers::common::handler::CommonHandler;
+use crate::handlers::common::proxy::TheGreatAbstracter;
+use crate::handlers::on_uninit::UseDefaultOnUninit;
+
 /// The default thing to do when the fallback handler is not initialized.
 #[cfg(not(feature = "ds-panic"))]
 pub type DefaultOnUninit = PanicOnUninit;
@@ -31,3 +33,16 @@ pub type DefaultOnUninit = PanicOnUninit;
 pub type DefaultOnUninit = UseDefaultOnUninit;
 
 type Abstracter<S> = TheGreatAbstracter<Fallback, S>;
+
+impl<S: Scope> CommonHandler<DefaultOnUninit, S, Fallback> {
+    pub const DEFAULT: Self = Self {
+        extra_data: (),
+        _scope: PhantomData,
+    };
+}
+
+impl<S: Scope> Default for CommonHandler<DefaultOnUninit, S, Fallback> {
+    fn default() -> Self {
+        Self::DEFAULT
+    }
+}

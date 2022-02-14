@@ -7,24 +7,11 @@ use crate::handlers::on_uninit::{FlagOnUninit, PanicOnUninit, UseDefaultOnUninit
 use crate::handlers::UninitializedError;
 use crate::TryDropStrategy;
 
-
-
 pub type ThreadLocalFallbackHandler<OU = DefaultOnUninit> = CommonHandler<OU, ThreadLocal, Fallback>;
 
 pub static DEFAULT_THREAD_LOCAL_FALLBACK_HANDLER: ThreadLocalFallbackHandler = ThreadLocalFallbackHandler::DEFAULT;
 
-impl<S: Scope> CommonHandler<DefaultOnUninit, S, Fallback> {
-    pub const DEFAULT: Self = Self {
-        extra_data: (),
-        _scope: PhantomData,
-    };
-}
 
-impl<S: Scope> Default for CommonHandler<DefaultOnUninit, S, Fallback> {
-    fn default() -> Self {
-        Self::DEFAULT
-    }
-}
 
 impl TryDropStrategy for CommonHandler<PanicOnUninit, ThreadLocal, Fallback> {
     fn handle_error(&self, error: crate::Error) {
