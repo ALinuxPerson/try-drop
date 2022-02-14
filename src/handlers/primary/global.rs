@@ -16,20 +16,20 @@ use crate::handlers::common::handler::CommonHandler;
 use crate::handlers::primary::{Abstracter, DefaultOnUninit};
 use crate::handlers::common::{
     Primary,
-    Global as GlobalHandler,
+    Global as GlobalScope,
 };
 
 #[cfg(feature = "ds-write")]
 use crate::handlers::on_uninit::UseDefaultOnUninit;
 
-pub type GlobalPrimaryHandler<OU = DefaultOnUninit> = CommonHandler<OU, GlobalHandler, Primary>;
+pub type GlobalPrimaryHandler<OU = DefaultOnUninit> = CommonHandler<OU, GlobalScope, Primary>;
 pub static DEFAULT_GLOBAL_PRIMARY_HANDLER: GlobalPrimaryHandler = GlobalPrimaryHandler::DEFAULT;
 
 impl FallibleTryDropStrategy for GlobalPrimaryHandler<ErrorOnUninit> {
     type Error = anyhow::Error;
 
     fn try_handle_error(&self, error: Error) -> Result<(), Self::Error> {
-        Abstracter::<GlobalHandler>::try_read(|strategy| strategy.dyn_try_handle_error(error))
+        Abstracter::<GlobalScope>::try_read(|strategy| strategy.dyn_try_handle_error(error))
             .map_err(Into::into)
             .and_then(convert::identity)
     }
@@ -39,7 +39,7 @@ impl FallibleTryDropStrategy for GlobalPrimaryHandler<PanicOnUninit> {
     type Error = anyhow::Error;
 
     fn try_handle_error(&self, error: Error) -> Result<(), Self::Error> {
-        Abstracter::<GlobalHandler>::try_read(|strategy| strategy.dyn_try_handle_error(error))
+        Abstracter::<GlobalScope>::try_read(|strategy| strategy.dyn_try_handle_error(error))
             .expect(<Primary as GlobalDefinition>::UNINITIALIZED_ERROR)
     }
 }
@@ -49,7 +49,7 @@ impl FallibleTryDropStrategy for GlobalPrimaryHandler<UseDefaultOnUninit> {
     type Error = anyhow::Error;
 
     fn try_handle_error(&self, error: Error) -> Result<(), Self::Error> {
-        Abstracter::<GlobalHandler>::read_or_default(|strategy| strategy.dyn_try_handle_error(error))
+        Abstracter::<GlobalScope>::read_or_default(|strategy| strategy.dyn_try_handle_error(error))
     }
 }
 
@@ -57,7 +57,7 @@ impl FallibleTryDropStrategy for GlobalPrimaryHandler<FlagOnUninit> {
     type Error = anyhow::Error;
 
     fn try_handle_error(&self, error: Error) -> Result<(), Self::Error> {
-        let (last_drop_failed, ret) = match Abstracter::<GlobalHandler>::try_read(|s| s.dyn_try_handle_error(error)) {
+        let (last_drop_failed, ret) = match Abstracter::<GlobalScope>::try_read(|s| s.dyn_try_handle_error(error)) {
             Ok(Ok(())) => (false, Ok(())),
             Ok(Err(error)) => (false, Err(error)),
             Err(error) => (true, Err(error.into())),
