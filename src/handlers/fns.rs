@@ -1,5 +1,5 @@
 use super::{fallback, primary};
-use crate::{DynFallibleTryDropStrategy, TryDropStrategy};
+use crate::{ThreadLocalFallibleTryDropStrategy, ThreadLocalTryDropStrategy};
 use std::boxed::Box;
 
 #[cfg(feature = "global")]
@@ -34,8 +34,8 @@ pub fn uninstall_globally() {
 /// This installs the primary and fallback thread local handlers.
 #[cfg(feature = "thread-local")]
 pub fn install_thread_local_handlers(
-    primary: impl DynFallibleTryDropStrategy + 'static,
-    fallback: impl TryDropStrategy + 'static,
+    primary: impl ThreadLocalFallibleTryDropStrategy,
+    fallback: impl ThreadLocalTryDropStrategy,
 ) {
     install_thread_local_handlers_dyn(Box::new(primary), Box::new(fallback))
 }
@@ -44,8 +44,8 @@ pub fn install_thread_local_handlers(
 /// object.
 #[cfg(feature = "thread-local")]
 pub fn install_thread_local_handlers_dyn(
-    primary: Box<dyn DynFallibleTryDropStrategy>,
-    fallback: Box<dyn TryDropStrategy>,
+    primary: Box<dyn ThreadLocalFallibleTryDropStrategy>,
+    fallback: Box<dyn ThreadLocalTryDropStrategy>,
 ) {
     primary::thread_local::install_dyn(primary);
     fallback::thread_local::install_dyn(fallback);
@@ -54,8 +54,8 @@ pub fn install_thread_local_handlers_dyn(
 /// This installs the primary and fallback thread local handlers for this scope.
 #[cfg(feature = "thread-local")]
 pub fn install_thread_local_handlers_for_this_scope(
-    primary: impl DynFallibleTryDropStrategy + 'static,
-    fallback: impl TryDropStrategy + 'static,
+    primary: impl ThreadLocalFallibleTryDropStrategy,
+    fallback: impl ThreadLocalTryDropStrategy,
 ) -> (
     primary::thread_local::ScopeGuard,
     fallback::thread_local::ScopeGuard,
@@ -67,8 +67,8 @@ pub fn install_thread_local_handlers_for_this_scope(
 /// dynamic trait object.
 #[cfg(feature = "thread-local")]
 pub fn install_thread_local_handlers_for_this_scope_dyn(
-    primary: Box<dyn DynFallibleTryDropStrategy>,
-    fallback: Box<dyn TryDropStrategy>,
+    primary: Box<dyn ThreadLocalFallibleTryDropStrategy>,
+    fallback: Box<dyn ThreadLocalTryDropStrategy>,
 ) -> (
     primary::thread_local::ScopeGuard,
     fallback::thread_local::ScopeGuard,

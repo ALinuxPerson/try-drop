@@ -1,6 +1,8 @@
 //! Manage the primary and fallback handlers and their scopes.
 
+#[macro_use]
 mod common;
+
 pub mod fallback;
 pub(crate) mod fns;
 pub mod primary;
