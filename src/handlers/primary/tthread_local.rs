@@ -2,7 +2,7 @@ use std::boxed::Box;
 use std::cell::RefCell;
 use std::thread::LocalKey;
 use std::thread_local;
-use crate::DynFallibleTryDropStrategy;
+use crate::{DynFallibleTryDropStrategy, ThreadLocalFallibleTryDropStrategy};
 use crate::handlers::common::Primary;
 use crate::handlers::common::thread_local::{
     DefaultThreadLocalDefinition,
@@ -40,7 +40,7 @@ impl DefaultThreadLocalDefinition for Primary {
     }
 }
 
-impl<T: DynFallibleTryDropStrategy + 'static> From<T> for Box<dyn DynFallibleTryDropStrategy> {
+impl<T: ThreadLocalFallibleTryDropStrategy> From<T> for Box<dyn DynFallibleTryDropStrategy> {
     fn from(strategy: T) -> Self {
         Box::new(strategy)
     }
@@ -49,7 +49,7 @@ impl<T: DynFallibleTryDropStrategy + 'static> From<T> for Box<dyn DynFallibleTry
 type ThreadLocal = GenericThreadLocal<Primary>;
 pub type ScopeGuard = GenericScopeGuard<Primary>;
 
-pub fn install(strategy: impl DynFallibleTryDropStrategy + 'static) {
+pub fn install(strategy: impl ThreadLocalFallibleTryDropStrategy) {
     ThreadLocal::install(strategy)
 }
 
@@ -77,7 +77,7 @@ pub fn take() -> Option<Box<dyn DynFallibleTryDropStrategy>> {
     ThreadLocal::take()
 }
 
-pub fn replace(strategy: impl DynFallibleTryDropStrategy + 'static) -> Option<Box<dyn DynFallibleTryDropStrategy>> {
+pub fn replace(strategy: impl ThreadLocalFallibleTryDropStrategy) -> Option<Box<dyn DynFallibleTryDropStrategy>> {
     ThreadLocal::replace(strategy)
 }
 
@@ -85,7 +85,7 @@ pub fn replace_dyn(strategy: Box<dyn DynFallibleTryDropStrategy>) -> Option<Box<
     ThreadLocal::replace_dyn(strategy)
 }
 
-pub fn scope(strategy: impl DynFallibleTryDropStrategy + 'static) -> ScopeGuard {
+pub fn scope(strategy: impl ThreadLocalFallibleTryDropStrategy) -> ScopeGuard {
     ThreadLocal::scope(strategy)
 }
 
