@@ -1,15 +1,15 @@
 use std::marker::PhantomData;
 use std::sync::atomic::AtomicBool;
-use crate::handlers::common::Scope;
+use crate::handlers::common::{Handler, Scope};
 use crate::handlers::on_uninit::{FlagOnUninit, OnUninit, PanicOnUninit};
 use crate::{LOAD_ORDERING, STORE_ORDERING};
 
-pub struct Handler<OU: OnUninit, S: Scope> {
+pub struct CommonHandler<OU: OnUninit, S: Scope, H: Handler> {
     extra_data: OU::ExtraData,
-    _scope: PhantomData<S>,
+    _scope: PhantomData<(S, H)>,
 }
 
-impl<S: Scope> Handler<PanicOnUninit, S> {
+impl<S: Scope, H: Handler> CommonHandler<PanicOnUninit, S, H> {
     pub const PANIC_ON_UNINIT: Self = Self {
         extra_data: (),
         _scope: PhantomData,
@@ -20,7 +20,7 @@ impl<S: Scope> Handler<PanicOnUninit, S> {
     }
 }
 
-impl<S: Scope> Handler<FlagOnUninit, S> {
+impl<S: Scope, H: Handler> CommonHandler<FlagOnUninit, S, H> {
     pub const FLAG_ON_UNINIT: Self = Self {
         extra_data: AtomicBool::new(false),
         _scope: PhantomData,
@@ -34,7 +34,7 @@ impl<S: Scope> Handler<FlagOnUninit, S> {
         self.extra_data.load(LOAD_ORDERING)
     }
 
-    fn set_last_drop_failed(&self, value: bool) {
+    pub(crate) fn set_last_drop_failed(&self, value: bool) {
         self.extra_data.store(value, STORE_ORDERING)
     }
 }
