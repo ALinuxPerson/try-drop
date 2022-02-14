@@ -4,13 +4,7 @@ use std::thread::LocalKey;
 use std::thread_local;
 use crate::{DynFallibleTryDropStrategy, ThreadLocalFallibleTryDropStrategy};
 use crate::handlers::common::Primary;
-use crate::handlers::common::thread_local::{
-    DefaultThreadLocalDefinition,
-    ThreadLocal as GenericThreadLocal,
-    scope_guard::ScopeGuard as GenericScopeGuard,
-    ThreadLocalDefinition,
-};
-use crate::handlers::UninitializedError;
+use crate::handlers::common::thread_local::{DefaultThreadLocalDefinition, ThreadLocal as GenericThreadLocal, scope_guard::ScopeGuard as GenericScopeGuard, ThreadLocalDefinition};
 
 thread_local! {
     static PRIMARY_HANDLER: RefCell<Option<Box<dyn DynFallibleTryDropStrategy>>> = RefCell::new(None);
@@ -49,46 +43,23 @@ impl<T: ThreadLocalFallibleTryDropStrategy> From<T> for Box<dyn DynFallibleTryDr
 type ThreadLocal = GenericThreadLocal<Primary>;
 pub type ScopeGuard = GenericScopeGuard<Primary>;
 
-pub fn install(strategy: impl ThreadLocalFallibleTryDropStrategy) {
-    ThreadLocal::install(strategy)
-}
-
-pub fn install_dyn(strategy: Box<dyn DynFallibleTryDropStrategy>) {
-    ThreadLocal::install_dyn(strategy)
-}
-
-pub fn try_read<T>(f: impl FnOnce(&Box<dyn DynFallibleTryDropStrategy>) -> T) -> Result<T, UninitializedError> {
-    ThreadLocal::try_read(f)
-}
-
-pub fn write<T>(f: impl FnOnce(&mut Box<dyn DynFallibleTryDropStrategy>) -> T) -> T {
-    ThreadLocal::write(f)
-}
-
-pub fn try_write<T>(f: impl FnOnce(&mut Box<dyn DynFallibleTryDropStrategy>) -> T) -> Result<T, UninitializedError> {
-    ThreadLocal::try_write(f)
-}
-
-pub fn uninstall() {
-    ThreadLocal::uninstall()
-}
-
-pub fn take() -> Option<Box<dyn DynFallibleTryDropStrategy>> {
-    ThreadLocal::take()
-}
-
-pub fn replace(strategy: impl ThreadLocalFallibleTryDropStrategy) -> Option<Box<dyn DynFallibleTryDropStrategy>> {
-    ThreadLocal::replace(strategy)
-}
-
-pub fn replace_dyn(strategy: Box<dyn DynFallibleTryDropStrategy>) -> Option<Box<dyn DynFallibleTryDropStrategy>> {
-    ThreadLocal::replace_dyn(strategy)
-}
-
-pub fn scope(strategy: impl ThreadLocalFallibleTryDropStrategy) -> ScopeGuard {
-    ThreadLocal::scope(strategy)
-}
-
-pub fn scope_dyn(strategy: Box<dyn DynFallibleTryDropStrategy>) -> ScopeGuard {
-    ThreadLocal::scope_dyn(strategy)
+thread_local_methods! {
+    ThreadLocal = ThreadLocal;
+    ScopeGuard = ScopeGuard;
+    GenericStrategy = ThreadLocalFallibleTryDropStrategy;
+    DynStrategy = DynFallibleTryDropStrategy;
+    feature = "ds-panic";
+    install;
+    install_dyn;
+    try_read;
+    read_or_default;
+    write;
+    try_write;
+    write_or_default;
+    uninstall;
+    take;
+    replace;
+    replace_dyn;
+    scope;
+    scope_dyn;
 }
