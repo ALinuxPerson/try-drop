@@ -25,6 +25,9 @@ macro_rules! thread_local_methods {
 
         $(#[$($install_dyn_meta:meta)*])*
         install_dyn;
+        
+        $(#[$($read_meta:meta)*])*
+        read;
 
         $(#[$($try_read_meta:meta)*])*
         try_read;
@@ -69,6 +72,11 @@ macro_rules! thread_local_methods {
         $(#[$($install_dyn_meta)*])*
         pub fn install_dyn(strategy: $dyn_strategy) {
             $thread_local::install_dyn(strategy)
+        }
+        
+        $(#[$($read_meta)*])*
+        pub fn read<T>(f: impl FnOnce(&$dyn_strategy) -> T) -> T {
+            $thread_local::read(f)
         }
 
         $(#[$($try_read_meta)*])*

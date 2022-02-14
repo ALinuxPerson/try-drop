@@ -1,10 +1,15 @@
 //! Manage the thread local primary handler.
-mod scope_guard;
 
-pub use scope_guard::ScopeGuard;
 use std::boxed::Box;
 use std::cell::RefCell;
-
+use std::thread::LocalKey;
+use crate::handlers::common::Primary;
+use crate::handlers::common::thread_local::{
+    DefaultThreadLocalDefinition,
+    ThreadLocalDefinition,
+    ThreadLocal as GenericThreadLocal,
+    scope_guard::ScopeGuard as GenericScopeGuard,
+};
 use crate::handlers::on_uninit::{ErrorOnUninit, FlagOnUninit, OnUninit, PanicOnUninit};
 use crate::handlers::uninit_error::UninitializedError;
 use crate::{DynFallibleTryDropStrategy, FallibleTryDropStrategy, LOAD_ORDERING, STORE_ORDERING};
@@ -14,10 +19,6 @@ use std::thread_local;
 
 #[cfg(feature = "ds-write")]
 use crate::handlers::on_uninit::UseDefaultOnUninit;
-
-thread_local! {
-    static PRIMARY_HANDLER: RefCell<Option<Box<dyn DynFallibleTryDropStrategy>>> = RefCell::new(None);
-}
 
 const UNINITIALIZED_ERROR: &str = "the thread local primary handler is not initialized yet";
 
@@ -168,120 +169,64 @@ impl FallibleTryDropStrategy for ThreadLocalPrimaryHandler<FlagOnUninit> {
     }
 }
 
-/// Install a new thread local primary handler. Since this drop strategy will only be used in one
-/// thread, it is more flexible than the global primary handler.
-pub fn install(strategy: impl DynFallibleTryDropStrategy + 'static) {
-    install_dyn(Box::new(strategy))
+thread_local! {
+    static PRIMARY_HANDLER: RefCell<Option<Box<dyn ThreadLocalFallibleTryDropStrategy>>> = RefCell::new(None);
+    static LOCKED: RefCell<bool> = RefCell::new(false);
 }
 
-/// Get a reference to the thread local primary handler. This will panic if the thread local drop
-/// strategy has no value in it.
-pub fn read<T>(f: impl FnOnce(&dyn DynFallibleTryDropStrategy) -> T) -> T {
-    try_read(f).expect(UNINITIALIZED_ERROR)
+impl ThreadLocalDefinition for Primary {
+    const UNINITIALIZED_ERROR: &'static str = "the thread local primary handler is not initialized yet";
+    const DYN: &'static str = "ThreadLocalFallibleTryDropStrategy";
+    type ThreadLocal = Box<dyn ThreadLocalFallibleTryDropStrategy>;
+
+    fn thread_local() -> &'static LocalKey<RefCell<Option<Self::ThreadLocal>>> {
+        &PRIMARY_HANDLER
+    }
+
+    fn locked() -> &'static LocalKey<RefCell<bool>> {
+        &LOCKED
+    }
 }
 
 #[cfg(feature = "ds-write")]
-fn default() -> Box<dyn DynFallibleTryDropStrategy> {
-    let mut strategy = crate::drop_strategies::WriteDropStrategy::stderr();
-    strategy.prelude("error: ");
-    Box::new(strategy)
+impl DefaultThreadLocalDefinition for Primary {
+    fn default() -> Self::ThreadLocal {
+        let mut strategy = crate::drop_strategies::WriteDropStrategy::stderr();
+        strategy.prelude("error: ");
+        Box::new(strategy)
+    }
 }
 
-/// Get a reference to the thread local primary handler. If there is no value present in it, then
-/// it will initialize it with the default drop strategy.
-#[cfg(feature = "ds-write")]
-pub fn read_or_default<T>(f: impl FnOnce(&dyn DynFallibleTryDropStrategy) -> T) -> T {
-    PRIMARY_HANDLER.with(|drop_strategy| {
-        let mut strategy = drop_strategy.borrow_mut();
-        let strategy = strategy.get_or_insert_with(default);
-        let strategy = &*strategy;
-        f(strategy.as_ref())
-    })
+impl<T: ThreadLocalFallibleTryDropStrategy> From<T> for Box<dyn ThreadLocalFallibleTryDropStrategy> {
+    fn from(strategy: T) -> Self {
+        Box::new(strategy)
+    }
 }
 
-/// Get a reference to the thread local primary handler. This will return an error if the
-/// thread local primary handler has no value in it.
-pub fn try_read<T>(
-    f: impl FnOnce(&dyn DynFallibleTryDropStrategy) -> T,
-) -> Result<T, UninitializedError> {
-    PRIMARY_HANDLER.with(|cell| {
-        cell.borrow()
-            .as_deref()
-            .map(f)
-            .ok_or(UninitializedError(()))
-    })
+type ThreadLocal = GenericThreadLocal<Primary>;
+pub type ScopeGuard = GenericScopeGuard<Primary>;
+pub type BoxDynFallibleTryDropStrategy = Box<dyn ThreadLocalFallibleTryDropStrategy>;
+
+thread_local_methods! {
+    ThreadLocal = ThreadLocal;
+    ScopeGuard = ScopeGuard;
+    GenericStrategy = ThreadLocalFallibleTryDropStrategy;
+    DynStrategy = BoxDynFallibleTryDropStrategy;
+    feature = "ds-write";
+
+    install;
+    install_dyn;
+    read;
+    try_read;
+    read_or_default;
+    write;
+    try_write;
+    write_or_default;
+    uninstall;
+    take;
+    replace;
+    replace_dyn;
+    scope;
+    scope_dyn;
 }
 
-/// Get a mutable reference to the thread local primary handler.
-pub fn write<T>(f: impl FnOnce(&mut Box<dyn DynFallibleTryDropStrategy>) -> T) -> T {
-    try_write(f).expect(UNINITIALIZED_ERROR)
-}
-
-/// Get a mutable reference to the thread local primary handler. This will return an error if the
-/// thread local drop strategy has no value in it.
-pub fn try_write<T>(
-    f: impl FnOnce(&mut Box<dyn DynFallibleTryDropStrategy>) -> T,
-) -> Result<T, UninitializedError> {
-    PRIMARY_HANDLER.with(|cell| {
-        cell.borrow_mut()
-            .as_mut()
-            .map(f)
-            .ok_or(UninitializedError(()))
-    })
-}
-
-/// Get a mutable reference to the thread local primary handler. If there is no value present in
-/// it, then it will initialize it with the default strategy.
-#[cfg(feature = "ds-write")]
-pub fn write_or_default<T>(f: impl FnOnce(&mut Box<dyn DynFallibleTryDropStrategy>) -> T) -> T {
-    PRIMARY_HANDLER.with(|drop_strategy| f(drop_strategy.borrow_mut().get_or_insert_with(default)))
-}
-
-/// Install this drop strategy to the current thread.
-pub fn install_dyn(strategy: Box<dyn DynFallibleTryDropStrategy>) {
-    PRIMARY_HANDLER.with(|drop_strategy| {
-        drop_strategy.borrow_mut().replace(strategy);
-    })
-}
-
-/// Uninstall this drop strategy from the current thread.
-pub fn uninstall() {
-    take();
-}
-
-/// Take this drop strategy from the current thread, if there is any.
-pub fn take() -> Option<Box<dyn DynFallibleTryDropStrategy>> {
-    PRIMARY_HANDLER.with(|drop_strategy| drop_strategy.borrow_mut().take())
-}
-
-/// Replace the current primary handler with another, returning the previous primary handler if
-/// any.
-pub fn replace(
-    new: impl DynFallibleTryDropStrategy + 'static,
-) -> Option<Box<dyn DynFallibleTryDropStrategy>> {
-    replace_dyn(Box::new(new))
-}
-
-/// Replace the current primary handler with another, returning the previous primary handler if
-/// any. Must be a dynamic trait object.
-pub fn replace_dyn(
-    new: Box<dyn DynFallibleTryDropStrategy>,
-) -> Option<Box<dyn DynFallibleTryDropStrategy>> {
-    PRIMARY_HANDLER.with(|previous| previous.borrow_mut().replace(new))
-}
-
-/// Install this strategy for the current scope.
-///
-/// # Panics
-/// This panics if a strategy was already installed for the previous scope.
-pub fn scope(strategy: impl DynFallibleTryDropStrategy + 'static) -> ScopeGuard {
-    scope_dyn(Box::new(strategy))
-}
-
-/// Install this strategy for the current scope. Must be a dynamic trait object.
-///
-/// # Panics
-/// This panics if a strategy was already installed for the previous scope.
-pub fn scope_dyn(strategy: Box<dyn DynFallibleTryDropStrategy>) -> ScopeGuard {
-    ScopeGuard::new_dyn(strategy)
-}
