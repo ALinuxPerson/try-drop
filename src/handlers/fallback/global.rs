@@ -5,19 +5,16 @@ use crate::handlers::uninit_error::UninitializedError;
 use crate::{GlobalTryDropStrategy, TryDropStrategy, LOAD_ORDERING, STORE_ORDERING};
 use anyhow::Error;
 use parking_lot::{
-    MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLock, RwLockReadGuard, RwLockWriteGuard,
+    MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLock,
 };
 use std::boxed::Box;
 use std::marker::PhantomData;
 use std::sync::atomic::AtomicBool;
+use crate::handlers::common::Fallback;
+use crate::handlers::common::global::{DefaultGlobalDefinition, GlobalDefinition, Global as GenericGlobal};
 
 #[cfg(feature = "ds-panic")]
 use crate::handlers::on_uninit::UseDefaultOnUninit;
-
-static FALLBACK_HANDLER: RwLock<Option<Box<dyn GlobalTryDropStrategy>>> =
-    parking_lot::const_rwlock(None);
-
-const UNINITIALIZED_ERROR: &str = "the global fallback handler is not initialized yet";
 
 /// The default thing to do when the global fallback handler is not initialized.
 #[cfg(not(feature = "ds-panic"))]
@@ -126,78 +123,46 @@ impl TryDropStrategy for GlobalFallbackHandler<FlagOnUninit> {
     }
 }
 
-/// Install a new global fallback handler. Must be a dynamic trait object.
-pub fn install_dyn(strategy: Box<dyn GlobalTryDropStrategy>) {
-    FALLBACK_HANDLER.write().replace(strategy);
-}
+static FALLBACK_HANDLER: RwLock<Option<Box<dyn GlobalTryDropStrategy>>> = parking_lot::const_rwlock(None);
 
-/// Install a new global fallback handler.
-pub fn install(strategy: impl GlobalTryDropStrategy) {
-    install_dyn(Box::new(strategy))
-}
+impl GlobalDefinition for Fallback {
+    const UNINITIALIZED_ERROR: &'static str = "the global fallback handler is not initialized yet";
+    type Global = Box<dyn GlobalTryDropStrategy>;
 
-/// Get a reference to the fallback handler. If there is no global fallback handler
-/// initialized, this will return an error.
-pub fn try_read(
-) -> Result<MappedRwLockReadGuard<'static, Box<dyn GlobalTryDropStrategy>>, UninitializedError> {
-    let fallback_handler = FALLBACK_HANDLER.read();
-
-    if fallback_handler.is_some() {
-        Ok(RwLockReadGuard::map(fallback_handler, |drop_strategy| {
-            drop_strategy.as_ref().unwrap()
-        }))
-    } else {
-        Err(UninitializedError(()))
+    fn global() -> &'static RwLock<Option<Self::Global>> {
+        &FALLBACK_HANDLER
     }
 }
 
-/// Get a reference to the fallback handler. If there is no global fallback handler initialized,
-/// this will panic.
-pub fn read() -> MappedRwLockReadGuard<'static, Box<dyn GlobalTryDropStrategy>> {
-    try_read().expect(UNINITIALIZED_ERROR)
-}
-
-/// Get a reference to the fallback handler. If there is no global fallback handler
-/// initialized, this will set it to the default then return it.
 #[cfg(feature = "ds-panic")]
-pub fn read_or_default() -> MappedRwLockReadGuard<'static, Box<dyn GlobalTryDropStrategy>> {
-    drop(write_or_default());
-    read()
-}
-
-/// Get a mutable reference to the fallback handler. If there is no global fallback try drop
-/// strategy initialized, this will return an error.
-pub fn try_write(
-) -> Result<MappedRwLockWriteGuard<'static, Box<dyn GlobalTryDropStrategy>>, UninitializedError> {
-    let fallback_handler = FALLBACK_HANDLER.write();
-
-    if fallback_handler.is_some() {
-        Ok(RwLockWriteGuard::map(fallback_handler, |drop_strategy| {
-            drop_strategy.as_mut().unwrap()
-        }))
-    } else {
-        Err(UninitializedError(()))
+impl DefaultGlobalDefinition for Fallback {
+    fn default() -> Self::Global {
+        Box::new(crate::drop_strategies::PanicDropStrategy::DEFAULT)
     }
 }
 
-/// Get a mutable reference to the fallback handler. If there is no global fallback handler
-/// initialized, this will panic.
-pub fn write() -> MappedRwLockWriteGuard<'static, Box<dyn GlobalTryDropStrategy>> {
-    try_write().expect(UNINITIALIZED_ERROR)
+impl<T: GlobalTryDropStrategy> From<T> for Box<dyn GlobalTryDropStrategy> {
+    fn from(t: T) -> Self {
+        Box::new(t)
+    }
 }
 
-/// Get a mutable reference to the fallback handler. If there is no global fallback handler
-/// initialized, this will set it to the default then return it.
-#[cfg(feature = "ds-panic")]
-pub fn write_or_default() -> MappedRwLockWriteGuard<'static, Box<dyn GlobalTryDropStrategy>> {
-    use crate::drop_strategies::PanicDropStrategy;
+type Global = GenericGlobal<Fallback>;
+type BoxDynGlobalTryDropStrategy = Box<dyn GlobalTryDropStrategy>;
 
-    RwLockWriteGuard::map(FALLBACK_HANDLER.write(), |drop_strategy| {
-        drop_strategy.get_or_insert_with(|| Box::new(PanicDropStrategy::DEFAULT))
-    })
-}
+global_methods! {
+    Global = Global;
+    GenericStrategy = GlobalTryDropStrategy;
+    DynStrategy = BoxDynGlobalTryDropStrategy;
+    feature = "ds-panic";
 
-/// Uninstall or remove the global fallback handler.
-pub fn uninstall() {
-    *FALLBACK_HANDLER.write() = None
+    install_dyn;
+    install;
+    try_read;
+    read;
+    try_write;
+    write;
+    uninstall;
+    read_or_default;
+    write_or_default;
 }
