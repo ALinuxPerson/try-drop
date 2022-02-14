@@ -204,6 +204,14 @@ downcast_rs::impl_downcast!(sync GlobalDynFallibleTryDropStrategy);
 #[cfg(feature = "global")]
 impl<T: ThreadSafe + DynFallibleTryDropStrategy> GlobalDynFallibleTryDropStrategy for T {}
 
+/// A trait which signifies a try drop strategy which can be used in a thread local scenario. Must
+/// be dynamically dispatched and must live as long as the program does.
+#[cfg(feature = "thread-local")]
+pub trait ThreadLocalFallibleTryDropStrategy: DynFallibleTryDropStrategy + 'static {}
+
+#[cfg(feature = "thread-local")]
+impl<T: DynFallibleTryDropStrategy + 'static> ThreadLocalFallibleTryDropStrategy for T {}
+
 /// A trait which signifies a try drop strategy. This can never fail. If it can, use
 /// [`FallibleTryDropStrategy`] instead.
 pub trait TryDropStrategy {
