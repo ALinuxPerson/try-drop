@@ -10,6 +10,7 @@ pub mod thread_local;
 pub mod global;
 
 pub mod handler;
+pub mod proxy;
 
 use std::error::Error;
 use std::fmt;
