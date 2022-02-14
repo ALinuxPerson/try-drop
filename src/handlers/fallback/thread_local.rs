@@ -5,121 +5,38 @@ use crate::{TryDropStrategy, LOAD_ORDERING, STORE_ORDERING};
 use anyhow::Error;
 use std::boxed::Box;
 use std::cell::RefCell;
-use std::marker::PhantomData;
-use std::sync::atomic::AtomicBool;
 use std::thread_local;
 use std::thread::LocalKey;
-use crate::handlers::common::Fallback;
+use crate::handlers::common::{Fallback, ThreadLocal as ThreadLocalHandler};
+use crate::handlers::common::handler::CommonHandler;
 use crate::handlers::common::thread_local::scope_guard::ScopeGuard as GenericScopeGuard;
 use crate::handlers::common::thread_local::{DefaultThreadLocalDefinition, ThreadLocal as GenericThreadLocal, ThreadLocalDefinition};
 use crate::ThreadLocalTryDropStrategy;
+use super::{DefaultOnUninit, Abstracter};
 
 #[cfg(feature = "ds-panic")]
 use crate::handlers::on_uninit::UseDefaultOnUninit;
 
-/// The default thing to do when the fallback handler is uninitialized.
-#[cfg(not(feature = "ds-panic"))]
-pub type DefaultOnUninit = PanicOnUninit;
+pub type ThreadLocalFallbackHandler<OU = DefaultOnUninit> = CommonHandler<OU, ThreadLocalHandler, Fallback>;
 
-/// The default thing to do when the fallback handler is uninitialized.
-#[cfg(feature = "ds-panic")]
-pub type DefaultOnUninit = UseDefaultOnUninit;
+pub static DEFAULT_THREAD_LOCAL_FALLBACK_HANDLER: ThreadLocalFallbackHandler = ThreadLocalFallbackHandler::DEFAULT;
 
-/// The default thread local fallback handler.
-pub static DEFAULT_THREAD_LOCAL_FALLBACK_HANDLER: ThreadLocalFallbackHandler =
-    ThreadLocalFallbackHandler::DEFAULT;
-
-const UNINITIALIZED_ERROR: &str = "the thread local fallback handler is not initialized yet";
-
-/// The thread local fallback handler. This doesn't store anything, it just provides an
-/// interface to the thread local fallback handler, stored in a `static`.
-#[cfg_attr(
-    feature = "derives",
-    derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
-)]
-pub struct ThreadLocalFallbackHandler<OU: OnUninit = DefaultOnUninit> {
-    extra_data: OU::ExtraData,
-    _on_uninit: PhantomData<OU>,
-}
-
-impl ThreadLocalFallbackHandler<DefaultOnUninit> {
-    /// The default thread local fallback handler.
-    pub const DEFAULT: Self = Self {
-        extra_data: (),
-        _on_uninit: PhantomData,
-    };
-}
-
-impl ThreadLocalFallbackHandler<PanicOnUninit> {
-    /// See [`Self::on_uninit_panic`].
-    pub const PANIC_ON_UNINIT: Self = Self::on_uninit_panic();
-
-    /// Create a new interface to the thread local fallback handler. If the thread local fallback
-    /// handler is not initialized, this will panic.
-    pub const fn on_uninit_panic() -> Self {
-        Self {
-            extra_data: (),
-            _on_uninit: PhantomData,
-        }
+impl TryDropStrategy for CommonHandler<PanicOnUninit, ThreadLocalHandler, Fallback> {
+    fn handle_error(&self, error: crate::Error) {
+        Abstracter::<ThreadLocalHandler>::read(|strategy| strategy.handle_error(error))
     }
 }
 
-#[cfg(feature = "ds-panic")]
-impl ThreadLocalFallbackHandler<UseDefaultOnUninit> {
-    /// See [`Self::on_uninit_use_default`].
-    pub const USE_DEFAULT_ON_UNINIT: Self = Self::on_uninit_use_default();
-
-    /// Create a new interface to the thread local fallback handler. If the thread local fallback
-    /// handler is not initialized, this will set it to the default fallback handler.
-    pub const fn on_uninit_use_default() -> Self {
-        Self {
-            extra_data: (),
-            _on_uninit: PhantomData,
-        }
-    }
-}
-
-impl ThreadLocalFallbackHandler<FlagOnUninit> {
-    /// See [`Self::on_uninit_flag`].
-    #[allow(clippy::declare_interior_mutable_const)]
-    pub const FLAG_ON_UNINIT: Self = Self::on_uninit_flag();
-
-    /// Create a new interface to the thread local fallback handler. If the thread local fallback
-    /// handler is not initialized, a flag `last_drop_failed` will be set to true.
-    pub const fn on_uninit_flag() -> Self {
-        Self {
-            extra_data: AtomicBool::new(false),
-            _on_uninit: PhantomData,
-        }
-    }
-
-    /// Check if the last drop failed due to the thread local fallback handler not being
-    /// initialized.
-    pub fn last_drop_failed(&self) -> bool {
-        self.extra_data.load(LOAD_ORDERING)
-    }
-
-    fn set_last_drop_failed(&self, value: bool) {
-        self.extra_data.store(value, STORE_ORDERING)
-    }
-}
-
-impl TryDropStrategy for ThreadLocalFallbackHandler<PanicOnUninit> {
+#[cfg(feature = "ds-write")]
+impl TryDropStrategy for CommonHandler<UseDefaultOnUninit, ThreadLocalHandler, Fallback> {
     fn handle_error(&self, error: Error) {
-        read(|strategy| strategy.handle_error(error))
+        Abstracter::<ThreadLocalHandler>::read_or_default(|strategy| strategy.handle_error(error))
     }
 }
 
-#[cfg(feature = "ds-panic")]
-impl TryDropStrategy for ThreadLocalFallbackHandler<UseDefaultOnUninit> {
+impl TryDropStrategy for CommonHandler<FlagOnUninit, ThreadLocalHandler, Fallback> {
     fn handle_error(&self, error: Error) {
-        read_or_default(|strategy| strategy.handle_error(error))
-    }
-}
-
-impl TryDropStrategy for ThreadLocalFallbackHandler<FlagOnUninit> {
-    fn handle_error(&self, error: Error) {
-        if let Err(UninitializedError(())) = try_read(|strategy| strategy.handle_error(error)) {
+        if let Err(UninitializedError(())) = Abstracter::<ThreadLocalHandler>::try_read(|strategy| strategy.handle_error(error)) {
             self.set_last_drop_failed(true)
         } else {
             self.set_last_drop_failed(false)
