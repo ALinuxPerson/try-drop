@@ -1,12 +1,16 @@
 use std::marker::PhantomData;
 use parking_lot::{MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLock, RwLockReadGuard, RwLockWriteGuard};
+use crate::handlers::common::Handler;
 use crate::handlers::UninitializedError;
 
-pub trait GlobalDefinition {
+pub trait GlobalDefinition: Handler {
     const UNINITIALIZED_ERROR: &'static str;
     type Global: 'static;
 
     fn global() -> &'static RwLock<Option<Self::Global>>;
+}
+
+pub trait DefaultGlobalDefinition: GlobalDefinition {
     fn default() -> Self::Global;
 }
 
@@ -38,11 +42,6 @@ impl<T: GlobalDefinition> Global<T> {
         Self::try_read().expect(T::UNINITIALIZED_ERROR)
     }
 
-    pub fn read_or_default() -> MappedRwLockReadGuard<'static, T::Global> {
-        drop(Self::write_or_default());
-        Self::read()
-    }
-
     pub fn try_write() -> Result<
         MappedRwLockWriteGuard<'static, T::Global>,
         UninitializedError,
@@ -60,13 +59,66 @@ impl<T: GlobalDefinition> Global<T> {
         Self::try_write().expect(T::UNINITIALIZED_ERROR)
     }
 
+    pub fn uninstall() {
+        *T::global().write() = None
+    }
+}
+
+impl<T: DefaultGlobalDefinition> Global<T> {
+    pub fn read_or_default() -> MappedRwLockReadGuard<'static, T::Global> {
+        drop(Self::write_or_default());
+        Self::read()
+    }
+
     pub fn write_or_default() -> MappedRwLockWriteGuard<'static, T::Global> {
         RwLockWriteGuard::map(T::global().write(), |drop_strategy| {
             drop_strategy.get_or_insert_with(T::default)
         })
     }
+}
 
-    pub fn uninstall() {
-        *T::global().write() = None
-    }
+macro_rules! globals {
+    ($name:ident where Global: $global:ty, GenericGlobal: $generic_global:ident) => {
+        pub fn install_dyn(strategy: $global) {
+            $name::install_dyn(strategy)
+        }
+
+        pub fn install(strategy: $generic_global) {
+            $name::install(strategy)
+        }
+
+        pub fn try_read() -> Result<
+            MappedRwLockReadGuard<'static, $global>,
+            UninitializedError,
+        > {
+            $name::try_read()
+        }
+
+        pub fn read() -> MappedRwLockReadGuard<'static, $global> {
+            $name::read()
+        }
+
+        pub fn read_or_default() -> MappedRwLockReadGuard<'static, $global> {
+            $name::read_or_default()
+        }
+
+        pub fn try_write() -> Result<
+            MappedRwLockWriteGuard<'static, $global>,
+            UninitializedError,
+        > {
+            $name::try_write()
+        }
+
+        pub fn write() -> MappedRwLockWriteGuard<'static, $global> {
+            $name::write()
+        }
+
+        pub fn write_or_default() -> MappedRwLockWriteGuard<'static, $global> {
+            $name::write_or_default()
+        }
+
+        pub fn uninstall() {
+            $name::uninstall()
+        }
+    };
 }
