@@ -1,14 +1,14 @@
 use std::boxed::Box;
 use parking_lot::{MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLock};
 use crate::GlobalDynFallibleTryDropStrategy;
-use crate::handlers::common::Fallback;
+use crate::handlers::common::Primary;
 use crate::handlers::common::global::{DefaultGlobalDefinition, Global as GenericGlobal, GlobalDefinition};
 use crate::handlers::UninitializedError;
 
 static PRIMARY_HANDLER: RwLock<Option<Box<dyn GlobalDynFallibleTryDropStrategy>>> =
     parking_lot::const_rwlock(None);
 
-impl GlobalDefinition for Fallback {
+impl GlobalDefinition for Primary {
     const UNINITIALIZED_ERROR: &'static str = "the global primary handler is not initialized yet";
     type Global = Box<dyn GlobalDynFallibleTryDropStrategy>;
 
@@ -18,7 +18,7 @@ impl GlobalDefinition for Fallback {
 }
 
 #[cfg(feature = "ds-write")]
-impl DefaultGlobalDefinition for Fallback {
+impl DefaultGlobalDefinition for Primary {
     fn default() -> Self::Global {
         let mut strategy = crate::drop_strategies::WriteDropStrategy::stderr();
         strategy.prelude("error: ");
@@ -32,7 +32,7 @@ impl<T: GlobalDynFallibleTryDropStrategy + 'static> From<T> for Box<dyn GlobalDy
     }
 }
 
-type Global = GenericGlobal<Fallback>;
+type Global = GenericGlobal<Primary>;
 
 pub fn install_dyn(strategy: Box<dyn GlobalDynFallibleTryDropStrategy>) {
     Global::install_dyn(strategy)
