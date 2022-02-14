@@ -12,6 +12,8 @@ use parking_lot::{
 use std::boxed::Box;
 use std::marker::PhantomData;
 use std::sync::atomic::AtomicBool;
+use crate::handlers::common::Primary;
+use crate::handlers::common::global::{DefaultGlobalDefinition, Global as GenericGlobal, GlobalDefinition};
 
 #[cfg(feature = "ds-write")]
 use crate::handlers::on_uninit::UseDefaultOnUninit;
@@ -19,10 +21,6 @@ use crate::handlers::on_uninit::UseDefaultOnUninit;
 /// The default global primary handler.
 pub static DEFAULT_GLOBAL_PRIMARY_DROP_STRATEGY: GlobalPrimaryHandler =
     GlobalPrimaryHandler::DEFAULT;
-static PRIMARY_HANDLER: RwLock<Option<Box<dyn GlobalDynFallibleTryDropStrategy>>> =
-    parking_lot::const_rwlock(None);
-
-const UNINITIALIZED_ERROR: &str = "the global primary handler is not initialized yet";
 
 /// The default thing to do when the global primary primary handler is uninitialized, that is to
 /// panic.
@@ -162,88 +160,49 @@ impl FallibleTryDropStrategy for GlobalPrimaryHandler<FlagOnUninit> {
     }
 }
 
-/// Install a new global primary handler. Must be a dynamic trait object.
-pub fn install_dyn(strategy: Box<dyn GlobalDynFallibleTryDropStrategy>) {
-    PRIMARY_HANDLER.write().replace(strategy);
-}
+static PRIMARY_HANDLER: RwLock<Option<Box<dyn GlobalDynFallibleTryDropStrategy>>> =
+    parking_lot::const_rwlock(None);
 
-/// Install a new global primary handler.
-pub fn install(strategy: impl GlobalDynFallibleTryDropStrategy) {
-    install_dyn(Box::new(strategy))
-}
+impl GlobalDefinition for Primary {
+    const UNINITIALIZED_ERROR: &'static str = "the global primary handler is not initialized yet";
+    type Global = Box<dyn GlobalDynFallibleTryDropStrategy>;
 
-/// Get a reference to the primary handler. If there is no global primary handler initialized,
-/// this will return an error.
-pub fn try_read() -> Result<
-    MappedRwLockReadGuard<'static, Box<dyn GlobalDynFallibleTryDropStrategy>>,
-    UninitializedError,
-> {
-    let primary_handler = PRIMARY_HANDLER.read();
-
-    if primary_handler.is_some() {
-        Ok(RwLockReadGuard::map(primary_handler, |drop_strategy| {
-            drop_strategy.as_ref().unwrap()
-        }))
-    } else {
-        Err(UninitializedError(()))
+    fn global() -> &'static RwLock<Option<Self::Global>> {
+        &PRIMARY_HANDLER
     }
 }
 
-/// Get a reference to the primary handler. If there is no global primary handler initialized,
-/// this will panic.
-pub fn read() -> MappedRwLockReadGuard<'static, Box<dyn GlobalDynFallibleTryDropStrategy>> {
-    try_read().expect(UNINITIALIZED_ERROR)
-}
-
-/// Get a reference to the primary handler. If there is no global primary handler initialized,
-/// this will set it to the default then return it.
 #[cfg(feature = "ds-write")]
-pub fn read_or_default() -> MappedRwLockReadGuard<'static, Box<dyn GlobalDynFallibleTryDropStrategy>>
-{
-    drop(write_or_default());
-    read()
-}
-
-/// Get a mutable reference to the primary handler. If there is no global primary handler
-/// initialized, this will return an error.
-pub fn try_write() -> Result<
-    MappedRwLockWriteGuard<'static, Box<dyn GlobalDynFallibleTryDropStrategy>>,
-    UninitializedError,
-> {
-    let primary_handler = PRIMARY_HANDLER.write();
-
-    if primary_handler.is_some() {
-        Ok(RwLockWriteGuard::map(primary_handler, |drop_strategy| {
-            drop_strategy.as_mut().unwrap()
-        }))
-    } else {
-        Err(UninitializedError(()))
+impl DefaultGlobalDefinition for Primary {
+    fn default() -> Self::Global {
+        let mut strategy = crate::drop_strategies::WriteDropStrategy::stderr();
+        strategy.prelude("error: ");
+        Box::new(strategy)
     }
 }
 
-/// Get a mutable reference to the global primary handler. If there is no global primary handler
-/// initialized, this will panic.
-pub fn write() -> MappedRwLockWriteGuard<'static, Box<dyn GlobalDynFallibleTryDropStrategy>> {
-    try_write().expect(UNINITIALIZED_ERROR)
+impl<T: GlobalDynFallibleTryDropStrategy + 'static> From<T> for Box<dyn GlobalDynFallibleTryDropStrategy> {
+    fn from(handler: T) -> Self {
+        Box::new(handler)
+    }
 }
 
-/// Get a mutable reference to the global primary handler. If there is no global primary handler
-/// initialized, this will set it to the default then return it.
-#[cfg(feature = "ds-write")]
-pub fn write_or_default(
-) -> MappedRwLockWriteGuard<'static, Box<dyn GlobalDynFallibleTryDropStrategy>> {
-    use crate::drop_strategies::WriteDropStrategy;
+type Global = GenericGlobal<Primary>;
+pub type BoxDynGlobalFallibleTryDropStrategy = Box<dyn GlobalDynFallibleTryDropStrategy>;
 
-    RwLockWriteGuard::map(PRIMARY_HANDLER.write(), |drop_strategy| {
-        drop_strategy.get_or_insert_with(|| {
-            let mut strategy = WriteDropStrategy::stderr();
-            strategy.prelude("error: ");
-            Box::new(strategy)
-        })
-    })
-}
+global_methods! {
+    Global = Global;
+    GenericStrategy = GlobalDynFallibleTryDropStrategy;
+    DynStrategy = BoxDynGlobalFallibleTryDropStrategy;
+    feature = "ds-write";
 
-/// Uninstall or remove the global primary handler.
-pub fn uninstall() {
-    *PRIMARY_HANDLER.write() = None
+    install_dyn;
+    install;
+    try_read;
+    read;
+    try_write;
+    write;
+    uninstall;
+    read_or_default;
+    write_or_default;
 }
