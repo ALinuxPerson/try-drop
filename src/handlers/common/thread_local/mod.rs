@@ -1,4 +1,9 @@
 pub mod scope_guard;
+pub(crate) mod imports {
+    pub use crate::{DynFallibleTryDropStrategy, ThreadLocalFallibleTryDropStrategy};
+    pub use std::boxed::Box;
+    pub use crate::handlers::UninitializedError;
+}
 
 use std::cell::RefCell;
 use std::marker::PhantomData;
@@ -6,6 +11,125 @@ use std::thread::LocalKey;
 use crate::handlers::common::Handler;
 use crate::handlers::common::thread_local::scope_guard::ScopeGuard;
 use crate::handlers::UninitializedError;
+
+macro_rules! thread_local_methods {
+    (
+        ThreadLocal = $thread_local:ident;
+        ScopeGuard = $scope_guard:ident;
+        GenericStrategy = $generic_strategy:ident;
+        DynStrategy = $dyn_strategy:ident;
+        feature = $feature:literal;
+
+        $(#[$($install_meta:meta)*])*
+        install;
+
+        $(#[$($install_dyn_meta:meta)*])*
+        install_dyn;
+
+        $(#[$($try_read_meta:meta)*])*
+        try_read;
+
+        $(#[$($read_or_default_meta:meta)*])*
+        read_or_default;
+
+        $(#[$($write_meta:meta)*])*
+        write;
+
+        $(#[$($try_write_meta:meta)*])*
+        try_write;
+
+        $(#[$($write_or_default_meta:meta)*])*
+        write_or_default;
+
+        $(#[$($uninstall_meta:meta)*])*
+        uninstall;
+
+        $(#[$($take_meta:meta)*])*
+        take;
+
+        $(#[$($replace_meta:meta)*])*
+        replace;
+
+        $(#[$($replace_dyn_meta:meta)*])*
+        replace_dyn;
+
+        $(#[$($scope_meta:meta)*])*
+        scope;
+
+        $(#[$($scope_dyn_meta:meta)*])*
+        scope_dyn;
+    ) => {
+        use $crate::handlers::common::thread_local::imports::*;
+
+        $(#[$($install_meta)*])*
+        pub fn install(strategy: impl $generic_strategy) {
+            $thread_local::install(strategy)
+        }
+
+        $(#[$($install_dyn_meta)*])*
+        pub fn install_dyn(strategy: $dyn_strategy) {
+            $thread_local::install_dyn(strategy)
+        }
+
+        $(#[$($try_read_meta)*])*
+        pub fn try_read<T>(f: impl FnOnce(&$dyn_strategy) -> T) -> Result<T, UninitializedError> {
+            $thread_local::try_read(f)
+        }
+
+        $(#[$($read_or_default_meta)*])*
+        #[cfg(feature = $feature)]
+        pub fn read_or_default<T>(f: impl FnOnce(&$dyn_strategy) -> T) -> T {
+            $thread_local::read_or_default(f)
+        }
+
+        $(#[$($write_meta)*])*
+        pub fn write<T>(f: impl FnOnce(&mut $dyn_strategy) -> T) -> T {
+            $thread_local::write(f)
+        }
+
+        $(#[$($try_write_meta)*])*
+        pub fn try_write<T>(f: impl FnOnce(&mut $dyn_strategy) -> T) -> Result<T, UninitializedError> {
+            $thread_local::try_write(f)
+        }
+
+        $(#[$($write_or_default_meta)*])*
+        #[cfg(feature = $feature)]
+        pub fn write_or_default<T>(f: impl FnOnce(&mut $dyn_strategy) -> T) -> T {
+            $thread_local::write_or_default(f)
+        }
+
+        $(#[$($uninstall_meta)*])*
+        pub fn uninstall() {
+            $thread_local::uninstall()
+        }
+
+        $(#[$($take_meta)*])*
+        pub fn take() -> Option<$dyn_strategy> {
+            $thread_local::take()
+        }
+
+        $(#[$($replace_meta)*])*
+        pub fn replace(strategy: impl $generic_strategy) -> Option<$dyn_strategy> {
+            $thread_local::replace(strategy)
+        }
+
+        $(#[$($replace_dyn_meta)*])*
+        pub fn replace_dyn(strategy: $dyn_strategy) -> Option<$dyn_strategy> {
+            $thread_local::replace_dyn(strategy)
+        }
+
+        $(#[$($scope_meta)*])*
+        pub fn scope(strategy: impl $generic_strategy) -> $scope_guard {
+            $thread_local::scope(strategy)
+        }
+
+        $(#[$($scope_dyn_meta)*])*
+        pub fn scope_dyn(strategy: $dyn_strategy) -> $scope_guard {
+            $thread_local::scope_dyn(strategy)
+        }
+    };
+}
+
 
 pub trait ThreadLocalDefinition: Handler {
     const UNINITIALIZED_ERROR: &'static str;
@@ -97,3 +221,4 @@ impl<T: DefaultThreadLocalDefinition> ThreadLocal<T> {
             .with(|cell| f(cell.borrow_mut().get_or_insert_with(T::default)))
     }
 }
+
