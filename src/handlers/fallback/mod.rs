@@ -9,6 +9,8 @@ pub mod thread_local;
 #[cfg(all(feature = "global", feature = "thread-local"))]
 pub mod shim;
 
+mod handler;
+
 mod private {
     pub trait Sealed {}
 }
