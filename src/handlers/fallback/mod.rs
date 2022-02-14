@@ -9,6 +9,9 @@ pub mod thread_local;
 #[cfg(all(feature = "global", feature = "thread-local"))]
 pub mod shim;
 
+#[cfg(all(feature = "global", feature = "thread-local"))]
+pub mod sshim;
+
 mod handler;
 
 mod private {
