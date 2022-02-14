@@ -52,7 +52,7 @@ thread_local_methods! {
     ScopeGuard = ScopeGuard;
     GenericStrategy = ThreadLocalFallibleTryDropStrategy;
     DynStrategy = BoxDynFallibleTryDropStrategy;
-    feature = "ds-panic";
+    feature = "ds-write";
 
     install;
     install_dyn;
