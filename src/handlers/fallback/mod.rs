@@ -3,6 +3,9 @@
 #[cfg(feature = "global")]
 pub mod global;
 
+#[cfg(feature = "global")]
+pub mod gglobal;
+
 #[cfg(feature = "thread-local")]
 pub mod thread_local;
 
