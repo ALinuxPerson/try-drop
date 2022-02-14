@@ -9,6 +9,8 @@ pub mod thread_local;
 #[macro_use]
 pub mod global;
 
+pub mod handler;
+
 use std::error::Error;
 use std::fmt;
 use std::fmt::Formatter;
@@ -49,3 +51,13 @@ impl Handler for Primary {}
 pub enum Fallback {}
 impl private::Sealed for Fallback {}
 impl Handler for Fallback {}
+
+pub trait Scope: private::Sealed {}
+
+pub enum Global {}
+impl private::Sealed for Global {}
+impl Scope for Global {}
+
+pub enum ThreadLocal {}
+impl private::Sealed for ThreadLocal {}
+impl Scope for ThreadLocal {}
