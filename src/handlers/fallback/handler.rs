@@ -7,15 +7,7 @@ use crate::handlers::on_uninit::{FlagOnUninit, PanicOnUninit, UseDefaultOnUninit
 use crate::handlers::UninitializedError;
 use crate::TryDropStrategy;
 
-/// The default thing to do when the global fallback handler is not initialized.
-#[cfg(not(feature = "ds-panic"))]
-pub type DefaultOnUninit = PanicOnUninit;
 
-/// The default thing to do when the global fallback handler is not initialized.
-#[cfg(feature = "ds-panic")]
-pub type DefaultOnUninit = UseDefaultOnUninit;
-
-type Abstracter<S> = TheGreatAbstracter<Fallback, S>;
 
 pub type ThreadLocalFallbackHandler<OU = DefaultOnUninit> = CommonHandler<OU, ThreadLocal, Fallback>;
 
@@ -39,8 +31,6 @@ impl TryDropStrategy for CommonHandler<PanicOnUninit, ThreadLocal, Fallback> {
         Abstracter::<ThreadLocal>::read(|strategy| strategy.handle_error(error))
     }
 }
-
-
 
 #[cfg(feature = "ds-write")]
 impl TryDropStrategy for CommonHandler<UseDefaultOnUninit, ThreadLocal, Fallback> {
