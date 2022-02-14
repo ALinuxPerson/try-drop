@@ -3,6 +3,7 @@ mod private {
 }
 pub mod shim;
 pub mod thread_local;
+pub mod global;
 
 use std::error::Error;
 use std::fmt;
