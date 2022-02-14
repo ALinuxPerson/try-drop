@@ -2,6 +2,8 @@ mod private {
     pub trait Sealed {}
 }
 pub mod shim;
+
+#[macro_use]
 pub mod thread_local;
 pub mod global;
 
