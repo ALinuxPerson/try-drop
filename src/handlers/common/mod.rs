@@ -5,6 +5,8 @@ pub mod shim;
 
 #[macro_use]
 pub mod thread_local;
+
+#[macro_use]
 pub mod global;
 
 use std::error::Error;
