@@ -2,13 +2,13 @@
 
 #[cfg(feature = "ds-panic")]
 mod imp {
+    use super::ShimFallbackHandler;
     use crate::drop_strategies::PanicDropStrategy;
-    use crate::handlers::common::Fallback;
+    use crate::handlers::common::handler::CommonHandler;
     use crate::handlers::common::shim::UseDefaultOnUninitShim;
+    use crate::handlers::common::Fallback;
     use crate::TryDropStrategy;
     use once_cell::sync::Lazy;
-    use crate::handlers::common::handler::CommonHandler;
-    use super::ShimFallbackHandler;
 
     /// The default thing to do when both the primary and fallback handlers are uninitialized,
     /// that is to use the inner cache to handle the error instead.
@@ -59,13 +59,13 @@ mod imp {
     }
 }
 
-pub use imp::DefaultOnUninit;
 use crate::adapters::ArcError;
-use crate::handlers::common::Fallback;
 use crate::handlers::common::handler::CommonShimHandler;
 use crate::handlers::common::shim::OnUninitShim;
+use crate::handlers::common::Fallback;
 use crate::handlers::on_uninit::{DoNothingOnUninit, FlagOnUninit, PanicOnUninit};
 use crate::TryDropStrategy;
+pub use imp::DefaultOnUninit;
 
 pub type ShimFallbackHandler<OU = DefaultOnUninit> = CommonShimHandler<OU, Fallback>;
 pub static DEFAULT_SHIM_FALLBACK_HANDLER: ShimFallbackHandler = ShimFallbackHandler::DEFAULT;

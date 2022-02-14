@@ -1,6 +1,6 @@
-use std::{fmt, format};
-use crate::handlers::common::NestedScopeError;
 use crate::handlers::common::thread_local::{ThreadLocal, ThreadLocalDefinition};
+use crate::handlers::common::NestedScopeError;
+use std::{fmt, format};
 
 pub struct ScopeGuard<D: ThreadLocalDefinition> {
     last_strategy: Option<D::ThreadLocal>,
@@ -24,7 +24,9 @@ impl<D: ThreadLocalDefinition> ScopeGuard<D> {
             Err(NestedScopeError(()))
         } else {
             D::locked().with(|cell| *cell.borrow_mut() = true);
-            Ok(Self { last_strategy: ThreadLocal::<D>::replace_dyn(strategy) })
+            Ok(Self {
+                last_strategy: ThreadLocal::<D>::replace_dyn(strategy),
+            })
         }
     }
 }

@@ -1,16 +1,16 @@
 pub mod scope_guard;
 pub(crate) mod imports {
+    pub use crate::handlers::UninitializedError;
     pub use crate::{DynFallibleTryDropStrategy, ThreadLocalFallibleTryDropStrategy};
     pub use std::boxed::Box;
-    pub use crate::handlers::UninitializedError;
 }
 
+use crate::handlers::common::thread_local::scope_guard::ScopeGuard;
+use crate::handlers::common::Handler;
+use crate::handlers::UninitializedError;
 use std::cell::RefCell;
 use std::marker::PhantomData;
 use std::thread::LocalKey;
-use crate::handlers::common::Handler;
-use crate::handlers::common::thread_local::scope_guard::ScopeGuard;
-use crate::handlers::UninitializedError;
 
 macro_rules! thread_local_methods {
     (
@@ -25,7 +25,7 @@ macro_rules! thread_local_methods {
 
         $(#[$($install_dyn_meta:meta)*])*
         install_dyn;
-        
+
         $(#[$($read_meta:meta)*])*
         read;
 
@@ -73,7 +73,7 @@ macro_rules! thread_local_methods {
         pub fn install_dyn(strategy: $dyn_strategy) {
             $thread_local::install_dyn(strategy)
         }
-        
+
         $(#[$($read_meta)*])*
         pub fn read<T>(f: impl FnOnce(&$dyn_strategy) -> T) -> T {
             $thread_local::read(f)
@@ -137,7 +137,6 @@ macro_rules! thread_local_methods {
         }
     };
 }
-
 
 pub trait ThreadLocalDefinition: Handler {
     const UNINITIALIZED_ERROR: &'static str;
@@ -225,8 +224,6 @@ impl<T: DefaultThreadLocalDefinition> ThreadLocal<T> {
     }
 
     pub fn write_or_default<R>(f: impl FnOnce(&mut T::ThreadLocal) -> R) -> R {
-        T::thread_local()
-            .with(|cell| f(cell.borrow_mut().get_or_insert_with(T::default)))
+        T::thread_local().with(|cell| f(cell.borrow_mut().get_or_insert_with(T::default)))
     }
 }
-

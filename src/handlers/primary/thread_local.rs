@@ -1,31 +1,31 @@
 //! Manage the thread local primary handler.
 
-use std::boxed::Box;
-use std::cell::RefCell;
-use std::thread::LocalKey;
-use crate::handlers::common::Primary;
+use super::{Abstracter, DefaultOnUninit};
+use crate::handlers::common::handler::CommonHandler;
 use crate::handlers::common::thread_local::{
-    DefaultThreadLocalDefinition,
-    ThreadLocalDefinition,
-    ThreadLocal as GenericThreadLocal,
-    scope_guard::ScopeGuard as GenericScopeGuard,
+    scope_guard::ScopeGuard as GenericScopeGuard, DefaultThreadLocalDefinition,
+    ThreadLocal as GenericThreadLocal, ThreadLocalDefinition,
 };
+use crate::handlers::common::Primary;
+use crate::handlers::common::ThreadLocal as ThreadLocalScope;
 use crate::handlers::on_uninit::{ErrorOnUninit, FlagOnUninit, OnUninit, PanicOnUninit};
 use crate::handlers::uninit_error::UninitializedError;
 use crate::{DynFallibleTryDropStrategy, FallibleTryDropStrategy, LOAD_ORDERING, STORE_ORDERING};
+use std::boxed::Box;
+use std::cell::RefCell;
 use std::marker::PhantomData;
 use std::sync::atomic::AtomicBool;
+use std::thread::LocalKey;
 use std::{convert, thread_local};
-use crate::handlers::common::handler::CommonHandler;
-use super::{Abstracter, DefaultOnUninit};
-use crate::handlers::common::ThreadLocal as ThreadLocalScope;
 
 #[cfg(feature = "ds-write")]
 use crate::handlers::on_uninit::UseDefaultOnUninit;
 
-pub type ThreadLocalPrimaryHandler<OU = DefaultOnUninit> = CommonHandler<OU, ThreadLocalScope, Primary>;
+pub type ThreadLocalPrimaryHandler<OU = DefaultOnUninit> =
+    CommonHandler<OU, ThreadLocalScope, Primary>;
 
-pub static DEFAULT_THREAD_LOCAL_PRIMARY_HANDLER: ThreadLocalPrimaryHandler = ThreadLocalPrimaryHandler::DEFAULT;
+pub static DEFAULT_THREAD_LOCAL_PRIMARY_HANDLER: ThreadLocalPrimaryHandler =
+    ThreadLocalPrimaryHandler::DEFAULT;
 
 impl FallibleTryDropStrategy for ThreadLocalPrimaryHandler<ErrorOnUninit> {
     type Error = anyhow::Error;
@@ -51,7 +51,9 @@ impl FallibleTryDropStrategy for ThreadLocalPrimaryHandler<UseDefaultOnUninit> {
     type Error = anyhow::Error;
 
     fn try_handle_error(&self, error: crate::Error) -> Result<(), Self::Error> {
-        Abstracter::<ThreadLocalScope>::read_or_default(|strategy| strategy.dyn_try_handle_error(error))
+        Abstracter::<ThreadLocalScope>::read_or_default(|strategy| {
+            strategy.dyn_try_handle_error(error)
+        })
     }
 }
 
@@ -59,11 +61,12 @@ impl FallibleTryDropStrategy for ThreadLocalPrimaryHandler<FlagOnUninit> {
     type Error = anyhow::Error;
 
     fn try_handle_error(&self, error: crate::Error) -> Result<(), Self::Error> {
-        let (last_drop_failed, ret) = match Abstracter::<ThreadLocalScope>::try_read(|s| s.dyn_try_handle_error(error)) {
-            Ok(Ok(())) => (false, Ok(())),
-            Ok(Err(error)) => (false, Err(error)),
-            Err(error) => (true, Err(error.into())),
-        };
+        let (last_drop_failed, ret) =
+            match Abstracter::<ThreadLocalScope>::try_read(|s| s.dyn_try_handle_error(error)) {
+                Ok(Ok(())) => (false, Ok(())),
+                Ok(Err(error)) => (false, Err(error)),
+                Err(error) => (true, Err(error.into())),
+            };
         self.set_last_drop_failed(last_drop_failed);
         ret
     }
@@ -75,7 +78,8 @@ thread_local! {
 }
 
 impl ThreadLocalDefinition for Primary {
-    const UNINITIALIZED_ERROR: &'static str = "the thread local primary handler is not initialized yet";
+    const UNINITIALIZED_ERROR: &'static str =
+        "the thread local primary handler is not initialized yet";
     const DYN: &'static str = "ThreadLocalFallibleTryDropStrategy";
     type ThreadLocal = Box<dyn ThreadLocalFallibleTryDropStrategy>;
 
@@ -97,7 +101,9 @@ impl DefaultThreadLocalDefinition for Primary {
     }
 }
 
-impl<T: ThreadLocalFallibleTryDropStrategy> From<T> for Box<dyn ThreadLocalFallibleTryDropStrategy> {
+impl<T: ThreadLocalFallibleTryDropStrategy> From<T>
+    for Box<dyn ThreadLocalFallibleTryDropStrategy>
+{
     fn from(strategy: T) -> Self {
         Box::new(strategy)
     }
@@ -129,4 +135,3 @@ thread_local_methods! {
     scope;
     scope_dyn;
 }
-

@@ -1,26 +1,27 @@
 //! Manage the global fallback handler.
 
+use super::DefaultOnUninit;
+use crate::handlers::common::global::{
+    DefaultGlobalDefinition, Global as GenericGlobal, GlobalDefinition,
+};
+use crate::handlers::common::handler::CommonHandler;
+use crate::handlers::common::Fallback;
+use crate::handlers::common::Global as GlobalScope;
+use crate::handlers::fallback::Abstracter;
 use crate::handlers::on_uninit::{FlagOnUninit, OnUninit, PanicOnUninit};
 use crate::handlers::uninit_error::UninitializedError;
 use crate::{GlobalTryDropStrategy, TryDropStrategy, LOAD_ORDERING, STORE_ORDERING};
 use anyhow::Error;
-use parking_lot::{
-    MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLock,
-};
+use parking_lot::{MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLock};
 use std::boxed::Box;
-use crate::handlers::common::Fallback;
-use crate::handlers::common::global::{DefaultGlobalDefinition, GlobalDefinition, Global as GenericGlobal};
-use crate::handlers::common::handler::CommonHandler;
-use crate::handlers::common::Global as GlobalScope;
-use crate::handlers::fallback::Abstracter;
-use super::DefaultOnUninit;
 
 #[cfg(feature = "ds-panic")]
 use crate::handlers::on_uninit::UseDefaultOnUninit;
 
 pub type GlobalFallbackHandler<OU = DefaultOnUninit> = CommonHandler<OU, GlobalScope, Fallback>;
 pub static DEFAULT_GLOBAL_FALLBACK_HANDLER: GlobalFallbackHandler = GlobalFallbackHandler::DEFAULT;
-static FALLBACK_HANDLER: RwLock<Option<Box<dyn GlobalTryDropStrategy>>> = parking_lot::const_rwlock(None);
+static FALLBACK_HANDLER: RwLock<Option<Box<dyn GlobalTryDropStrategy>>> =
+    parking_lot::const_rwlock(None);
 
 impl TryDropStrategy for GlobalFallbackHandler<PanicOnUninit> {
     fn handle_error(&self, error: crate::Error) {
@@ -37,7 +38,9 @@ impl TryDropStrategy for GlobalFallbackHandler<UseDefaultOnUninit> {
 
 impl TryDropStrategy for GlobalFallbackHandler<FlagOnUninit> {
     fn handle_error(&self, error: Error) {
-        if let Err(UninitializedError(())) = Abstracter::<GlobalScope>::try_read(|strategy| strategy.handle_error(error)) {
+        if let Err(UninitializedError(())) =
+            Abstracter::<GlobalScope>::try_read(|strategy| strategy.handle_error(error))
+        {
             self.set_last_drop_failed(true)
         } else {
             self.set_last_drop_failed(false)

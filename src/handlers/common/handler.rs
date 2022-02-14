@@ -1,9 +1,9 @@
-use std::marker::PhantomData;
-use std::sync::atomic::AtomicBool;
+use crate::handlers::common::shim::OnUninitShim;
 use crate::handlers::common::{Global, Handler, Scope, ThreadLocal};
 use crate::handlers::on_uninit::{DoNothingOnUninit, FlagOnUninit, OnUninit, PanicOnUninit};
 use crate::{LOAD_ORDERING, STORE_ORDERING};
-use crate::handlers::common::shim::OnUninitShim;
+use std::marker::PhantomData;
+use std::sync::atomic::AtomicBool;
 
 pub struct CommonHandler<OU: OnUninit, S: Scope, H: Handler> {
     pub(crate) extra_data: OU::ExtraData,

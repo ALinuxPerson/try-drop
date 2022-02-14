@@ -1,10 +1,10 @@
 //! Manage the primary handler.
 
-use std::marker::PhantomData;
+use crate::handlers::common::handler::CommonHandler;
 use crate::handlers::common::proxy::TheGreatAbstracter;
 use crate::handlers::common::{Primary, Scope};
-use crate::handlers::common::handler::CommonHandler;
 use crate::handlers::on_uninit::{ErrorOnUninit, UseDefaultOnUninit};
+use std::marker::PhantomData;
 
 #[cfg(feature = "global")]
 pub mod global;

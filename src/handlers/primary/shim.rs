@@ -2,16 +2,16 @@
 
 #[cfg(feature = "ds-write")]
 mod imp {
+    use super::ShimPrimaryHandler;
     use crate::drop_strategies::WriteDropStrategy;
+    use crate::handlers::common::handler::CommonHandler;
+    use crate::handlers::common::shim::UseDefaultOnUninitShim;
+    use crate::handlers::common::Primary;
     use crate::handlers::primary::global::GlobalPrimaryHandler;
     use crate::handlers::primary::thread_local::ThreadLocalPrimaryHandler;
-    use crate::handlers::common::Primary;
-    use crate::handlers::common::shim::UseDefaultOnUninitShim;
     use crate::FallibleTryDropStrategy;
     use once_cell::sync::Lazy;
     use std::io;
-    use crate::handlers::common::handler::CommonHandler;
-    use super::ShimPrimaryHandler;
 
     /// The default thing to do when both the global and thread-local primary handlers are
     /// uninitialized, that is to use the internal cache.
@@ -61,8 +61,8 @@ mod imp {
 
 #[cfg(not(feature = "ds-write"))]
 mod imp {
-    use crate::handlers::on_uninit::PanicOnUninit;
     use super::ShimPrimaryHandler;
+    use crate::handlers::on_uninit::PanicOnUninit;
 
     /// The default thing to do when both the global and thread-local primary handlers are
     /// uninitialized, that is to panic.
@@ -73,13 +73,13 @@ mod imp {
     }
 }
 
-pub use imp::DefaultOnUninit;
 use crate::adapters::ArcError;
-use crate::FallibleTryDropStrategy;
 use crate::handlers::common::handler::CommonShimHandler;
-use crate::handlers::common::Primary;
 use crate::handlers::common::shim::OnUninitShim;
+use crate::handlers::common::Primary;
 use crate::handlers::on_uninit::{DoNothingOnUninit, ErrorOnUninit, FlagOnUninit, PanicOnUninit};
+use crate::FallibleTryDropStrategy;
+pub use imp::DefaultOnUninit;
 
 pub type ShimPrimaryHandler<OU = DefaultOnUninit> = CommonShimHandler<OU, Primary>;
 pub static DEFAULT_SHIM_PRIMARY_HANDLER: ShimPrimaryHandler = ShimPrimaryHandler::DEFAULT;

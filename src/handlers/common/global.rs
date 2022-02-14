@@ -1,13 +1,17 @@
 pub(crate) mod imports {
-    use std::boxed::Box;
-    use parking_lot::{MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLockReadGuard, RwLockWriteGuard};
     use crate::handlers::UninitializedError;
+    use parking_lot::{
+        MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLockReadGuard, RwLockWriteGuard,
+    };
+    use std::boxed::Box;
 }
 
-use std::marker::PhantomData;
-use parking_lot::{MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLock, RwLockReadGuard, RwLockWriteGuard};
 use crate::handlers::common::Handler;
 use crate::handlers::UninitializedError;
+use parking_lot::{
+    MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLock, RwLockReadGuard, RwLockWriteGuard,
+};
+use std::marker::PhantomData;
 
 pub trait GlobalDefinition: Handler {
     const UNINITIALIZED_ERROR: &'static str;
@@ -31,14 +35,13 @@ impl<T: GlobalDefinition> Global<T> {
         Self::install_dyn(strategy.into())
     }
 
-    pub fn try_read() -> Result<
-        MappedRwLockReadGuard<'static, T::Global>,
-        UninitializedError,
-    > {
+    pub fn try_read() -> Result<MappedRwLockReadGuard<'static, T::Global>, UninitializedError> {
         let global = T::global().read();
 
         if global.is_some() {
-            Ok(RwLockReadGuard::map(global, |global| global.as_ref().unwrap()))
+            Ok(RwLockReadGuard::map(global, |global| {
+                global.as_ref().unwrap()
+            }))
         } else {
             Err(UninitializedError(()))
         }
@@ -48,14 +51,13 @@ impl<T: GlobalDefinition> Global<T> {
         Self::try_read().expect(T::UNINITIALIZED_ERROR)
     }
 
-    pub fn try_write() -> Result<
-        MappedRwLockWriteGuard<'static, T::Global>,
-        UninitializedError,
-    > {
+    pub fn try_write() -> Result<MappedRwLockWriteGuard<'static, T::Global>, UninitializedError> {
         let global = T::global().write();
 
         if global.is_some() {
-            Ok(RwLockWriteGuard::map(global, |global| global.as_mut().unwrap()))
+            Ok(RwLockWriteGuard::map(global, |global| {
+                global.as_mut().unwrap()
+            }))
         } else {
             Err(UninitializedError(()))
         }

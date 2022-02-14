@@ -7,9 +7,9 @@ mod private {
 mod use_default {
     use super::private;
     use crate::handlers::common::shim::OnUninitShim;
+    use crate::handlers::common::{Fallback, Handler, Primary};
     use once_cell::sync::Lazy;
     use std::marker::PhantomData;
-    use crate::handlers::common::{Fallback, Handler, Primary};
 
     #[cfg_attr(
         feature = "derives",

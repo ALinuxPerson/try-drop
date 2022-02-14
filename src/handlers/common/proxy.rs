@@ -1,11 +1,13 @@
+use crate::handlers::common::global::Global as GlobalAbstracter;
+use crate::handlers::common::global::{DefaultGlobalDefinition, GlobalDefinition};
+use crate::handlers::common::thread_local::ThreadLocalDefinition;
+use crate::handlers::common::thread_local::{
+    DefaultThreadLocalDefinition, ThreadLocal as ThreadLocalAbstracter,
+};
+use crate::handlers::common::{Global, Scope, ThreadLocal};
+use crate::handlers::UninitializedError;
 use std::marker::PhantomData;
 use std::ops::{Deref, DerefMut};
-use crate::handlers::common::global::{DefaultGlobalDefinition, GlobalDefinition};
-use crate::handlers::common::{Global, Scope, ThreadLocal};
-use crate::handlers::common::global::Global as GlobalAbstracter;
-use crate::handlers::common::thread_local::{DefaultThreadLocalDefinition, ThreadLocal as ThreadLocalAbstracter};
-use crate::handlers::common::thread_local::ThreadLocalDefinition;
-use crate::handlers::UninitializedError;
 
 pub struct TheGreatAbstracter<D, S>(PhantomData<(D, S)>)
 where
@@ -14,9 +16,9 @@ where
     S: Scope;
 
 impl<D> TheGreatAbstracter<D, Global>
-    where
-        D: GlobalDefinition,
-        D: ThreadLocalDefinition,
+where
+    D: GlobalDefinition,
+    D: ThreadLocalDefinition,
 {
     pub fn install(strategy: impl Into<D::Global>) {
         GlobalAbstracter::<D>::install(strategy)
@@ -62,9 +64,9 @@ where
 }
 
 impl<D> TheGreatAbstracter<D, ThreadLocal>
-    where
-        D: GlobalDefinition,
-        D: ThreadLocalDefinition,
+where
+    D: GlobalDefinition,
+    D: ThreadLocalDefinition,
 {
     pub fn install(strategy: impl Into<D::ThreadLocal>) {
         ThreadLocalAbstracter::<D>::install(strategy)
@@ -96,9 +98,9 @@ impl<D> TheGreatAbstracter<D, ThreadLocal>
 }
 
 impl<D> TheGreatAbstracter<D, ThreadLocal>
-    where
-        D: DefaultGlobalDefinition,
-        D: DefaultThreadLocalDefinition,
+where
+    D: DefaultGlobalDefinition,
+    D: DefaultThreadLocalDefinition,
 {
     pub fn read_or_default<R>(f: impl FnOnce(&D::ThreadLocal) -> R) -> R {
         ThreadLocalAbstracter::<D>::read_or_default(f)

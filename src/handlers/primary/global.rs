@@ -1,6 +1,12 @@
 //! Manage the primary global handler.
 
+use crate::handlers::common::global::{
+    DefaultGlobalDefinition, Global as GenericGlobal, GlobalDefinition,
+};
+use crate::handlers::common::handler::CommonHandler;
+use crate::handlers::common::{Global as GlobalScope, Primary};
 use crate::handlers::on_uninit::{ErrorOnUninit, FlagOnUninit, OnUninit, PanicOnUninit};
+use crate::handlers::primary::{Abstracter, DefaultOnUninit};
 use crate::handlers::uninit_error::UninitializedError;
 use crate::{
     FallibleTryDropStrategy, GlobalDynFallibleTryDropStrategy, LOAD_ORDERING, STORE_ORDERING,
@@ -11,13 +17,6 @@ use parking_lot::{
 };
 use std::boxed::Box;
 use std::convert;
-use crate::handlers::common::global::{DefaultGlobalDefinition, Global as GenericGlobal, GlobalDefinition};
-use crate::handlers::common::handler::CommonHandler;
-use crate::handlers::primary::{Abstracter, DefaultOnUninit};
-use crate::handlers::common::{
-    Primary,
-    Global as GlobalScope,
-};
 
 #[cfg(feature = "ds-write")]
 use crate::handlers::on_uninit::UseDefaultOnUninit;
@@ -57,11 +56,12 @@ impl FallibleTryDropStrategy for GlobalPrimaryHandler<FlagOnUninit> {
     type Error = anyhow::Error;
 
     fn try_handle_error(&self, error: Error) -> Result<(), Self::Error> {
-        let (last_drop_failed, ret) = match Abstracter::<GlobalScope>::try_read(|s| s.dyn_try_handle_error(error)) {
-            Ok(Ok(())) => (false, Ok(())),
-            Ok(Err(error)) => (false, Err(error)),
-            Err(error) => (true, Err(error.into())),
-        };
+        let (last_drop_failed, ret) =
+            match Abstracter::<GlobalScope>::try_read(|s| s.dyn_try_handle_error(error)) {
+                Ok(Ok(())) => (false, Ok(())),
+                Ok(Err(error)) => (false, Err(error)),
+                Err(error) => (true, Err(error.into())),
+            };
         self.set_last_drop_failed(last_drop_failed);
         ret
     }
@@ -88,7 +88,9 @@ impl DefaultGlobalDefinition for Primary {
     }
 }
 
-impl<T: GlobalDynFallibleTryDropStrategy + 'static> From<T> for Box<dyn GlobalDynFallibleTryDropStrategy> {
+impl<T: GlobalDynFallibleTryDropStrategy + 'static> From<T>
+    for Box<dyn GlobalDynFallibleTryDropStrategy>
+{
     fn from(handler: T) -> Self {
         Box::new(handler)
     }
