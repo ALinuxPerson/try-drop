@@ -24,6 +24,9 @@ type Abstracter<S> = TheGreatAbstracter<Primary, S>;
 pub type GlobalPrimaryHandler<OU = DefaultOnUninit> = CommonHandler<OU, Global, Primary>;
 pub type ThreadLocalPrimaryHandler<OU = DefaultOnUninit> = CommonHandler<OU, ThreadLocal, Primary>;
 
+pub static DEFAULT_GLOBAL_PRIMARY_HANDLER: GlobalPrimaryHandler = GlobalPrimaryHandler::DEFAULT;
+pub static DEFAULT_THREAD_LOCAL_PRIMARY_HANDLER: ThreadLocalPrimaryHandler = ThreadLocalPrimaryHandler::DEFAULT;
+
 impl<S: Scope> CommonHandler<ErrorOnUninit, S, Primary> {
     pub const ON_UNINIT_ERROR: Self = Self {
         extra_data: (),

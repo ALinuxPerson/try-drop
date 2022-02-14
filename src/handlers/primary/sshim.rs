@@ -80,6 +80,7 @@ use crate::handlers::common::shim::OnUninitShim;
 use crate::handlers::on_uninit::{DoNothingOnUninit, ErrorOnUninit, FlagOnUninit, PanicOnUninit};
 
 pub type ShimPrimaryHandler<OU = DefaultOnUninit> = CommonShimHandler<OU, Primary>;
+pub static DEFAULT_SHIM_PRIMARY_HANDLER: ShimPrimaryHandler = ShimPrimaryHandler::DEFAULT;
 
 impl<OU: OnUninitShim> ShimPrimaryHandler<OU> {
     fn on_all_uninit(
