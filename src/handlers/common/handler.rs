@@ -41,9 +41,9 @@ impl<S: Scope, H: Handler> CommonHandler<FlagOnUninit, S, H> {
 }
 
 pub struct CommonShimHandler<OU: OnUninitShim, H: Handler> {
-    global: CommonHandler<FlagOnUninit, Global, H>,
-    thread_local: CommonHandler<FlagOnUninit, ThreadLocal, H>,
-    extra_data: OU::ExtraData,
+    pub(crate) global: CommonHandler<FlagOnUninit, Global, H>,
+    pub(crate) thread_local: CommonHandler<FlagOnUninit, ThreadLocal, H>,
+    pub(crate) extra_data: OU::ExtraData,
 }
 
 impl<H: Handler> CommonShimHandler<PanicOnUninit, H> {
