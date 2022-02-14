@@ -247,6 +247,13 @@ downcast_rs::impl_downcast!(sync GlobalTryDropStrategy);
 #[cfg(feature = "global")]
 impl<T: ThreadSafe + TryDropStrategy> GlobalTryDropStrategy for T {}
 
+/// A trait which signifies an infallible try drop strategy which can be used in a thread local.
+#[cfg(feature = "thread-local")]
+pub trait ThreadLocalTryDropStrategy: TryDropStrategy + 'static {}
+
+#[cfg(feature = "thread-local")]
+impl<T: TryDropStrategy + 'static> ThreadLocalTryDropStrategy for T {}
+
 /// A trait which signifies a thread safe type. Can be used in a `static`.
 pub trait ThreadSafe: Send + Sync + 'static {}
 
