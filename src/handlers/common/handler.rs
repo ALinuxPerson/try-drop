@@ -3,6 +3,7 @@ use std::sync::atomic::AtomicBool;
 use crate::handlers::common::{Global, Handler, Scope, ThreadLocal};
 use crate::handlers::on_uninit::{DoNothingOnUninit, FlagOnUninit, OnUninit, PanicOnUninit};
 use crate::{LOAD_ORDERING, STORE_ORDERING};
+use crate::handlers::common::shim::OnUninitShim;
 
 pub struct CommonHandler<OU: OnUninit, S: Scope, H: Handler> {
     extra_data: OU::ExtraData,
@@ -39,7 +40,7 @@ impl<S: Scope, H: Handler> CommonHandler<FlagOnUninit, S, H> {
     }
 }
 
-pub struct CommonShimHandler<OU: OnUninit, H: Handler> {
+pub struct CommonShimHandler<OU: OnUninitShim, H: Handler> {
     global: CommonHandler<FlagOnUninit, Global, H>,
     thread_local: CommonHandler<FlagOnUninit, ThreadLocal, H>,
     extra_data: OU::ExtraData,
