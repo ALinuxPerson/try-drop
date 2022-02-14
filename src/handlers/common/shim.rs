@@ -9,6 +9,7 @@ mod use_default {
     use crate::handlers::common::shim::OnUninitShim;
     use once_cell::sync::Lazy;
     use std::marker::PhantomData;
+    use crate::handlers::common::{Fallback, Handler, Primary};
 
     #[cfg_attr(
         feature = "derives",
@@ -17,34 +18,16 @@ mod use_default {
     pub struct UseDefaultOnUninitShim<H: Handler>(PhantomData<H>);
 
     #[cfg(feature = "ds-write")]
-    impl OnUninitShim for UseDefaultOnUninitShim<PrimaryHandler> {
+    impl OnUninitShim for UseDefaultOnUninitShim<Primary> {
         type ExtraData = Lazy<crate::drop_strategies::WriteDropStrategy<std::io::Stderr>>;
     }
 
     #[cfg(feature = "ds-panic")]
-    impl OnUninitShim for UseDefaultOnUninitShim<FallbackHandler> {
+    impl OnUninitShim for UseDefaultOnUninitShim<Fallback> {
         type ExtraData = Lazy<crate::drop_strategies::PanicDropStrategy>;
     }
 
     impl<H: Handler> private::Sealed for UseDefaultOnUninitShim<H> {}
-
-    pub trait Handler: private::Sealed {}
-
-    #[cfg_attr(
-        feature = "derives",
-        derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
-    )]
-    pub enum FallbackHandler {}
-    impl Handler for FallbackHandler {}
-    impl private::Sealed for FallbackHandler {}
-
-    #[cfg_attr(
-        feature = "derives",
-        derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
-    )]
-    pub enum PrimaryHandler {}
-    impl Handler for PrimaryHandler {}
-    impl private::Sealed for PrimaryHandler {}
 }
 
 #[cfg(any(feature = "ds-write", feature = "ds-panic"))]

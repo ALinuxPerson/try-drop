@@ -13,21 +13,22 @@ mod imp {
     use crate::handlers::primary::global::GlobalPrimaryHandler;
     use crate::handlers::primary::shim::ShimPrimaryHandler;
     use crate::handlers::primary::thread_local::ThreadLocalPrimaryHandler;
-    use crate::handlers::common::shim::{PrimaryHandler, UseDefaultOnUninitShim};
+    use crate::handlers::common::Primary;
+    use crate::handlers::common::shim::UseDefaultOnUninitShim;
     use crate::FallibleTryDropStrategy;
     use once_cell::sync::Lazy;
     use std::io;
 
     /// The default thing to do when both the global and thread-local primary handlers are
     /// uninitialized, that is to use the internal cache.
-    pub type DefaultOnUninit = UseDefaultOnUninitShim<PrimaryHandler>;
+    pub type DefaultOnUninit = UseDefaultOnUninitShim<Primary>;
 
     impl ShimPrimaryHandler<DefaultOnUninit> {
         /// The default shim primary handler.
         pub const DEFAULT: Self = Self::USE_DEFAULT_ON_UNINIT;
     }
 
-    impl ShimPrimaryHandler<UseDefaultOnUninitShim<PrimaryHandler>> {
+    impl ShimPrimaryHandler<UseDefaultOnUninitShim<Primary>> {
         /// See [`Self::use_default_on_uninit`].
         #[allow(clippy::declare_interior_mutable_const)]
         pub const USE_DEFAULT_ON_UNINIT: Self = Self {
@@ -51,7 +52,7 @@ mod imp {
         }
     }
 
-    impl FallibleTryDropStrategy for ShimPrimaryHandler<UseDefaultOnUninitShim<PrimaryHandler>> {
+    impl FallibleTryDropStrategy for ShimPrimaryHandler<UseDefaultOnUninitShim<Primary>> {
         type Error = anyhow::Error;
 
         fn try_handle_error(&self, error: crate::Error) -> Result<(), Self::Error> {

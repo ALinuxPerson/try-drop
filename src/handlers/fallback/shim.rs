@@ -14,15 +14,16 @@ mod imp {
     use crate::handlers::fallback::global::GlobalFallbackHandler;
     use crate::handlers::fallback::shim::ShimFallbackHandler;
     use crate::handlers::fallback::thread_local::ThreadLocalFallbackHandler;
-    use crate::handlers::common::shim::{FallbackHandler, UseDefaultOnUninitShim};
+    use crate::handlers::common::Fallback;
+    use crate::handlers::common::shim::UseDefaultOnUninitShim;
     use crate::TryDropStrategy;
     use once_cell::sync::Lazy;
 
     /// The default thing to do when both the primary and fallback handlers are uninitialized,
     /// that is to use the inner cache to handle the error instead.
-    pub type DefaultOnUninit = UseDefaultOnUninitShim<FallbackHandler>;
+    pub type DefaultOnUninit = UseDefaultOnUninitShim<Fallback>;
 
-    impl ShimFallbackHandler<UseDefaultOnUninitShim<FallbackHandler>> {
+    impl ShimFallbackHandler<UseDefaultOnUninitShim<Fallback>> {
         /// See [`Self::use_default_on_uninit`].
         pub const USE_DEFAULT_ON_UNINIT: Self = Self {
             global: GlobalFallbackHandler::FLAG_ON_UNINIT,
@@ -46,7 +47,7 @@ mod imp {
         pub const DEFAULT: Self = Self::USE_DEFAULT_ON_UNINIT;
     }
 
-    impl TryDropStrategy for ShimFallbackHandler<UseDefaultOnUninitShim<FallbackHandler>> {
+    impl TryDropStrategy for ShimFallbackHandler<UseDefaultOnUninitShim<Fallback>> {
         fn handle_error(&self, error: crate::Error) {
             self.on_all_uninit(error, |error| self.cache().handle_error(error.into()))
         }
