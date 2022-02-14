@@ -1,3 +1,9 @@
+pub(crate) mod imports {
+    use std::boxed::Box;
+    use parking_lot::{MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLockReadGuard, RwLockWriteGuard};
+    use crate::handlers::UninitializedError;
+}
+
 use std::marker::PhantomData;
 use parking_lot::{MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLock, RwLockReadGuard, RwLockWriteGuard};
 use crate::handlers::common::Handler;
@@ -77,48 +83,87 @@ impl<T: DefaultGlobalDefinition> Global<T> {
     }
 }
 
-macro_rules! globals {
-    ($name:ident where Global: $global:ty, GenericGlobal: $generic_global:ident) => {
-        pub fn install_dyn(strategy: $global) {
-            $name::install_dyn(strategy)
+macro_rules! global_methods {
+    (
+        Global = $global:ident;
+        GenericStrategy = $generic_strategy:ident;
+        DynStrategy = $dyn_strategy:ident;
+        feature = $feature:literal;
+
+        $(#[$($install_dyn_tt:tt)*])*
+        install_dyn;
+
+        $(#[$($install_tt:tt)*])*
+        install;
+
+        $(#[$($try_read_tt:tt)*])*
+        try_read;
+
+        $(#[$($read_tt:tt)*])*
+        read;
+
+        $(#[$($try_write_tt:tt)*])*
+        try_write;
+
+        $(#[$($write_tt:tt)*])*
+        write;
+
+        $(#[$($uninstall_tt:tt)*])*
+        uninstall;
+
+        $(#[$($read_or_default_tt:tt)*])*
+        read_or_default;
+
+        $(#[$($write_or_default_tt:tt)*])*
+        write_or_default;
+    ) => {
+        use $crate::handlers::common::imports::*;
+
+        $(#[$($install_dyn_tt)*])*
+        pub fn install_dyn(strategy: $dyn_strategy) {
+            $global::install_dyn(strategy)
         }
 
-        pub fn install(strategy: $generic_global) {
-            $name::install(strategy)
+        $(#[$($install_tt)*])*
+        pub fn install(strategy: impl $generic_strategy) {
+            $global::install(strategy)
         }
 
-        pub fn try_read() -> Result<
-            MappedRwLockReadGuard<'static, $global>,
-            UninitializedError,
-        > {
-            $name::try_read()
+        $(#[$($try_read_tt)*])*
+        pub fn try_read() -> Result<MappedRwLockReadGuard<'static, $dyn_strategy>, UninitializedError> {
+            $global::try_read()
         }
 
-        pub fn read() -> MappedRwLockReadGuard<'static, $global> {
-            $name::read()
+        $(#[$($read_tt)*])*
+        pub fn read() -> MappedRwLockReadGuard<'static, $dyn_strategy> {
+            $global::read()
         }
 
-        pub fn read_or_default() -> MappedRwLockReadGuard<'static, $global> {
-            $name::read_or_default()
+        $(#[$($try_write_tt)*])*
+        pub fn try_write() -> Result<MappedRwLockWriteGuard<'static, $dyn_strategy>, UninitializedError> {
+            $global::try_write()
         }
 
-        pub fn try_write() -> Result<
-            MappedRwLockWriteGuard<'static, $global>,
-            UninitializedError,
-        > {
-            $name::try_write()
+        $(#[$($write_tt)*])*
+        pub fn write() -> MappedRwLockWriteGuard<'static, $dyn_strategy> {
+            $global::write()
         }
 
-        pub fn write() -> MappedRwLockWriteGuard<'static, $global> {
-            $name::write()
-        }
-
-        pub fn write_or_default() -> MappedRwLockWriteGuard<'static, $global> {
-            $name::write_or_default()
-        }
-
+        $(#[$($uninstall_tt)*])*
         pub fn uninstall() {
-            $name::uninstall()
+            $global::uninstall()
+        }
+
+        $(#[$($read_or_default_tt)*])*
+        #[cfg(feature = $feature)]
+        pub fn read_or_default() -> MappedRwLockReadGuard<'static, $dyn_strategy> {
+            $global::read_or_default()
+        }
+
+        $(#[$($write_or_default_tt)*])*
+        #[cfg(feature = $feature)]
+        pub fn write_or_default() -> MappedRwLockWriteGuard<'static, $dyn_strategy> {
+            $global::write_or_default()
         }
     };
 }
