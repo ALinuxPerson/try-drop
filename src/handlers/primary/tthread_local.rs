@@ -1,10 +1,13 @@
-use std::boxed::Box;
 use std::cell::RefCell;
 use std::thread::LocalKey;
 use std::thread_local;
-use crate::{DynFallibleTryDropStrategy, ThreadLocalFallibleTryDropStrategy};
 use crate::handlers::common::Primary;
-use crate::handlers::common::thread_local::{DefaultThreadLocalDefinition, ThreadLocal as GenericThreadLocal, scope_guard::ScopeGuard as GenericScopeGuard, ThreadLocalDefinition};
+use crate::handlers::common::thread_local::{
+    DefaultThreadLocalDefinition,
+    ThreadLocalDefinition,
+    ThreadLocal as GenericThreadLocal,
+    scope_guard::ScopeGuard as GenericScopeGuard,
+};
 
 thread_local! {
     static PRIMARY_HANDLER: RefCell<Option<Box<dyn DynFallibleTryDropStrategy>>> = RefCell::new(None);
@@ -42,13 +45,15 @@ impl<T: ThreadLocalFallibleTryDropStrategy> From<T> for Box<dyn DynFallibleTryDr
 
 type ThreadLocal = GenericThreadLocal<Primary>;
 pub type ScopeGuard = GenericScopeGuard<Primary>;
+pub type BoxDynFallibleTryDropStrategy = Box<dyn DynFallibleTryDropStrategy>;
 
 thread_local_methods! {
     ThreadLocal = ThreadLocal;
     ScopeGuard = ScopeGuard;
     GenericStrategy = ThreadLocalFallibleTryDropStrategy;
-    DynStrategy = DynFallibleTryDropStrategy;
+    DynStrategy = BoxDynFallibleTryDropStrategy;
     feature = "ds-panic";
+
     install;
     install_dyn;
     try_read;
