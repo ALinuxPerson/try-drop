@@ -1,5 +1,6 @@
+use std::marker::PhantomData;
 use anyhow::Error;
-use crate::handlers::common::{Fallback, Global, ThreadLocal};
+use crate::handlers::common::{Fallback, Global, Scope, ThreadLocal};
 use crate::handlers::common::handler::CommonHandler;
 use crate::handlers::common::proxy::TheGreatAbstracter;
 use crate::handlers::on_uninit::{FlagOnUninit, PanicOnUninit, UseDefaultOnUninit};
@@ -17,6 +18,22 @@ pub type DefaultOnUninit = UseDefaultOnUninit;
 type Abstracter<S> = TheGreatAbstracter<Fallback, S>;
 pub type GlobalFallbackHandler<OU = DefaultOnUninit> = CommonHandler<OU, Global, Fallback>;
 pub type ThreadLocalFallbackHandler<OU = DefaultOnUninit> = CommonHandler<OU, ThreadLocal, Fallback>;
+
+pub static DEFAULT_GLOBAL_FALLBACK_HANDLER: GlobalFallbackHandler = GlobalFallbackHandler::DEFAULT;
+pub static DEFAULT_THREAD_LOCAL_FALLBACK_HANDLER: ThreadLocalFallbackHandler = ThreadLocalFallbackHandler::DEFAULT;
+
+impl<S: Scope> CommonHandler<DefaultOnUninit, S, Fallback> {
+    pub const DEFAULT: Self = Self {
+        extra_data: (),
+        _scope: PhantomData,
+    };
+}
+
+impl<S: Scope> Default for CommonHandler<DefaultOnUninit, S, Fallback> {
+    fn default() -> Self {
+        Self::DEFAULT
+    }
+}
 
 impl TryDropStrategy for CommonHandler<PanicOnUninit, ThreadLocal, Fallback> {
     fn handle_error(&self, error: crate::Error) {

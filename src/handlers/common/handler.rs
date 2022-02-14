@@ -6,8 +6,8 @@ use crate::{LOAD_ORDERING, STORE_ORDERING};
 use crate::handlers::common::shim::OnUninitShim;
 
 pub struct CommonHandler<OU: OnUninit, S: Scope, H: Handler> {
-    extra_data: OU::ExtraData,
-    _scope: PhantomData<(S, H)>,
+    pub(crate) extra_data: OU::ExtraData,
+    pub(crate) _scope: PhantomData<(S, H)>,
 }
 
 impl<S: Scope, H: Handler> CommonHandler<PanicOnUninit, S, H> {
