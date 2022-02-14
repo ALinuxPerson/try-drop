@@ -7,7 +7,7 @@ use std::boxed::Box;
 use std::cell::RefCell;
 use std::thread_local;
 use std::thread::LocalKey;
-use crate::handlers::common::{Fallback, ThreadLocal as ThreadLocalHandler};
+use crate::handlers::common::{Fallback, ThreadLocal as ThreadLocalScope};
 use crate::handlers::common::handler::CommonHandler;
 use crate::handlers::common::thread_local::scope_guard::ScopeGuard as GenericScopeGuard;
 use crate::handlers::common::thread_local::{DefaultThreadLocalDefinition, ThreadLocal as GenericThreadLocal, ThreadLocalDefinition};
@@ -17,26 +17,26 @@ use super::{DefaultOnUninit, Abstracter};
 #[cfg(feature = "ds-panic")]
 use crate::handlers::on_uninit::UseDefaultOnUninit;
 
-pub type ThreadLocalFallbackHandler<OU = DefaultOnUninit> = CommonHandler<OU, ThreadLocalHandler, Fallback>;
+pub type ThreadLocalFallbackHandler<OU = DefaultOnUninit> = CommonHandler<OU, ThreadLocalScope, Fallback>;
 
 pub static DEFAULT_THREAD_LOCAL_FALLBACK_HANDLER: ThreadLocalFallbackHandler = ThreadLocalFallbackHandler::DEFAULT;
 
-impl TryDropStrategy for CommonHandler<PanicOnUninit, ThreadLocalHandler, Fallback> {
+impl TryDropStrategy for CommonHandler<PanicOnUninit, ThreadLocalScope, Fallback> {
     fn handle_error(&self, error: crate::Error) {
-        Abstracter::<ThreadLocalHandler>::read(|strategy| strategy.handle_error(error))
+        Abstracter::<ThreadLocalScope>::read(|strategy| strategy.handle_error(error))
     }
 }
 
 #[cfg(feature = "ds-write")]
-impl TryDropStrategy for CommonHandler<UseDefaultOnUninit, ThreadLocalHandler, Fallback> {
+impl TryDropStrategy for CommonHandler<UseDefaultOnUninit, ThreadLocalScope, Fallback> {
     fn handle_error(&self, error: Error) {
-        Abstracter::<ThreadLocalHandler>::read_or_default(|strategy| strategy.handle_error(error))
+        Abstracter::<ThreadLocalScope>::read_or_default(|strategy| strategy.handle_error(error))
     }
 }
 
-impl TryDropStrategy for CommonHandler<FlagOnUninit, ThreadLocalHandler, Fallback> {
+impl TryDropStrategy for CommonHandler<FlagOnUninit, ThreadLocalScope, Fallback> {
     fn handle_error(&self, error: Error) {
-        if let Err(UninitializedError(())) = Abstracter::<ThreadLocalHandler>::try_read(|strategy| strategy.handle_error(error)) {
+        if let Err(UninitializedError(())) = Abstracter::<ThreadLocalScope>::try_read(|strategy| strategy.handle_error(error)) {
             self.set_last_drop_failed(true)
         } else {
             self.set_last_drop_failed(false)
