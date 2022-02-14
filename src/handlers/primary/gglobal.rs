@@ -33,43 +33,21 @@ impl<T: GlobalDynFallibleTryDropStrategy + 'static> From<T> for Box<dyn GlobalDy
 }
 
 type Global = GenericGlobal<Primary>;
+pub type BoxDynGlobalFallibleTryDropStrategy = Box<dyn GlobalDynFallibleTryDropStrategy>;
 
-pub fn install_dyn(strategy: Box<dyn GlobalDynFallibleTryDropStrategy>) {
-    Global::install_dyn(strategy)
+global_methods! {
+    Global = Global;
+    GenericStrategy = GlobalDynFallibleTryDropStrategy;
+    DynStrategy = BoxDynGlobalFallibleTryDropStrategy;
+    feature = "ds-write";
+
+    install_dyn;
+    install;
+    try_read;
+    read;
+    try_write;
+    write;
+    uninstall;
+    read_or_default;
+    write_or_default;
 }
-
-pub fn install(strategy: impl GlobalDynFallibleTryDropStrategy + 'static) {
-    Global::install(strategy)
-}
-
-pub fn try_read() -> Result<MappedRwLockReadGuard<'static, Box<dyn GlobalDynFallibleTryDropStrategy>>, UninitializedError> {
-    Global::try_read()
-}
-
-pub fn read() -> MappedRwLockReadGuard<'static, Box<dyn GlobalDynFallibleTryDropStrategy>> {
-    Global::read()
-}
-
-pub fn try_write() -> Result<MappedRwLockWriteGuard<'static, Box<dyn GlobalDynFallibleTryDropStrategy>>, UninitializedError> {
-    Global::try_write()
-}
-
-pub fn write() -> MappedRwLockWriteGuard<'static, Box<dyn GlobalDynFallibleTryDropStrategy>> {
-    Global::write()
-}
-
-pub fn uninstall() {
-    Global::uninstall()
-}
-
-#[cfg(feature = "ds-write")]
-pub fn read_or_default() -> MappedRwLockReadGuard<'static, Box<dyn GlobalDynFallibleTryDropStrategy>> {
-    Global::read_or_default()
-}
-
-#[cfg(feature = "ds-write")]
-pub fn write_or_default() -> MappedRwLockWriteGuard<'static, Box<dyn GlobalDynFallibleTryDropStrategy>> {
-    Global::write_or_default()
-}
-
-
