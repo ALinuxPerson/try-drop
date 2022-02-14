@@ -1,10 +1,3 @@
-use crate::adapters::ArcError;
-use crate::handlers::common::Fallback;
-use crate::handlers::common::handler::CommonShimHandler;
-use crate::handlers::common::shim::OnUninitShim;
-use crate::handlers::on_uninit::{DoNothingOnUninit, FlagOnUninit, PanicOnUninit};
-use crate::TryDropStrategy;
-
 #[cfg(feature = "ds-panic")]
 mod imp {
     use crate::drop_strategies::PanicDropStrategy;
@@ -64,7 +57,15 @@ mod imp {
     }
 }
 
-pub type ShimFallbackHandler<OU> = CommonShimHandler<OU, Fallback>;
+pub use imp::DefaultOnUninit;
+use crate::adapters::ArcError;
+use crate::handlers::common::Fallback;
+use crate::handlers::common::handler::CommonShimHandler;
+use crate::handlers::common::shim::OnUninitShim;
+use crate::handlers::on_uninit::{DoNothingOnUninit, FlagOnUninit, PanicOnUninit};
+use crate::TryDropStrategy;
+
+pub type ShimFallbackHandler<OU = DefaultOnUninit> = CommonShimHandler<OU, Fallback>;
 
 impl<OU: OnUninitShim> ShimFallbackHandler<OU> {
     fn on_all_uninit(&self, error: anyhow::Error, f: impl FnOnce(ArcError)) {
