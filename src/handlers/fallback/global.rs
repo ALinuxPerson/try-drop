@@ -11,33 +11,33 @@ use std::boxed::Box;
 use crate::handlers::common::Fallback;
 use crate::handlers::common::global::{DefaultGlobalDefinition, GlobalDefinition, Global as GenericGlobal};
 use crate::handlers::common::handler::CommonHandler;
-use crate::handlers::common::Global as GlobalHandler;
+use crate::handlers::common::Global as GlobalScope;
 use crate::handlers::fallback::Abstracter;
 use super::DefaultOnUninit;
 
 #[cfg(feature = "ds-panic")]
 use crate::handlers::on_uninit::UseDefaultOnUninit;
 
-pub type GlobalFallbackHandler<OU = DefaultOnUninit> = CommonHandler<OU, GlobalHandler, Fallback>;
+pub type GlobalFallbackHandler<OU = DefaultOnUninit> = CommonHandler<OU, GlobalScope, Fallback>;
 pub static DEFAULT_GLOBAL_FALLBACK_HANDLER: GlobalFallbackHandler = GlobalFallbackHandler::DEFAULT;
 static FALLBACK_HANDLER: RwLock<Option<Box<dyn GlobalTryDropStrategy>>> = parking_lot::const_rwlock(None);
 
 impl TryDropStrategy for GlobalFallbackHandler<PanicOnUninit> {
     fn handle_error(&self, error: crate::Error) {
-        Abstracter::<GlobalHandler>::read(|strategy| strategy.handle_error(error))
+        Abstracter::<GlobalScope>::read(|strategy| strategy.handle_error(error))
     }
 }
 
 #[cfg(feature = "ds-write")]
 impl TryDropStrategy for GlobalFallbackHandler<UseDefaultOnUninit> {
     fn handle_error(&self, error: Error) {
-        Abstracter::<GlobalHandler>::read_or_default(|strategy| strategy.handle_error(error))
+        Abstracter::<GlobalScope>::read_or_default(|strategy| strategy.handle_error(error))
     }
 }
 
 impl TryDropStrategy for GlobalFallbackHandler<FlagOnUninit> {
     fn handle_error(&self, error: Error) {
-        if let Err(UninitializedError(())) = Abstracter::<GlobalHandler>::try_read(|strategy| strategy.handle_error(error)) {
+        if let Err(UninitializedError(())) = Abstracter::<GlobalScope>::try_read(|strategy| strategy.handle_error(error)) {
             self.set_last_drop_failed(true)
         } else {
             self.set_last_drop_failed(false)
