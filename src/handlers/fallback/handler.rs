@@ -16,10 +16,9 @@ pub type DefaultOnUninit = PanicOnUninit;
 pub type DefaultOnUninit = UseDefaultOnUninit;
 
 type Abstracter<S> = TheGreatAbstracter<Fallback, S>;
-pub type GlobalFallbackHandler<OU = DefaultOnUninit> = CommonHandler<OU, Global, Fallback>;
+
 pub type ThreadLocalFallbackHandler<OU = DefaultOnUninit> = CommonHandler<OU, ThreadLocal, Fallback>;
 
-pub static DEFAULT_GLOBAL_FALLBACK_HANDLER: GlobalFallbackHandler = GlobalFallbackHandler::DEFAULT;
 pub static DEFAULT_THREAD_LOCAL_FALLBACK_HANDLER: ThreadLocalFallbackHandler = ThreadLocalFallbackHandler::DEFAULT;
 
 impl<S: Scope> CommonHandler<DefaultOnUninit, S, Fallback> {
@@ -41,23 +40,12 @@ impl TryDropStrategy for CommonHandler<PanicOnUninit, ThreadLocal, Fallback> {
     }
 }
 
-impl TryDropStrategy for CommonHandler<PanicOnUninit, Global, Fallback> {
-    fn handle_error(&self, error: crate::Error) {
-        Abstracter::<Global>::read(|strategy| strategy.handle_error(error))
-    }
-}
+
 
 #[cfg(feature = "ds-write")]
 impl TryDropStrategy for CommonHandler<UseDefaultOnUninit, ThreadLocal, Fallback> {
     fn handle_error(&self, error: Error) {
         Abstracter::<ThreadLocal>::read_or_default(|strategy| strategy.handle_error(error))
-    }
-}
-
-#[cfg(feature = "ds-write")]
-impl TryDropStrategy for CommonHandler<UseDefaultOnUninit, Global, Fallback> {
-    fn handle_error(&self, error: Error) {
-        Abstracter::<Global>::read_or_default(|strategy| strategy.handle_error(error))
     }
 }
 
@@ -70,14 +58,3 @@ impl TryDropStrategy for CommonHandler<FlagOnUninit, ThreadLocal, Fallback> {
         }
     }
 }
-
-impl TryDropStrategy for CommonHandler<FlagOnUninit, Global, Fallback> {
-    fn handle_error(&self, error: Error) {
-        if let Err(UninitializedError(())) = Abstracter::<Global>::try_read(|strategy| strategy.handle_error(error)) {
-            self.set_last_drop_failed(true)
-        } else {
-            self.set_last_drop_failed(false)
-        }
-    }
-}
-
