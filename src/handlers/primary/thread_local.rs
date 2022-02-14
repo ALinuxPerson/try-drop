@@ -15,126 +15,25 @@ use crate::handlers::uninit_error::UninitializedError;
 use crate::{DynFallibleTryDropStrategy, FallibleTryDropStrategy, LOAD_ORDERING, STORE_ORDERING};
 use std::marker::PhantomData;
 use std::sync::atomic::AtomicBool;
-use std::thread_local;
+use std::{convert, thread_local};
+use crate::handlers::common::handler::CommonHandler;
+use super::{Abstracter, DefaultOnUninit};
+use crate::handlers::common::ThreadLocal as ThreadLocalScope;
 
 #[cfg(feature = "ds-write")]
 use crate::handlers::on_uninit::UseDefaultOnUninit;
 
-const UNINITIALIZED_ERROR: &str = "the thread local primary handler is not initialized yet";
+pub type ThreadLocalPrimaryHandler<OU = DefaultOnUninit> = CommonHandler<OU, ThreadLocalScope, Primary>;
 
-/// The default thing to do when the primary thread local primary handler is uninitialized, that is
-/// to panic.
-#[cfg(not(feature = "ds-write"))]
-pub type DefaultOnUninit = PanicOnUninit;
-
-/// The default thing to do when the primary thread local primary handler is uninitialized, that is
-/// to use the default strategy. Note that this mutates the thread local primary handler.
-#[cfg(feature = "ds-write")]
-pub type DefaultOnUninit = UseDefaultOnUninit;
-
-/// The default thread local primary handler.
-pub static DEFAULT_THREAD_LOCAL_PRIMARY_HANDLER: ThreadLocalPrimaryHandler =
-    ThreadLocalPrimaryHandler::DEFAULT;
-
-/// The thread local primary handler. This doesn't store anything, it just provides an interface
-/// to the thread local primary handler, stored in a `static`.
-#[cfg_attr(
-    feature = "derives",
-    derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)
-)]
-pub struct ThreadLocalPrimaryHandler<OU: OnUninit = DefaultOnUninit> {
-    extra_data: OU::ExtraData,
-    _on_uninit: PhantomData<OU>,
-}
-
-impl ThreadLocalPrimaryHandler<DefaultOnUninit> {
-    /// The default thread local primary handler.
-    pub const DEFAULT: Self = Self {
-        extra_data: (),
-        _on_uninit: PhantomData,
-    };
-}
-
-impl Default for ThreadLocalPrimaryHandler<DefaultOnUninit> {
-    fn default() -> Self {
-        Self::DEFAULT
-    }
-}
-
-impl ThreadLocalPrimaryHandler<ErrorOnUninit> {
-    /// See [`Self::on_uninit_error`].
-    pub const ERROR_ON_UNINIT: Self = Self::on_uninit_error();
-
-    /// Create a new interface to the thread local primary handler. If the thread local primary
-    /// handler is not initialized, this will error.
-    pub const fn on_uninit_error() -> Self {
-        Self {
-            extra_data: (),
-            _on_uninit: PhantomData,
-        }
-    }
-}
-
-impl ThreadLocalPrimaryHandler<PanicOnUninit> {
-    /// See [`Self::on_uninit_panic`].
-    pub const PANIC_ON_UNINIT: Self = Self::on_uninit_panic();
-
-    /// Create a new interface to the thread local primary handler. If the thread local primary
-    /// handler is not initialized, this will panic.
-    pub const fn on_uninit_panic() -> Self {
-        Self {
-            extra_data: (),
-            _on_uninit: PhantomData,
-        }
-    }
-}
-
-#[cfg(feature = "ds-write")]
-impl ThreadLocalPrimaryHandler<UseDefaultOnUninit> {
-    /// See [`Self::on_uninit_use_default`].
-    pub const USE_DEFAULT_ON_UNINIT: Self = Self::on_uninit_use_default();
-
-    /// Create a new interface to the thread local primary handler. If the thread local primary
-    /// handler is not initialized, this will set it to the default primary handler.
-    pub const fn on_uninit_use_default() -> Self {
-        Self {
-            extra_data: (),
-            _on_uninit: PhantomData,
-        }
-    }
-}
-
-impl ThreadLocalPrimaryHandler<FlagOnUninit> {
-    /// See [`Self::on_uninit_flag`].
-    pub const FLAG_ON_UNINIT: Self = Self::on_uninit_flag();
-
-    /// Create a new interface to the thread local primary handler. If the thread local primary
-    /// handler is not initialized, this will set an internal flag stating that the drop failed.
-    pub const fn on_uninit_flag() -> Self {
-        Self {
-            extra_data: AtomicBool::new(false),
-            _on_uninit: PhantomData,
-        }
-    }
-
-    /// Check if the last drop failed due to the primary thread local primary handler not being
-    /// initialized.
-    pub fn last_drop_failed(&self) -> bool {
-        self.extra_data.load(LOAD_ORDERING)
-    }
-
-    fn set_last_drop_failed(&self, value: bool) {
-        self.extra_data.store(value, STORE_ORDERING)
-    }
-}
+pub static DEFAULT_THREAD_LOCAL_PRIMARY_HANDLER: ThreadLocalPrimaryHandler = ThreadLocalPrimaryHandler::DEFAULT;
 
 impl FallibleTryDropStrategy for ThreadLocalPrimaryHandler<ErrorOnUninit> {
     type Error = anyhow::Error;
 
     fn try_handle_error(&self, error: crate::Error) -> Result<(), Self::Error> {
-        try_read(|strategy| strategy.dyn_try_handle_error(error))
+        Abstracter::<ThreadLocalScope>::try_read(|strategy| strategy.dyn_try_handle_error(error))
             .map_err(Into::into)
-            .and_then(std::convert::identity)
+            .and_then(convert::identity)
     }
 }
 
@@ -142,7 +41,8 @@ impl FallibleTryDropStrategy for ThreadLocalPrimaryHandler<PanicOnUninit> {
     type Error = anyhow::Error;
 
     fn try_handle_error(&self, error: crate::Error) -> Result<(), Self::Error> {
-        try_read(|strategy| strategy.dyn_try_handle_error(error)).expect(UNINITIALIZED_ERROR)
+        Abstracter::<ThreadLocalScope>::try_read(|strategy| strategy.dyn_try_handle_error(error))
+            .expect(<Primary as ThreadLocalDefinition>::UNINITIALIZED_ERROR)
     }
 }
 
@@ -151,7 +51,7 @@ impl FallibleTryDropStrategy for ThreadLocalPrimaryHandler<UseDefaultOnUninit> {
     type Error = anyhow::Error;
 
     fn try_handle_error(&self, error: crate::Error) -> Result<(), Self::Error> {
-        read_or_default(|strategy| strategy.dyn_try_handle_error(error))
+        Abstracter::<ThreadLocalScope>::read_or_default(|strategy| strategy.dyn_try_handle_error(error))
     }
 }
 
@@ -159,7 +59,7 @@ impl FallibleTryDropStrategy for ThreadLocalPrimaryHandler<FlagOnUninit> {
     type Error = anyhow::Error;
 
     fn try_handle_error(&self, error: crate::Error) -> Result<(), Self::Error> {
-        let (last_drop_failed, ret) = match try_read(|s| s.dyn_try_handle_error(error)) {
+        let (last_drop_failed, ret) = match Abstracter::<ThreadLocalScope>::try_read(|s| s.dyn_try_handle_error(error)) {
             Ok(Ok(())) => (false, Ok(())),
             Ok(Err(error)) => (false, Err(error)),
             Err(error) => (true, Err(error.into())),
