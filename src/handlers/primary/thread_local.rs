@@ -27,50 +27,11 @@ pub type ThreadLocalPrimaryHandler<OU = DefaultOnUninit> =
 pub static DEFAULT_THREAD_LOCAL_PRIMARY_HANDLER: ThreadLocalPrimaryHandler =
     ThreadLocalPrimaryHandler::DEFAULT;
 
-impl FallibleTryDropStrategy for ThreadLocalPrimaryHandler<ErrorOnUninit> {
-    type Error = anyhow::Error;
-
-    fn try_handle_error(&self, error: crate::Error) -> Result<(), Self::Error> {
-        Abstracter::<ThreadLocalScope>::try_read(|strategy| strategy.dyn_try_handle_error(error))
-            .map_err(Into::into)
-            .and_then(convert::identity)
-    }
-}
-
-impl FallibleTryDropStrategy for ThreadLocalPrimaryHandler<PanicOnUninit> {
-    type Error = anyhow::Error;
-
-    fn try_handle_error(&self, error: crate::Error) -> Result<(), Self::Error> {
-        Abstracter::<ThreadLocalScope>::try_read(|strategy| strategy.dyn_try_handle_error(error))
-            .expect(<Primary as ThreadLocalDefinition>::UNINITIALIZED_ERROR)
-    }
-}
-
-#[cfg(feature = "ds-write")]
-impl FallibleTryDropStrategy for ThreadLocalPrimaryHandler<UseDefaultOnUninit> {
-    type Error = anyhow::Error;
-
-    fn try_handle_error(&self, error: crate::Error) -> Result<(), Self::Error> {
-        Abstracter::<ThreadLocalScope>::read_or_default(|strategy| {
-            strategy.dyn_try_handle_error(error)
-        })
-    }
-}
-
-impl FallibleTryDropStrategy for ThreadLocalPrimaryHandler<FlagOnUninit> {
-    type Error = anyhow::Error;
-
-    fn try_handle_error(&self, error: crate::Error) -> Result<(), Self::Error> {
-        let (last_drop_failed, ret) =
-            match Abstracter::<ThreadLocalScope>::try_read(|s| s.dyn_try_handle_error(error)) {
-                Ok(Ok(())) => (false, Ok(())),
-                Ok(Err(error)) => (false, Err(error)),
-                Err(error) => (true, Err(error.into())),
-            };
-        self.set_last_drop_failed(last_drop_failed);
-        ret
-    }
-}
+impl_fallible_try_drop_strategy_for!(ThreadLocalPrimaryHandler
+where
+    Scope: ThreadLocalScope,
+    Definition: ThreadLocalDefinition
+);
 
 thread_local! {
     static PRIMARY_HANDLER: RefCell<Option<Box<dyn ThreadLocalFallibleTryDropStrategy>>> = RefCell::new(None);

@@ -31,7 +31,7 @@ macro_rules! impl_fallible_try_drop_strategy_for {
         impl FallibleTryDropStrategy for $handler<FlagOnUninit> {
             type Error = anyhow::Error;
 
-            fn try_handle_error(&self, error: Error) -> Result<(), Self::Error> {
+            fn try_handle_error(&self, error: crate::Error) -> Result<(), Self::Error> {
                 let (last_drop_failed, ret) =
                     match Abstracter::<$scope>::try_read(|s| s.dyn_try_handle_error(error)) {
                         Ok(Ok(())) => (false, Ok(())),
