@@ -25,30 +25,7 @@ pub type ThreadLocalFallbackHandler<OU = DefaultOnUninit> =
 pub static DEFAULT_THREAD_LOCAL_FALLBACK_HANDLER: ThreadLocalFallbackHandler =
     ThreadLocalFallbackHandler::DEFAULT;
 
-impl TryDropStrategy for CommonHandler<PanicOnUninit, ThreadLocalScope, Fallback> {
-    fn handle_error(&self, error: crate::Error) {
-        Abstracter::<ThreadLocalScope>::read(|strategy| strategy.handle_error(error))
-    }
-}
-
-#[cfg(feature = "ds-write")]
-impl TryDropStrategy for CommonHandler<UseDefaultOnUninit, ThreadLocalScope, Fallback> {
-    fn handle_error(&self, error: Error) {
-        Abstracter::<ThreadLocalScope>::read_or_default(|strategy| strategy.handle_error(error))
-    }
-}
-
-impl TryDropStrategy for CommonHandler<FlagOnUninit, ThreadLocalScope, Fallback> {
-    fn handle_error(&self, error: Error) {
-        if let Err(UninitializedError(())) =
-            Abstracter::<ThreadLocalScope>::try_read(|strategy| strategy.handle_error(error))
-        {
-            self.set_last_drop_failed(true)
-        } else {
-            self.set_last_drop_failed(false)
-        }
-    }
-}
+impl_try_drop_strategy_for!(ThreadLocalFallbackHandler where Scope: ThreadLocalScope);
 
 thread_local! {
     static FALLBACK_HANDLER: RefCell<Option<Box<dyn ThreadLocalTryDropStrategy>>> = RefCell::new(None);

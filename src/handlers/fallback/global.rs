@@ -23,30 +23,7 @@ pub static DEFAULT_GLOBAL_FALLBACK_HANDLER: GlobalFallbackHandler = GlobalFallba
 static FALLBACK_HANDLER: RwLock<Option<Box<dyn GlobalTryDropStrategy>>> =
     parking_lot::const_rwlock(None);
 
-impl TryDropStrategy for GlobalFallbackHandler<PanicOnUninit> {
-    fn handle_error(&self, error: crate::Error) {
-        Abstracter::<GlobalScope>::read(|strategy| strategy.handle_error(error))
-    }
-}
-
-#[cfg(feature = "ds-write")]
-impl TryDropStrategy for GlobalFallbackHandler<UseDefaultOnUninit> {
-    fn handle_error(&self, error: Error) {
-        Abstracter::<GlobalScope>::read_or_default(|strategy| strategy.handle_error(error))
-    }
-}
-
-impl TryDropStrategy for GlobalFallbackHandler<FlagOnUninit> {
-    fn handle_error(&self, error: Error) {
-        if let Err(UninitializedError(())) =
-            Abstracter::<GlobalScope>::try_read(|strategy| strategy.handle_error(error))
-        {
-            self.set_last_drop_failed(true)
-        } else {
-            self.set_last_drop_failed(false)
-        }
-    }
-}
+impl_try_drop_strategy_for!(GlobalFallbackHandler where Scope: GlobalScope);
 
 impl GlobalDefinition for Fallback {
     const UNINITIALIZED_ERROR: &'static str = "the global fallback handler is not initialized yet";

@@ -1,5 +1,8 @@
 //! Manage the fallback handler.
 
+#[macro_use]
+mod macros;
+
 #[cfg(feature = "global")]
 pub mod global;
 
