@@ -6,7 +6,7 @@ pub(crate) mod imports {
 }
 
 use crate::handlers::common::thread_local::scope_guard::ScopeGuard;
-use crate::handlers::common::Handler;
+use crate::handlers::common::{DefaultScopeAccessor, Handler, ScopeAccessor};
 use crate::handlers::UninitializedError;
 use std::cell::RefCell;
 use std::marker::PhantomData;
@@ -225,5 +225,47 @@ impl<T: DefaultThreadLocalDefinition> ThreadLocal<T> {
 
     pub fn write_or_default<R>(f: impl FnOnce(&mut T::ThreadLocal) -> R) -> R {
         T::thread_local().with(|cell| f(cell.borrow_mut().get_or_insert_with(T::default)))
+    }
+}
+
+impl<T: ThreadLocalDefinition> ScopeAccessor for T {
+    type Access = T::ThreadLocal;
+
+    fn install(strategy: impl Into<Self::Access>) {
+        ThreadLocal::<T>::install(strategy)
+    }
+
+    fn install_dyn(strategy: Self::Access) {
+        ThreadLocal::<T>::install_dyn(strategy)
+    }
+
+    fn try_read<R>(f: impl FnOnce(&Self::Access) -> R) -> Result<R, UninitializedError> {
+        ThreadLocal::<T>::try_read(f)
+    }
+
+    fn read<R>(f: impl FnOnce(&Self::Access) -> R) -> R {
+        ThreadLocal::<T>::read(f)
+    }
+
+    fn try_write<R>(f: impl FnOnce(&mut Self::Access) -> R) -> Result<R, UninitializedError> {
+        ThreadLocal::<T>::try_write(f)
+    }
+
+    fn write<R>(f: impl FnOnce(&mut Self::Access) -> R) -> R {
+        ThreadLocal::<T>::write(f)
+    }
+
+    fn uninstall() {
+        ThreadLocal::<T>::uninstall()
+    }
+}
+
+impl<T: DefaultThreadLocalDefinition> DefaultScopeAccessor for T {
+    fn read_or_default<R>(f: impl FnOnce(&Self::Access) -> R) -> R {
+        ThreadLocal::<T>::read_or_default(f)
+    }
+
+    fn write_or_default<R>(f: impl FnOnce(&mut Self::Access) -> R) -> R {
+        ThreadLocal::<T>::write_or_default(f)
     }
 }
