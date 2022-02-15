@@ -6,6 +6,9 @@ use crate::handlers::common::{Primary, Scope};
 use crate::handlers::on_uninit::{ErrorOnUninit, UseDefaultOnUninit};
 use std::marker::PhantomData;
 
+#[macro_use]
+mod macros;
+
 #[cfg(feature = "global")]
 pub mod global;
 
