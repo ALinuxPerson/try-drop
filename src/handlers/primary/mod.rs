@@ -3,7 +3,7 @@
 use crate::handlers::common::handler::CommonHandler;
 use crate::handlers::common::proxy::TheGreatAbstracter;
 use crate::handlers::common::{Primary, Scope};
-use crate::handlers::on_uninit::{ErrorOnUninit, UseDefaultOnUninit};
+use crate::handlers::on_uninit::ErrorOnUninit;
 use std::marker::PhantomData;
 
 #[macro_use]
@@ -21,12 +21,12 @@ pub mod shim;
 /// The default thing to do when the primary handler is uninitialized, that is
 /// to panic.
 #[cfg(not(feature = "ds-write"))]
-pub type DefaultOnUninit = PanicOnUninit;
+pub type DefaultOnUninit = crate::handlers::on_uninit::PanicOnUninit;
 
 /// The default thing to do when the primary handler is uninitialized, that is
 /// to use the default strategy. Note that this mutates the primary handler.
 #[cfg(feature = "ds-write")]
-pub type DefaultOnUninit = UseDefaultOnUninit;
+pub type DefaultOnUninit = crate::handlers::on_uninit::UseDefaultOnUninit;
 
 type Abstracter<S> = TheGreatAbstracter<Primary, S>;
 

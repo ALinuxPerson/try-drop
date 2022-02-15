@@ -1,9 +1,11 @@
 use super::{fallback, primary};
-use crate::{ThreadLocalFallibleTryDropStrategy, ThreadLocalTryDropStrategy};
 use std::boxed::Box;
 
 #[cfg(feature = "global")]
 use crate::{GlobalDynFallibleTryDropStrategy, GlobalTryDropStrategy};
+
+#[cfg(feature = "thread-local")]
+use crate::{ThreadLocalFallibleTryDropStrategy, ThreadLocalTryDropStrategy};
 
 /// This installs the primary and fallback global handlers.
 #[cfg(feature = "global")]

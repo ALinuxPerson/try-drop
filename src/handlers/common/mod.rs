@@ -4,9 +4,11 @@ mod private {
 pub mod shim;
 
 #[macro_use]
+#[cfg(feature = "thread-local")]
 pub mod thread_local;
 
 #[macro_use]
+#[cfg(feature = "global")]
 pub mod global;
 
 pub mod handler;
