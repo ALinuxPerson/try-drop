@@ -81,7 +81,11 @@ use crate::handlers::on_uninit::{DoNothingOnUninit, ErrorOnUninit, FlagOnUninit,
 use crate::FallibleTryDropStrategy;
 pub use imp::DefaultOnUninit;
 
+/// A primary handler whose scope combines both the global and thread-local primary handlers, with
+/// the thread-local primary handler taking precedence.
 pub type ShimPrimaryHandler<OU = DefaultOnUninit> = CommonShimHandler<OU, Primary>;
+
+/// The default primary handler using the shim scope.
 pub static DEFAULT_SHIM_PRIMARY_HANDLER: ShimPrimaryHandler = ShimPrimaryHandler::DEFAULT;
 
 impl<OU: OnUninitShim> ShimPrimaryHandler<OU> {
