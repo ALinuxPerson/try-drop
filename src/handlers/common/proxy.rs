@@ -1,16 +1,20 @@
-use crate::handlers::common::global::Global as GlobalAbstracter;
-use crate::handlers::common::global::{DefaultGlobalDefinition, GlobalDefinition};
 use crate::handlers::common::{Global, Scope, ThreadLocal};
 use crate::handlers::UninitializedError;
 use std::marker::PhantomData;
 use std::ops::{Deref, DerefMut};
 
 #[cfg(feature = "thread-local")]
-use crate::handlers::common::thread_local::ThreadLocalDefinition;
-
-#[cfg(feature = "thread-local")]
 use crate::handlers::common::thread_local::{
-    DefaultThreadLocalDefinition, ThreadLocal as ThreadLocalAbstracter,
+    ThreadLocalDefinition,
+    DefaultThreadLocalDefinition,
+    ThreadLocal as ThreadLocalAbstracter,
+};
+
+#[cfg(feature = "global")]
+use crate::handlers::common::global::{
+    GlobalDefinition,
+    DefaultGlobalDefinition,
+    Global as GlobalAbstracter,
 };
 
 pub struct TheGreatAbstracter<D, S: Scope>(PhantomData<(D, S)>);
@@ -47,6 +51,7 @@ impl<D: GlobalDefinition> TheGreatAbstracter<D, Global>
     }
 }
 
+#[cfg(feature = "global")]
 impl<D: DefaultGlobalDefinition> TheGreatAbstracter<D, Global>
 {
     pub fn read_or_default<R>(f: impl FnOnce(&D::Global) -> R) -> R {
@@ -91,7 +96,7 @@ impl<D: ThreadLocalDefinition> TheGreatAbstracter<D, ThreadLocal>
 }
 
 #[cfg(feature = "thread-local")]
-impl<D: DefaulThreadLocalDefinition> TheGreatAbstracter<D, ThreadLocal>
+impl<D: DefaultThreadLocalDefinition> TheGreatAbstracter<D, ThreadLocal>
 {
     pub fn read_or_default<R>(f: impl FnOnce(&D::ThreadLocal) -> R) -> R {
         ThreadLocalAbstracter::<D>::read_or_default(f)
