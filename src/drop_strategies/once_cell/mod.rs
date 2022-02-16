@@ -142,7 +142,7 @@ mod tests {
 
     fn test<M: Mode>() {
         let item = Arc::new(OnceCell::new());
-        let strategy = OnceCellTryDropStrategy::ignore(Arc::clone(&item));
+        let strategy = OnceCellDropStrategy::ignore(Arc::clone(&item));
         let errors =
             ErrorsOnDrop::<Fallible, _>::given(strategy, PanicDropStrategy::DEFAULT).adapt();
         drop(errors);

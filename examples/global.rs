@@ -1,7 +1,7 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::thread;
-use try_drop::drop_strategies::{AdHocFallibleTryDropStrategy, AdHocTryDropStrategy};
+use try_drop::drop_strategies::{AdHocFallibleDropStrategy, AdHocDropStrategy};
 use try_drop::test_utils::{ErrorsOnDrop, Fallible};
 use try_drop::PureTryDrop;
 
@@ -10,7 +10,7 @@ fn main() {
     let global_fail = Arc::new(AtomicBool::new(false));
     let gf = Arc::clone(&global_fail);
     try_drop::install_global_handlers(
-        AdHocFallibleTryDropStrategy(move |error| {
+        AdHocFallibleDropStrategy(move |error| {
             println!("from primary global handler: {error}");
 
             if gf.load(Ordering::Acquire) {
@@ -20,7 +20,7 @@ fn main() {
                 Ok(())
             }
         }),
-        AdHocTryDropStrategy(|error| println!("from fallback global handler: {error}")),
+        AdHocDropStrategy(|error| println!("from fallback global handler: {error}")),
     );
 
     println!("drop, don't fail for global handler");

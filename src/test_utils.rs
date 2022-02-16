@@ -4,9 +4,21 @@ use crate::prelude::*;
 use crate::Infallible as TryDropInfallible;
 use std::marker::PhantomData;
 use std::println;
+use anyhow::Error;
 
 mod private {
     pub trait Sealed {}
+}
+
+/// A drop strategy which always fails.
+pub struct FallibleDropStrategy;
+
+impl FallibleTryDropStrategy for FallibleDropStrategy {
+    type Error = anyhow::Error;
+
+    fn try_handle_error(&self, error: Error) -> Result<(), Self::Error> {
+        Err(error)
+    }
 }
 
 pub trait Mode: private::Sealed {}

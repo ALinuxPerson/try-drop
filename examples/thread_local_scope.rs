@@ -1,12 +1,12 @@
 use try_drop::drop_strategies::unreachable::UnreachableDropStrategy;
-use try_drop::drop_strategies::AdHocTryDropStrategy;
+use try_drop::drop_strategies::AdHocDropStrategy;
 use try_drop::handlers::*;
 use try_drop::test_utils::{ErrorsOnDrop, Fallible};
 use try_drop::PureTryDrop;
 
 fn main() {
     println!("install main thread local handler");
-    primary::thread_local::install(AdHocTryDropStrategy(|error| {
+    primary::thread_local::install(AdHocDropStrategy(|error| {
         println!("error from the main thread local: {error}")
     }));
     let thing = ErrorsOnDrop::<Fallible, _>::not_given().adapt();
@@ -15,7 +15,7 @@ fn main() {
 
     {
         println!("install first thread local scope");
-        let _guard = primary::thread_local::scope(AdHocTryDropStrategy(|error| {
+        let _guard = primary::thread_local::scope(AdHocDropStrategy(|error| {
             println!("error from the first thread local scope: {error}")
         }));
 
@@ -31,7 +31,7 @@ fn main() {
 
     {
         println!("install second thread local scope");
-        let _guard = primary::thread_local::scope(AdHocTryDropStrategy(|error| {
+        let _guard = primary::thread_local::scope(AdHocDropStrategy(|error| {
             println!("error from the second thread local scope: {error}")
         }));
 

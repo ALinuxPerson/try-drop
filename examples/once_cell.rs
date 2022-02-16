@@ -1,7 +1,7 @@
 use once_cell::sync::OnceCell;
 use std::sync::Arc;
 use try_drop::drop_strategies::once_cell::Ignore;
-use try_drop::drop_strategies::{OnceCellTryDropStrategy, PanicDropStrategy};
+use try_drop::drop_strategies::{OnceCellDropStrategy, PanicDropStrategy};
 use try_drop::test_utils::{ErrorsOnDrop, Mode, Random, TryDropTypes};
 use try_drop::{adapters::DropAdapter, PureTryDrop};
 
@@ -14,7 +14,7 @@ where
 
 fn main() {
     let error = Arc::new(OnceCell::new());
-    let strategy = OnceCellTryDropStrategy::<Ignore>::new(Arc::clone(&error));
+    let strategy = OnceCellDropStrategy::<Ignore>::new(Arc::clone(&error));
     let value = ErrorsOnDrop::<Random, _>::given(strategy, PanicDropStrategy::DEFAULT).adapt();
 
     println!("will only error on drop sometimes");
