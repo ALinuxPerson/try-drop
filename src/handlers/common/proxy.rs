@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::handlers::common::{Global, Scope, ThreadLocal};
 use crate::handlers::UninitializedError;
 use std::marker::PhantomData;
