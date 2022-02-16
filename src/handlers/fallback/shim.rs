@@ -67,7 +67,11 @@ use crate::handlers::on_uninit::{DoNothingOnUninit, FlagOnUninit, PanicOnUninit}
 use crate::TryDropStrategy;
 pub use imp::DefaultOnUninit;
 
+/// A fallback handler which uses both the global and thread-local scopes, with the thread-local
+/// scope taking precedence.
 pub type ShimFallbackHandler<OU = DefaultOnUninit> = CommonShimHandler<OU, Fallback>;
+
+/// The default shim fallback handler.
 pub static DEFAULT_SHIM_FALLBACK_HANDLER: ShimFallbackHandler = ShimFallbackHandler::DEFAULT;
 
 impl<OU: OnUninitShim> ShimFallbackHandler<OU> {
