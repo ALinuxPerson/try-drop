@@ -1,6 +1,6 @@
 //! Types and utilities for the once cell try drop strategy.
 mod thread_unsafe;
-pub use thread_unsafe::ThreadUnsafeOnceCellTryDropStrategy;
+pub use thread_unsafe::ThreadUnsafeOnceCellDropStrategy;
 mod private {
     pub trait Sealed {}
 }
@@ -87,30 +87,30 @@ impl fmt::Display for AlreadyOccupiedError {
 ///
 /// [`BroadcastDropStrategy`]: crate::drop_strategies::BroadcastDropStrategy
 #[cfg_attr(feature = "derives", derive(Debug, Clone, Default))]
-pub struct OnceCellTryDropStrategy<M: Mode> {
+pub struct OnceCellDropStrategy<M: Mode> {
     /// The inner error value.
     pub inner: Arc<OnceCell<anyhow::Error>>,
     _mode: PhantomData<M>,
 }
 
-impl OnceCellTryDropStrategy<Ignore> {
-    /// Create a new once cell try drop strategy which will ignore if there is already an error
-    /// value in its cell.
+impl OnceCellDropStrategy<Ignore> {
+    /// Create a new once cell drop strategy which will ignore if there is already an error value in
+    /// its cell.
     pub fn ignore(item: Arc<OnceCell<anyhow::Error>>) -> Self {
         Self::new(item)
     }
 }
 
-impl OnceCellTryDropStrategy<Error> {
-    /// Create a new once cell try drop strategy which will error if there is already an error value
-    /// in its cell.
+impl OnceCellDropStrategy<Error> {
+    /// Create a new once cell drop strategy which will error if there is already an error value in
+    /// its cell.
     pub fn error(item: Arc<OnceCell<anyhow::Error>>) -> Self {
         Self::new(item)
     }
 }
 
-impl<M: Mode> OnceCellTryDropStrategy<M> {
-    /// Creates a new try drop strategy which sets an error value once.
+impl<M: Mode> OnceCellDropStrategy<M> {
+    /// Creates a new drop strategy which sets an error value once.
     pub fn new(item: Arc<OnceCell<anyhow::Error>>) -> Self {
         Self {
             inner: item,
@@ -119,13 +119,13 @@ impl<M: Mode> OnceCellTryDropStrategy<M> {
     }
 }
 
-impl TryDropStrategy for OnceCellTryDropStrategy<Ignore> {
+impl TryDropStrategy for OnceCellDropStrategy<Ignore> {
     fn handle_error(&self, error: anyhow::Error) {
         let _ = self.inner.set(error);
     }
 }
 
-impl FallibleTryDropStrategy for OnceCellTryDropStrategy<Error> {
+impl FallibleTryDropStrategy for OnceCellDropStrategy<Error> {
     type Error = AlreadyOccupiedError;
 
     fn try_handle_error(&self, error: anyhow::Error) -> Result<(), Self::Error> {
