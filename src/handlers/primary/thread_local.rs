@@ -10,7 +10,7 @@ use crate::handlers::common::Primary;
 use crate::handlers::common::ThreadLocal as ThreadLocalScope;
 use crate::handlers::on_uninit::{ErrorOnUninit, FlagOnUninit, PanicOnUninit};
 use crate::handlers::uninit_error::UninitializedError;
-use crate::{DynFallibleTryDropStrategy, FallibleTryDropStrategy};
+use crate::FallibleTryDropStrategy;
 use std::boxed::Box;
 use std::cell::RefCell;
 
