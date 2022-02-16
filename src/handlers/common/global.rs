@@ -119,6 +119,7 @@ macro_rules! global_methods {
         $(#[$($write_or_default_tt:tt)*])*
         write_or_default;
     ) => {
+        #[allow(unused_imports)]
         use $crate::handlers::common::global::imports::*;
 
         $(#[$($install_dyn_tt)*])*

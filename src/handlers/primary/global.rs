@@ -21,7 +21,10 @@ use std::convert;
 #[cfg(feature = "ds-write")]
 use crate::handlers::on_uninit::UseDefaultOnUninit;
 
+/// The primary global handler which uses the global scope.
 pub type GlobalPrimaryHandler<OU = DefaultOnUninit> = CommonHandler<OU, GlobalScope, Primary>;
+
+/// The default global primary handler.
 pub static DEFAULT_GLOBAL_PRIMARY_HANDLER: GlobalPrimaryHandler = GlobalPrimaryHandler::DEFAULT;
 
 impl_fallible_try_drop_strategy_for!(GlobalPrimaryHandler
@@ -60,6 +63,8 @@ impl<T: GlobalDynFallibleTryDropStrategy + 'static> From<T>
 }
 
 type Global = GenericGlobal<Primary>;
+
+/// A handy type alias to `Box<dyn GlobalDynFallibleTryDropStrategy>`.
 pub type BoxDynGlobalFallibleTryDropStrategy = Box<dyn GlobalDynFallibleTryDropStrategy>;
 
 global_methods! {
@@ -68,13 +73,48 @@ global_methods! {
     DynStrategy = BoxDynGlobalFallibleTryDropStrategy;
     feature = "ds-write";
 
+    /// Set the global primary handler. Must be a dynamic trait object.
     install_dyn;
+
+    /// Get the global primary handler.
     install;
+
+    /// Try and get a reference to the global primary handler.
+    ///
+    /// # Errors
+    /// If the global primary handler is not initialized yet, an error is returned.
     try_read;
+
+    /// Get a reference to the global primary handler.
+    ///
+    /// # Panics
+    /// If the global primary handler is not initialized yet, a panic is raised.
     read;
+
+    /// Try and get a mutable reference to the global primary handler.
+    ///
+    /// # Errors
+    /// If the global primary handler is not initialized yet, an error is returned.
     try_write;
+
+    /// Get a mutable reference to the global primary handler.
+    ///
+    /// # Panics
+    /// If the global primary handler is not initialized yet, a panic is raised.
     write;
+
+    /// Uninstall the global primary handler.
     uninstall;
+
+    /// Get a reference to the global primary handler.
+    ///
+    /// If the global primary handler is not initialized yet, it is initialized with the default
+    /// value.
     read_or_default;
+
+    /// Get a mutable reference to the global primary handler.
+    ///
+    /// If the global primary handler is not initialized yet, it is initialized with the default
+    /// value.
     write_or_default;
 }
