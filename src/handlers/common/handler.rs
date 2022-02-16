@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::handlers::common::shim::OnUninitShim;
 use crate::handlers::common::{Global, Handler, Scope, ThreadLocal};
 use crate::handlers::on_uninit::{DoNothingOnUninit, FlagOnUninit, OnUninit, PanicOnUninit};

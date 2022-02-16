@@ -1,9 +1,7 @@
 //! Manage the global fallback handler.
 
 use super::DefaultOnUninit;
-use crate::handlers::common::global::{
-    DefaultGlobalDefinition, Global as GenericGlobal, GlobalDefinition,
-};
+use crate::handlers::common::global::{Global as GenericGlobal, GlobalDefinition};
 use crate::handlers::common::handler::CommonHandler;
 use crate::handlers::common::Fallback;
 use crate::handlers::common::Global as GlobalScope;
@@ -14,6 +12,9 @@ use crate::{GlobalTryDropStrategy, TryDropStrategy};
 use anyhow::Error;
 use parking_lot::{MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLock};
 use std::boxed::Box;
+
+#[cfg(feature = "ds-panic")]
+use crate::handlers::common::global::DefaultGlobalDefinition;
 
 #[cfg(feature = "ds-panic")]
 use crate::handlers::on_uninit::UseDefaultOnUninit;

@@ -1,9 +1,15 @@
 #![allow(dead_code)]
 
-use crate::handlers::common::{Global, Scope, ThreadLocal};
+use crate::handlers::common::Scope;
 use crate::handlers::UninitializedError;
 use std::marker::PhantomData;
 use std::ops::{Deref, DerefMut};
+
+#[cfg(feature = "global")]
+use crate::handlers::common::Global;
+
+#[cfg(feature = "thread-local")]
+use crate::handlers::common::ThreadLocal;
 
 #[cfg(feature = "thread-local")]
 use crate::handlers::common::thread_local::{

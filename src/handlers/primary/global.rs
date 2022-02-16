@@ -1,7 +1,7 @@
 //! Manage the primary global handler.
 
 use crate::handlers::common::global::{
-    DefaultGlobalDefinition, Global as GenericGlobal, GlobalDefinition,
+    Global as GenericGlobal, GlobalDefinition,
 };
 use crate::handlers::common::handler::CommonHandler;
 use crate::handlers::common::{Global as GlobalScope, Primary};
@@ -11,6 +11,9 @@ use crate::handlers::uninit_error::UninitializedError;
 use crate::{
     FallibleTryDropStrategy, GlobalDynFallibleTryDropStrategy,
 };
+
+#[cfg(feature = "ds-write")]
+use crate::handlers::common::global::DefaultGlobalDefinition;
 
 use parking_lot::{
     MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLock,
