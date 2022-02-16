@@ -3,7 +3,7 @@ use super::{Abstracter, DefaultOnUninit};
 use crate::handlers::common::handler::CommonHandler;
 use crate::handlers::common::thread_local::scope_guard::ScopeGuard as GenericScopeGuard;
 use crate::handlers::common::thread_local::{
-    DefaultThreadLocalDefinition, ThreadLocal as GenericThreadLocal, ThreadLocalDefinition,
+    ThreadLocal as GenericThreadLocal, ThreadLocalDefinition,
 };
 use crate::handlers::common::{Fallback, ThreadLocal as ThreadLocalScope};
 use crate::handlers::on_uninit::{FlagOnUninit, PanicOnUninit};
@@ -15,6 +15,9 @@ use std::boxed::Box;
 use std::cell::RefCell;
 use std::thread::LocalKey;
 use std::thread_local;
+
+#[cfg(feature = "ds-panic")]
+use crate::handlers::common::thread_local::DefaultThreadLocalDefinition;
 
 #[cfg(feature = "ds-panic")]
 use crate::handlers::on_uninit::UseDefaultOnUninit;

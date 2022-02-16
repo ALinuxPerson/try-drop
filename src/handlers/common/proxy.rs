@@ -3,6 +3,8 @@
 use crate::handlers::common::Scope;
 use crate::handlers::UninitializedError;
 use std::marker::PhantomData;
+
+#[cfg(feature = "global")]
 use std::ops::{Deref, DerefMut};
 
 #[cfg(feature = "global")]

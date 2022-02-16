@@ -3,7 +3,7 @@
 use super::{Abstracter, DefaultOnUninit};
 use crate::handlers::common::handler::CommonHandler;
 use crate::handlers::common::thread_local::{
-    scope_guard::ScopeGuard as GenericScopeGuard, DefaultThreadLocalDefinition,
+    scope_guard::ScopeGuard as GenericScopeGuard,
     ThreadLocal as GenericThreadLocal, ThreadLocalDefinition,
 };
 use crate::handlers::common::Primary;
@@ -14,9 +14,11 @@ use crate::FallibleTryDropStrategy;
 use std::boxed::Box;
 use std::cell::RefCell;
 
-
 use std::thread::LocalKey;
 use std::{convert, thread_local};
+
+#[cfg(feature = "ds-write")]
+use crate::handlers::common::thread_local::DefaultThreadLocalDefinition;
 
 #[cfg(feature = "ds-write")]
 use crate::handlers::on_uninit::UseDefaultOnUninit;
