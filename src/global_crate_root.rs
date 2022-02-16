@@ -1,5 +1,7 @@
-use crate::handlers::{DEFAULT_FALLBACK_HANDLER, DEFAULT_PRIMARY_HANDLER, FallbackHandler, PrimaryHandler};
 pub use crate::handlers::fns::*;
+use crate::handlers::{
+    FallbackHandler, PrimaryHandler, DEFAULT_FALLBACK_HANDLER, DEFAULT_PRIMARY_HANDLER,
+};
 use crate::prelude::*;
 
 impl<TD: ImpureTryDrop> PureTryDrop for TD {

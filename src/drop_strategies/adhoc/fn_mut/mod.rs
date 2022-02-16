@@ -105,9 +105,7 @@ pub trait IntoAdHocMutFallibleDropStrategy:
     type Error: Into<anyhow::Error>;
 
     /// Convert this type into an [`AdHocMutFallibleDropStrategy`].
-    fn into_drop_strategy(
-        self,
-    ) -> AdHocMutFallibleDropStrategy<Self, Self::Error> {
+    fn into_drop_strategy(self) -> AdHocMutFallibleDropStrategy<Self, Self::Error> {
         AdHocMutFallibleDropStrategy::new(self)
     }
 }

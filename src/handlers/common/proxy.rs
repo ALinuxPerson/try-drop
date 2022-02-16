@@ -15,23 +15,18 @@ use crate::handlers::common::ThreadLocal;
 
 #[cfg(feature = "thread-local")]
 use crate::handlers::common::thread_local::{
-    ThreadLocalDefinition,
-    DefaultThreadLocalDefinition,
-    ThreadLocal as ThreadLocalAbstracter,
+    DefaultThreadLocalDefinition, ThreadLocal as ThreadLocalAbstracter, ThreadLocalDefinition,
 };
 
 #[cfg(feature = "global")]
 use crate::handlers::common::global::{
-    GlobalDefinition,
-    DefaultGlobalDefinition,
-    Global as GlobalAbstracter,
+    DefaultGlobalDefinition, Global as GlobalAbstracter, GlobalDefinition,
 };
 
 pub struct TheGreatAbstracter<D, S: Scope>(PhantomData<(D, S)>);
 
 #[cfg(feature = "global")]
-impl<D: GlobalDefinition> TheGreatAbstracter<D, Global>
-{
+impl<D: GlobalDefinition> TheGreatAbstracter<D, Global> {
     pub fn install(strategy: impl Into<D::Global>) {
         GlobalAbstracter::<D>::install(strategy)
     }
@@ -62,8 +57,7 @@ impl<D: GlobalDefinition> TheGreatAbstracter<D, Global>
 }
 
 #[cfg(feature = "global")]
-impl<D: DefaultGlobalDefinition> TheGreatAbstracter<D, Global>
-{
+impl<D: DefaultGlobalDefinition> TheGreatAbstracter<D, Global> {
     pub fn read_or_default<R>(f: impl FnOnce(&D::Global) -> R) -> R {
         f(GlobalAbstracter::<D>::read_or_default().deref())
     }
@@ -74,8 +68,7 @@ impl<D: DefaultGlobalDefinition> TheGreatAbstracter<D, Global>
 }
 
 #[cfg(feature = "thread-local")]
-impl<D: ThreadLocalDefinition> TheGreatAbstracter<D, ThreadLocal>
-{
+impl<D: ThreadLocalDefinition> TheGreatAbstracter<D, ThreadLocal> {
     pub fn install(strategy: impl Into<D::ThreadLocal>) {
         ThreadLocalAbstracter::<D>::install(strategy)
     }
@@ -106,8 +99,7 @@ impl<D: ThreadLocalDefinition> TheGreatAbstracter<D, ThreadLocal>
 }
 
 #[cfg(feature = "thread-local")]
-impl<D: DefaultThreadLocalDefinition> TheGreatAbstracter<D, ThreadLocal>
-{
+impl<D: DefaultThreadLocalDefinition> TheGreatAbstracter<D, ThreadLocal> {
     pub fn read_or_default<R>(f: impl FnOnce(&D::ThreadLocal) -> R) -> R {
         ThreadLocalAbstracter::<D>::read_or_default(f)
     }

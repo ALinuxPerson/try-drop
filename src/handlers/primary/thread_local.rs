@@ -3,8 +3,8 @@
 use super::{Abstracter, DefaultOnUninit};
 use crate::handlers::common::handler::CommonHandler;
 use crate::handlers::common::thread_local::{
-    scope_guard::ScopeGuard as GenericScopeGuard,
-    ThreadLocal as GenericThreadLocal, ThreadLocalDefinition,
+    scope_guard::ScopeGuard as GenericScopeGuard, ThreadLocal as GenericThreadLocal,
+    ThreadLocalDefinition,
 };
 use crate::handlers::common::Primary;
 use crate::handlers::common::ThreadLocal as ThreadLocalScope;

@@ -24,7 +24,9 @@ macro_rules! impl_fallible_try_drop_strategy_for {
             type Error = anyhow::Error;
 
             fn try_handle_error(&self, error: crate::Error) -> Result<(), Self::Error> {
-                Abstracter::<$scope>::read_or_default(|strategy| strategy.dyn_try_handle_error(error))
+                Abstracter::<$scope>::read_or_default(|strategy| {
+                    strategy.dyn_try_handle_error(error)
+                })
             }
         }
 

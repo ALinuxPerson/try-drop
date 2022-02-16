@@ -1,23 +1,17 @@
 //! Manage the primary global handler.
 
-use crate::handlers::common::global::{
-    Global as GenericGlobal, GlobalDefinition,
-};
+use crate::handlers::common::global::{Global as GenericGlobal, GlobalDefinition};
 use crate::handlers::common::handler::CommonHandler;
 use crate::handlers::common::{Global as GlobalScope, Primary};
 use crate::handlers::on_uninit::{ErrorOnUninit, FlagOnUninit, PanicOnUninit};
 use crate::handlers::primary::{Abstracter, DefaultOnUninit};
 use crate::handlers::uninit_error::UninitializedError;
-use crate::{
-    FallibleTryDropStrategy, GlobalDynFallibleTryDropStrategy,
-};
+use crate::{FallibleTryDropStrategy, GlobalDynFallibleTryDropStrategy};
 
 #[cfg(feature = "ds-write")]
 use crate::handlers::common::global::DefaultGlobalDefinition;
 
-use parking_lot::{
-    MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLock,
-};
+use parking_lot::{MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLock};
 use std::boxed::Box;
 use std::convert;
 
