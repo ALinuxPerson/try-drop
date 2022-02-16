@@ -19,9 +19,11 @@ use std::thread_local;
 #[cfg(feature = "ds-panic")]
 use crate::handlers::on_uninit::UseDefaultOnUninit;
 
+/// A fallback handler that uses the thread local scope.
 pub type ThreadLocalFallbackHandler<OU = DefaultOnUninit> =
     CommonHandler<OU, ThreadLocalScope, Fallback>;
 
+/// The default thread local fallback handler.
 pub static DEFAULT_THREAD_LOCAL_FALLBACK_HANDLER: ThreadLocalFallbackHandler =
     ThreadLocalFallbackHandler::DEFAULT;
 
@@ -61,7 +63,12 @@ impl<T: ThreadLocalTryDropStrategy> From<T> for Box<dyn ThreadLocalTryDropStrate
 }
 
 type ThreadLocal = GenericThreadLocal<Fallback>;
+
+/// A scope guard for the thread local fallback handler. This sets the thread local fallback handler
+/// to the one specified for the duration of the scope.
 pub type ScopeGuard = GenericScopeGuard<Fallback>;
+
+/// A handy type alias for `Box<dyn ThreadLocalTryDropStrategy>`.
 pub type BoxDynTryDropStrategy = Box<dyn ThreadLocalTryDropStrategy>;
 
 thread_local_methods! {
@@ -71,19 +78,69 @@ thread_local_methods! {
     DynStrategy = BoxDynTryDropStrategy;
     feature = "ds-panic";
 
+    /// Install a new fallback thread local handler.
     install;
+
+    /// Install a new fallback thread local handler. Must be a dynamic trait object.
     install_dyn;
+
+    /// Get a reference to the current fallback thread local handler.
+    ///
+    /// # Panics
+    /// If the fallback thread local handler is not initialized yet, this function will panic.
     read;
+
+    /// Try to get a reference to the current fallback thread local handler.
+    ///
+    /// # Errors
+    /// If the fallback thread local handler is not initialized yet, this function will return an
+    /// error.
     try_read;
+
+    /// Get a reference to the current fallback thread local handler.
+    ///
+    /// If the fallback thread local handler is not initialized yet, this will set the fallback
+    /// thread local handler to the default one.
     read_or_default;
+
+    /// Get a mutable reference to the current fallback thread local handler.
+    ///
+    /// # Panics
+    /// If the fallback thread local handler is not initialized yet, this function will panic.
     write;
+
+    /// Try to get a mutable reference to the current fallback thread local handler.
+    ///
+    /// # Errors
+    /// If the fallback thread local handler is not initialized yet, this function will return an
+    /// error.
     try_write;
+
+    /// Get a mutable reference to the current fallback thread local handler.
+    ///
+    /// If the fallback thread local handler is not initialized yet, this will set the fallback
+    /// thread local handler to the default one.
     write_or_default;
+
+    /// Uninstall the current fallback thread local handler.
     uninstall;
+
+    /// Take the current fallback thread local handler, if there is any.
     take;
+
+    /// Replace the current fallback thread local handler with a new one, returning the old one if
+    /// any.
     replace;
+
+    /// Replace the current fallback thread local handler with a new one, returning the old one if
+    /// any. Must be a dynamic trait object.
     replace_dyn;
+
+    /// Sets the fallback thread local handler to the specified one for the duration of the scope.
     scope;
+
+    /// Sets the fallback thread local handler to the specified one for the duration of the scope.
+    /// Must be a dynamic trait object.
     scope_dyn;
 }
 

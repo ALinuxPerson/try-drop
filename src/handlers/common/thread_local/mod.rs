@@ -62,6 +62,7 @@ macro_rules! thread_local_methods {
         $(#[$($scope_dyn_meta:meta)*])*
         scope_dyn;
     ) => {
+        #[allow(unused_imports)]
         use $crate::handlers::common::thread_local::imports::*;
 
         $(#[$($install_meta)*])*
