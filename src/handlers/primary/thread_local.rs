@@ -21,9 +21,11 @@ use std::{convert, thread_local};
 #[cfg(feature = "ds-write")]
 use crate::handlers::on_uninit::UseDefaultOnUninit;
 
+/// A primary handler that uses the thread local scope.
 pub type ThreadLocalPrimaryHandler<OU = DefaultOnUninit> =
     CommonHandler<OU, ThreadLocalScope, Primary>;
 
+/// The default thread local primary handler.
 pub static DEFAULT_THREAD_LOCAL_PRIMARY_HANDLER: ThreadLocalPrimaryHandler =
     ThreadLocalPrimaryHandler::DEFAULT;
 
@@ -71,7 +73,12 @@ impl<T: ThreadLocalFallibleTryDropStrategy> From<T>
 }
 
 type ThreadLocal = GenericThreadLocal<Primary>;
+
+/// A scope guard for the thread local primary handler. It is used to set the thread local primary
+/// handler for the duration of the scope.
 pub type ScopeGuard = GenericScopeGuard<Primary>;
+
+/// Handy type alias to `Box<dyn ThreadLocalFallibleTryDropStrategy>`.
 pub type BoxDynFallibleTryDropStrategy = Box<dyn ThreadLocalFallibleTryDropStrategy>;
 
 thread_local_methods! {
@@ -81,18 +88,68 @@ thread_local_methods! {
     DynStrategy = BoxDynFallibleTryDropStrategy;
     feature = "ds-write";
 
+    /// Install a new thread local primary handler.
     install;
+
+    /// Install a new thread local primary handler. Must be a dynamic trait object.
     install_dyn;
+
+    /// Get a reference to the current thread local primary handler.
+    ///
+    /// # Panics
+    /// If the thread local primary handler is not initialized yet, this function will panic.
     read;
+
+    /// Try and get a reference to the current thread local primary handler.
+    ///
+    /// # Errors
+    /// If the thread local primary handler is not initialized yet, this function will return an
+    /// error.
     try_read;
+
+    /// Get a reference to the current thread local primary handler.
+    ///
+    /// If the current thread local primary handler is not initialized yet, this function will
+    /// set it to the default primary handler.
     read_or_default;
+
+    /// Get a mutable reference to the current thread local primary handler.
+    ///
+    /// # Panics
+    /// If the thread local primary handler is not initialized yet, this function will panic.
     write;
+
+    /// Try and get a mutable reference to the current thread local primary handler.
+    ///
+    /// # Errors
+    /// If the thread local primary handler is not initialized yet, this function will return an
     try_write;
+
+    /// Get a mutable reference to the current thread local primary handler.
+    ///
+    /// If the current thread local primary handler is not initialized yet, this function will
+    /// set it to the default primary handler.
     write_or_default;
+
+    /// Uninstall the current thread local primary handler.
     uninstall;
+
+    /// Take the current thread local primary handler, if there is any initalized.
     take;
+
+    /// Replace the current thread local primary handler with the given one, returning the old one
+    /// if any.
     replace;
+
+    /// Replace the current thread local primary handler with the given one, returning the old one
+    /// if any. Must be a dynamic trait object.
     replace_dyn;
+
+    /// Sets the thread local primary handler to the given one for the duration of the given scope.
+    /// For more advanced usage, see the [`ScopeGuard`] type.
     scope;
+
+    /// Sets the thread local primary handler to the given one for the duration of the given scope.
+    /// For more advanced usage, see the [`ScopeGuard`] type. Must be a dynamic trait object.
     scope_dyn;
 }
