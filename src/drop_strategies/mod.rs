@@ -53,11 +53,11 @@ pub use adhoc::{
 
 #[cfg(feature = "ds-adhoc-mut")]
 pub use adhoc::{
-    AdHocMutFallibleTryDropStrategy, AdHocMutTryDropStrategy, IntoAdHocMutFallibleTryDropStrategy,
-    IntoAdHocMutTryDropStrategy, IntoThreadUnsafeAdHocMutDropStrategy,
+    AdHocMutFallibleDropStrategy, AdHocMutDropStrategy, IntoAdHocMutFallibleDropStrategy,
+    IntoAdHocMutDropStrategy, IntoThreadUnsafeAdHocMutDropStrategy,
     IntoThreadUnsafeAdHocMutFallibleDropStrategy, ThreadUnsafeAdHocMutDropStrategy,
     ThreadUnsafeAdHocMutFallibleDropStrategy,
 };
 
 #[cfg(feature = "ds-once-cell")]
-pub use self::once_cell::{OnceCell, OnceCellTryDropStrategy, ThreadUnsafeOnceCellTryDropStrategy};
+pub use self::once_cell::{OnceCell, OnceCellDropStrategy, ThreadUnsafeOnceCellDropStrategy};
