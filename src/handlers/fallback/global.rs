@@ -18,8 +18,12 @@ use std::boxed::Box;
 #[cfg(feature = "ds-panic")]
 use crate::handlers::on_uninit::UseDefaultOnUninit;
 
+/// A fallback handler which uses the global scope.
 pub type GlobalFallbackHandler<OU = DefaultOnUninit> = CommonHandler<OU, GlobalScope, Fallback>;
+
+/// The default global fallback handler.
 pub static DEFAULT_GLOBAL_FALLBACK_HANDLER: GlobalFallbackHandler = GlobalFallbackHandler::DEFAULT;
+
 static FALLBACK_HANDLER: RwLock<Option<Box<dyn GlobalTryDropStrategy>>> =
     parking_lot::const_rwlock(None);
 
@@ -56,13 +60,48 @@ global_methods! {
     DynStrategy = BoxDynGlobalTryDropStrategy;
     feature = "ds-panic";
 
+    /// Install a new global fallback handler. Must be a dynamic trait object.
     install_dyn;
+
+    /// Install a new global fallback handler.
     install;
+
+    /// Try and get a reference to the global fallback handler.
+    ///
+    /// # Errors
+    /// If the global fallback handler is not initialized yet, an error is returned.
     try_read;
+
+    /// Get a reference to the global fallback handler.
+    ///
+    /// # Panics
+    /// If the global fallback handler is not initialized yet, a panic is raised.
     read;
+
+    /// Try and get a mutable reference to the global fallback handler.
+    ///
+    /// # Errors
+    /// If the global fallback handler is not initialized yet, an error is returned.
     try_write;
+
+    /// Get a mutable reference to the global fallback handler.
+    ///
+    /// # Panics
+    /// If the global fallback handler is not initialized yet, a panic is raised.
     write;
+
+    /// Uninstall the current global fallback handler.
     uninstall;
+
+    /// Get a reference to the global fallback handler.
+    ///
+    /// If the global fallback handler is not initialized yet, it is initialized with the default
+    /// one.
     read_or_default;
+
+    /// Get a mutable reference to the global fallback handler.
+    ///
+    /// If the global fallback handler is not initialized yet, it is initialized with the default
+    /// one.
     write_or_default;
 }
