@@ -12,7 +12,7 @@ use crate::ThreadLocalTryDropStrategy;
 use crate::TryDropStrategy;
 use anyhow::Error;
 use std::boxed::Box;
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::thread::LocalKey;
 use std::thread_local;
 
@@ -34,7 +34,7 @@ impl_try_drop_strategy_for!(ThreadLocalFallbackHandler where Scope: ThreadLocalS
 
 thread_local! {
     static FALLBACK_HANDLER: RefCell<Option<Box<dyn ThreadLocalTryDropStrategy>>> = RefCell::new(None);
-    static LOCKED: RefCell<bool> = RefCell::new(false);
+    static LOCKED: Cell<bool> = Cell::new(false);
 }
 
 impl ThreadLocalDefinition for Fallback {
@@ -47,7 +47,7 @@ impl ThreadLocalDefinition for Fallback {
         &FALLBACK_HANDLER
     }
 
-    fn locked() -> &'static LocalKey<RefCell<bool>> {
+    fn locked() -> &'static LocalKey<Cell<bool>> {
         &LOCKED
     }
 }

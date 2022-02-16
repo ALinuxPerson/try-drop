@@ -12,7 +12,7 @@ use crate::handlers::on_uninit::{ErrorOnUninit, FlagOnUninit, PanicOnUninit};
 use crate::handlers::uninit_error::UninitializedError;
 use crate::FallibleTryDropStrategy;
 use std::boxed::Box;
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 
 use std::thread::LocalKey;
 use std::{convert, thread_local};
@@ -39,7 +39,7 @@ where
 
 thread_local! {
     static PRIMARY_HANDLER: RefCell<Option<Box<dyn ThreadLocalFallibleTryDropStrategy>>> = RefCell::new(None);
-    static LOCKED: RefCell<bool> = RefCell::new(false);
+    static LOCKED: Cell<bool> = Cell::new(false);
 }
 
 impl ThreadLocalDefinition for Primary {
@@ -52,7 +52,7 @@ impl ThreadLocalDefinition for Primary {
         &PRIMARY_HANDLER
     }
 
-    fn locked() -> &'static LocalKey<RefCell<bool>> {
+    fn locked() -> &'static LocalKey<Cell<bool>> {
         &LOCKED
     }
 }

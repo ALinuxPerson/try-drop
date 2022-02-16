@@ -8,7 +8,7 @@ pub(crate) mod imports {
 use crate::handlers::common::thread_local::scope_guard::ScopeGuard;
 use crate::handlers::common::Handler;
 use crate::handlers::UninitializedError;
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::marker::PhantomData;
 use std::thread::LocalKey;
 
@@ -145,7 +145,7 @@ pub trait ThreadLocalDefinition: Handler {
     type ThreadLocal: 'static;
 
     fn thread_local() -> &'static LocalKey<RefCell<Option<Self::ThreadLocal>>>;
-    fn locked() -> &'static LocalKey<RefCell<bool>>;
+    fn locked() -> &'static LocalKey<Cell<bool>>;
 }
 
 pub trait DefaultThreadLocalDefinition: ThreadLocalDefinition {

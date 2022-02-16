@@ -20,10 +20,10 @@ impl<D: ThreadLocalDefinition> ScopeGuard<D> {
     }
 
     pub fn try_new_dyn(strategy: D::ThreadLocal) -> Result<Self, NestedScopeError> {
-        if D::locked().with(|cell| *cell.borrow()) {
+        if D::locked().with(|cell| cell.get()) {
             Err(NestedScopeError(()))
         } else {
-            D::locked().with(|cell| *cell.borrow_mut() = true);
+            D::locked().with(|cell| cell.set(true));
             Ok(Self {
                 last_strategy: ThreadLocal::<D>::replace_dyn(strategy),
             })
@@ -45,6 +45,6 @@ impl<D: ThreadLocalDefinition> Drop for ScopeGuard<D> {
             ThreadLocal::<D>::install_dyn(last_strategy)
         }
 
-        D::locked().with(|cell| *cell.borrow_mut() = false)
+        D::locked().with(|cell| cell.set(false))
     }
 }
