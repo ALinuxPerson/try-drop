@@ -151,7 +151,7 @@ thread_local_methods! {
 mod tests {
     use super::*;
     use crate::drop_strategies::{
-        AdHocFallibleTryDropStrategy, IntoAdHocTryDropStrategy, NoOpDropStrategy,
+        AdHocFallibleDropStrategy, IntoAdHocDropStrategy, NoOpDropStrategy,
     };
     use crate::handlers::{fallback, primary};
     use crate::test_utils::{ErrorsOnDrop, Fallible};
@@ -187,7 +187,7 @@ mod tests {
         let installed = Rc::new(RefCell::new(false));
         let i = Rc::clone(&installed);
         install((move |_| *i.borrow_mut() = true).into_adhoc_try_drop_strategy());
-        fallback::thread_local::install(AdHocFallibleTryDropStrategy(|error| Err(error)));
+        fallback::thread_local::install(AdHocFallibleDropStrategy(|error| Err(error)));
         drop(ErrorsOnDrop::<Fallible, _>::not_given().adapt());
         assert!(*installed.borrow(), "install didn't install");
     }
@@ -199,7 +199,7 @@ mod tests {
         install_dyn(Box::new(
             (move |_| *i.borrow_mut() = true).into_adhoc_try_drop_strategy(),
         ));
-        fallback::thread_local::install(AdHocFallibleTryDropStrategy(|error| Err(error)));
+        fallback::thread_local::install(AdHocFallibleDropStrategy(|error| Err(error)));
         drop(ErrorsOnDrop::<Fallible, _>::not_given().adapt());
         assert!(*installed.borrow(), "install_dyn didn't install");
     }

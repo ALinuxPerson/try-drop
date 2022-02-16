@@ -47,8 +47,8 @@ pub use write::{ThreadUnsafeWriteDropStrategy, WriteDropStrategy};
 
 #[cfg(feature = "ds-adhoc")]
 pub use adhoc::{
-    AdHocFallibleTryDropStrategy, AdHocTryDropStrategy, IntoAdHocFallibleTryDropStrategy,
-    IntoAdHocTryDropStrategy,
+    AdHocFallibleDropStrategy, AdHocDropStrategy, IntoAdHocFallibleDropStrategy,
+    IntoAdHocDropStrategy,
 };
 
 #[cfg(feature = "ds-adhoc-mut")]

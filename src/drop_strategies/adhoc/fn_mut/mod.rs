@@ -6,54 +6,52 @@ use parking_lot::Mutex;
 use std::marker::PhantomData;
 pub use thread_unsafe::*;
 
-/// A quick and dirty try drop strategy which uses a function.
+/// A quick and dirty drop strategy which uses a function.
 ///
-/// This is more flexible compared to [`AdHocTryDropStrategy`], accepting also [`FnMut`]s
-/// instead of only [`Fn`]s, but the function is guarded by a [`Mutex`], which has more
-/// overhead.
+/// This is more flexible compared to [`AdHocDropStrategy`], accepting also [`FnMut`]s instead of
+/// only [`Fn`]s, but the function is guarded by a [`Mutex`], which has more overhead.
 ///
-/// [`AdHocTryDropStrategy`]: super::AdHocTryDropStrategy
+/// [`AdHocDropStrategy`]: super::AdHocDropStrategy
 #[cfg_attr(feature = "derives", derive(Debug, Default))]
-pub struct AdHocMutTryDropStrategy<F: FnMut(crate::Error)>(pub Mutex<F>);
+pub struct AdHocMutDropStrategy<F: FnMut(crate::Error)>(pub Mutex<F>);
 
-impl<F: FnMut(crate::Error)> AdHocMutTryDropStrategy<F> {
+impl<F: FnMut(crate::Error)> AdHocMutDropStrategy<F> {
     /// Create a new ad-hoc try drop strategy.
     pub fn new(f: F) -> Self {
         Self(Mutex::new(f))
     }
 }
 
-impl<F: FnMut(crate::Error)> TryDropStrategy for AdHocMutTryDropStrategy<F> {
+impl<F: FnMut(crate::Error)> TryDropStrategy for AdHocMutDropStrategy<F> {
     fn handle_error(&self, error: crate::Error) {
         self.0.lock()(error)
     }
 }
 
-impl<F: FnMut(crate::Error)> From<F> for AdHocMutTryDropStrategy<F> {
+impl<F: FnMut(crate::Error)> From<F> for AdHocMutDropStrategy<F> {
     fn from(f: F) -> Self {
         Self::new(f)
     }
 }
 
-/// Signifies that this type can be converted into an [`AdHocMutTryDropStrategy`].
-pub trait IntoAdHocMutTryDropStrategy: FnMut(crate::Error) + Sized {
-    /// Convert this type into an [`AdHocMutTryDropStrategy`].
-    fn into_adhoc_mut_try_drop_strategy(self) -> AdHocMutTryDropStrategy<Self> {
-        AdHocMutTryDropStrategy::new(self)
+/// Signifies that this type can be converted into an [`AdHocMutDropStrategy`].
+pub trait IntoAdHocMutDropStrategy: FnMut(crate::Error) + Sized {
+    /// Convert this type into an [`AdHocMutDropStrategy`].
+    fn into_drop_strategy(self) -> AdHocMutDropStrategy<Self> {
+        AdHocMutDropStrategy::new(self)
     }
 }
 
-impl<T: FnMut(crate::Error)> IntoAdHocMutTryDropStrategy for T {}
+impl<T: FnMut(crate::Error)> IntoAdHocMutDropStrategy for T {}
 
 /// A quick and dirty try drop strategy which uses a function.
 ///
-/// This is more flexible compared to [`AdHocFallibleTryDropStrategy`], accepting also
-/// [`FnMut`]s instead of only [`Fn`]s, but the function is guarded by a [`Mutex`], which has
-/// more overhead.
+/// This is more flexible compared to [`AdHocFallibleDropStrategy`], accepting also [`FnMut`]s
+/// instead of only [`Fn`]s, but the function is guarded by a [`Mutex`], which has more overhead.
 ///
-/// [`AdHocFallibleTryDropStrategy`]: super::AdHocFallibleTryDropStrategy
+/// [`AdHocFallibleDropStrategy`]: super::AdHocFallibleDropStrategy
 #[cfg_attr(feature = "derives", derive(Debug, Default))]
-pub struct AdHocMutFallibleTryDropStrategy<F, E>
+pub struct AdHocMutFallibleDropStrategy<F, E>
 where
     F: FnMut(crate::Error) -> Result<(), E>,
     E: Into<anyhow::Error>,
@@ -63,12 +61,12 @@ where
     _error: PhantomData<E>,
 }
 
-impl<F, E> AdHocMutFallibleTryDropStrategy<F, E>
+impl<F, E> AdHocMutFallibleDropStrategy<F, E>
 where
     F: FnMut(crate::Error) -> Result<(), E>,
     E: Into<anyhow::Error>,
 {
-    /// Create a new ad-hoc fallible try drop strategy.
+    /// Create a new ad-hoc fallible drop strategy.
     pub fn new(f: F) -> Self {
         Self {
             f: Mutex::new(f),
@@ -77,7 +75,7 @@ where
     }
 }
 
-impl<F, E> FallibleTryDropStrategy for AdHocMutFallibleTryDropStrategy<F, E>
+impl<F, E> FallibleTryDropStrategy for AdHocMutFallibleDropStrategy<F, E>
 where
     F: FnMut(crate::Error) -> Result<(), E>,
     E: Into<anyhow::Error>,
@@ -89,7 +87,7 @@ where
     }
 }
 
-impl<F, E> From<F> for AdHocMutFallibleTryDropStrategy<F, E>
+impl<F, E> From<F> for AdHocMutFallibleDropStrategy<F, E>
 where
     F: FnMut(crate::Error) -> Result<(), E>,
     E: Into<anyhow::Error>,
@@ -99,17 +97,17 @@ where
     }
 }
 
-/// Signifies that this type can be converted into an [`AdHocMutFallibleTryDropStrategy`].
-pub trait IntoAdHocMutFallibleTryDropStrategy:
+/// Signifies that this type can be converted into an [`AdHocMutFallibleDropStrategy`].
+pub trait IntoAdHocMutFallibleDropStrategy:
     FnMut(crate::Error) -> Result<(), Self::Error> + Sized
 {
     /// The error type.
     type Error: Into<anyhow::Error>;
 
-    /// Convert this type into an [`AdHocMutFallibleTryDropStrategy`].
-    fn into_adhoc_mut_fallible_try_drop_strategy(
+    /// Convert this type into an [`AdHocMutFallibleDropStrategy`].
+    fn into_drop_strategy(
         self,
-    ) -> AdHocMutFallibleTryDropStrategy<Self, Self::Error> {
-        AdHocMutFallibleTryDropStrategy::new(self)
+    ) -> AdHocMutFallibleDropStrategy<Self, Self::Error> {
+        AdHocMutFallibleDropStrategy::new(self)
     }
 }

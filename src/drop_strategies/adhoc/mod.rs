@@ -6,16 +6,16 @@ pub use fn_mut::*;
 
 use crate::{FallibleTryDropStrategy, TryDropStrategy};
 
-/// A quick and dirty try drop strategy which uses a function.
+/// A quick and dirty drop strategy which uses a function.
 #[cfg_attr(
     feature = "derives",
     derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
 )]
 #[cfg_attr(feature = "shrinkwraprs", derive(Shrinkwrap))]
 #[cfg_attr(feature = "shrinkwraprs", shrinkwrap(mutable))]
-pub struct AdHocTryDropStrategy<F: Fn(crate::Error)>(pub F);
+pub struct AdHocDropStrategy<F: Fn(crate::Error)>(pub F);
 
-impl<F: Fn(crate::Error)> AdHocTryDropStrategy<F> {
+impl<F: Fn(crate::Error)> AdHocDropStrategy<F> {
     /// Take the inner function.
     #[cfg(feature = "shrinkwraprs")]
     pub fn take(this: Self) -> F {
@@ -23,41 +23,41 @@ impl<F: Fn(crate::Error)> AdHocTryDropStrategy<F> {
     }
 }
 
-impl<F: Fn(crate::Error)> TryDropStrategy for AdHocTryDropStrategy<F> {
+impl<F: Fn(crate::Error)> TryDropStrategy for AdHocDropStrategy<F> {
     fn handle_error(&self, error: crate::Error) {
         self.0(error)
     }
 }
 
-impl<F: Fn(crate::Error)> From<F> for AdHocTryDropStrategy<F> {
+impl<F: Fn(crate::Error)> From<F> for AdHocDropStrategy<F> {
     fn from(f: F) -> Self {
-        AdHocTryDropStrategy(f)
+        AdHocDropStrategy(f)
     }
 }
 
-/// Signifies that this type can be converted into an [`AdHocTryDropStrategy`].
-pub trait IntoAdHocTryDropStrategy: Fn(crate::Error) + Sized {
-    /// Convert this type into an [`AdHocTryDropStrategy`].
-    fn into_adhoc_try_drop_strategy(self) -> AdHocTryDropStrategy<Self> {
-        AdHocTryDropStrategy(self)
+/// Signifies that this type can be converted into an [`AdHocDropStrategy`].
+pub trait IntoAdHocDropStrategy: Fn(crate::Error) + Sized {
+    /// Convert this type into an [`AdHocDropStrategy`].
+    fn into_drop_strategy(self) -> AdHocDropStrategy<Self> {
+        AdHocDropStrategy(self)
     }
 }
 
-impl<T: Fn(crate::Error)> IntoAdHocTryDropStrategy for T {}
+impl<T: Fn(crate::Error)> IntoAdHocDropStrategy for T {}
 
-/// A quick and dirty fallible try drop strategy which uses a function.
+/// A quick and dirty fallible drop strategy which uses a function.
 #[cfg_attr(
     feature = "derives",
     derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)
 )]
 #[cfg_attr(feature = "shrinkwraprs", derive(Shrinkwrap))]
 #[cfg_attr(feature = "shrinkwraprs", shrinkwrap(mutable))]
-pub struct AdHocFallibleTryDropStrategy<F, E>(pub F)
+pub struct AdHocFallibleDropStrategy<F, E>(pub F)
 where
     F: Fn(crate::Error) -> Result<(), E>,
     E: Into<anyhow::Error>;
 
-impl<F, E> AdHocFallibleTryDropStrategy<F, E>
+impl<F, E> AdHocFallibleDropStrategy<F, E>
 where
     F: Fn(crate::Error) -> Result<(), E>,
     E: Into<anyhow::Error>,
@@ -69,7 +69,7 @@ where
     }
 }
 
-impl<F, E> FallibleTryDropStrategy for AdHocFallibleTryDropStrategy<F, E>
+impl<F, E> FallibleTryDropStrategy for AdHocFallibleDropStrategy<F, E>
 where
     F: Fn(crate::Error) -> Result<(), E>,
     E: Into<anyhow::Error>,
@@ -81,7 +81,7 @@ where
     }
 }
 
-impl<F, E> From<F> for AdHocFallibleTryDropStrategy<F, E>
+impl<F, E> From<F> for AdHocFallibleDropStrategy<F, E>
 where
     F: Fn(crate::Error) -> Result<(), E>,
     E: Into<anyhow::Error>,
@@ -91,17 +91,17 @@ where
     }
 }
 
-/// Signifies that this type can be converted into an [`AdHocFallibleTryDropStrategy`].
-pub trait IntoAdHocFallibleTryDropStrategy:
+/// Signifies that this type can be converted into an [`AdHocFallibleDropStrategy`].
+pub trait IntoAdHocFallibleDropStrategy:
     Fn(crate::Error) -> Result<(), Self::Error> + Sized
 {
     /// The error type.
     type Error: Into<anyhow::Error>;
 
-    /// Convert this type into an [`AdHocFallibleTryDropStrategy`].
-    fn into_adhoc_fallible_try_drop_strategy(
+    /// Convert this type into an [`AdHocFallibleDropStrategy`].
+    fn into_drop_strategy(
         self,
-    ) -> AdHocFallibleTryDropStrategy<Self, Self::Error> {
-        AdHocFallibleTryDropStrategy(self)
+    ) -> AdHocFallibleDropStrategy<Self, Self::Error> {
+        AdHocFallibleDropStrategy(self)
     }
 }
