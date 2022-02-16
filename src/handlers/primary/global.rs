@@ -5,15 +5,15 @@ use crate::handlers::common::global::{
 };
 use crate::handlers::common::handler::CommonHandler;
 use crate::handlers::common::{Global as GlobalScope, Primary};
-use crate::handlers::on_uninit::{ErrorOnUninit, FlagOnUninit, OnUninit, PanicOnUninit};
+use crate::handlers::on_uninit::{ErrorOnUninit, FlagOnUninit, PanicOnUninit};
 use crate::handlers::primary::{Abstracter, DefaultOnUninit};
 use crate::handlers::uninit_error::UninitializedError;
 use crate::{
-    FallibleTryDropStrategy, GlobalDynFallibleTryDropStrategy, LOAD_ORDERING, STORE_ORDERING,
+    FallibleTryDropStrategy, GlobalDynFallibleTryDropStrategy,
 };
-use anyhow::Error;
+
 use parking_lot::{
-    MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLock, RwLockReadGuard, RwLockWriteGuard,
+    MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLock,
 };
 use std::boxed::Box;
 use std::convert;

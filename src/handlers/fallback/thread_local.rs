@@ -6,10 +6,10 @@ use crate::handlers::common::thread_local::{
     DefaultThreadLocalDefinition, ThreadLocal as GenericThreadLocal, ThreadLocalDefinition,
 };
 use crate::handlers::common::{Fallback, ThreadLocal as ThreadLocalScope};
-use crate::handlers::on_uninit::{ErrorOnUninit, FlagOnUninit, OnUninit, PanicOnUninit};
+use crate::handlers::on_uninit::{FlagOnUninit, PanicOnUninit};
 use crate::handlers::uninit_error::UninitializedError;
 use crate::ThreadLocalTryDropStrategy;
-use crate::{TryDropStrategy, LOAD_ORDERING, STORE_ORDERING};
+use crate::{TryDropStrategy};
 use anyhow::Error;
 use std::boxed::Box;
 use std::cell::RefCell;

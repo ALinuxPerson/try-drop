@@ -8,13 +8,13 @@ use crate::handlers::common::thread_local::{
 };
 use crate::handlers::common::Primary;
 use crate::handlers::common::ThreadLocal as ThreadLocalScope;
-use crate::handlers::on_uninit::{ErrorOnUninit, FlagOnUninit, OnUninit, PanicOnUninit};
+use crate::handlers::on_uninit::{ErrorOnUninit, FlagOnUninit, PanicOnUninit};
 use crate::handlers::uninit_error::UninitializedError;
-use crate::{DynFallibleTryDropStrategy, FallibleTryDropStrategy, LOAD_ORDERING, STORE_ORDERING};
+use crate::{DynFallibleTryDropStrategy, FallibleTryDropStrategy};
 use std::boxed::Box;
 use std::cell::RefCell;
-use std::marker::PhantomData;
-use std::sync::atomic::AtomicBool;
+
+
 use std::thread::LocalKey;
 use std::{convert, thread_local};
 
