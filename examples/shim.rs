@@ -1,4 +1,5 @@
-use std::cell::RefCell;
+use std::borrow::{Borrow, BorrowMut};
+use std::cell::Cell;
 use std::rc::Rc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -9,13 +10,13 @@ use try_drop::PureTryDrop;
 
 fn main() {
     println!("install thread local handlers from main thread");
-    let thread_local_fail = Rc::new(RefCell::new(false));
+    let thread_local_fail = Rc::new(Cell::new(false));
     let tlf = Rc::clone(&thread_local_fail);
     try_drop::install_thread_local_handlers(
         AdHocFallibleDropStrategy(move |error| {
             println!("from primary thread local handler: {error}");
 
-            if *tlf.borrow() {
+            if tlf.get() {
                 println!("forcing failure");
                 anyhow::bail!("forced failure of primary thread local handler")
             } else {
@@ -46,7 +47,7 @@ fn main() {
     drop(thing);
 
     println!("drop, do fail for primary thread local handler");
-    *thread_local_fail.borrow_mut() = true;
+    thread_local_fail.set(true);
     let thing = ErrorsOnDrop::<Fallible, _>::not_given().adapt();
     drop(thing);
 
