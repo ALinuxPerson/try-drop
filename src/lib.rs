@@ -43,7 +43,10 @@ pub mod adapters;
 
 use adapters::DropAdapter;
 
+#[allow(dead_code)]
 const LOAD_ORDERING: Ordering = Ordering::Acquire;
+
+#[allow(dead_code)]
 const STORE_ORDERING: Ordering = Ordering::Release;
 
 /// A trait for types which can be dropped, but which may fail to do so.
