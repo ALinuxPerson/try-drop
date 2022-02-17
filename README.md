@@ -10,6 +10,9 @@
 </div>
 
 # Quick Usage
+## For Clients
+...where clients mean structures that may fail dropping,
+
 Implement `TryDrop` for your type and `adapt` it like so:
 
 ```rust
@@ -55,3 +58,62 @@ impl Foo {
 ```
 
 With this, if dropping `Foo` fails, it will automatically print the error to standard error.
+
+## For Servers
+...where servers mean how to handle the drop errors (also means drop strategies),
+
+Implement `TryDropStrategy` for your structure.
+
+```rust
+use try_drop::TryDropStrategy;
+
+pub struct Strategy { /* fields */ }
+
+impl TryDropStrategy for Strategy {
+    fn handle_error(&self, error: try_drop::Error) {
+        // handle the error here
+    }
+}
+```
+
+...then install either for this thread,
+
+```rust
+try_drop::install_thread_local_handlers(Strategy, /* other strategy, use the `PanicDropStrategy` if you don't know */)
+```
+
+...install it globally (meaning if no thread local strategies are set, use this),
+
+```rust
+try_drop::install_global_handlers(Strategy, /* other strategy */)
+```
+
+...or, if possible, install it for a structure.
+
+```rust
+struct Sample<D = ShimPrimaryHandler, DD = ShimFallbackHandler>
+where
+    D: FallibleTryDropStrategy,
+    DD: TryDropStrategy,
+{
+    primary: D,
+    fallback: DD,
+    /* other fields */
+}
+
+impl<D, DD> Sample<D, DD>
+where
+    D: FallibleTryDropStrategy,
+    DD: TryDropStrategy,
+{
+    pub fn new_with(/* other arguments */ primary: D, fallback: DD) -> Self {
+        Self {
+            // filled arguments
+            primary,
+            fallback,
+        }
+    }
+}
+
+let sample = Sample::new_with(Strategy, /* other strategy */)
+```
