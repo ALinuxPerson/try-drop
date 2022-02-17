@@ -142,7 +142,7 @@ mod tests {
         let works = Arc::new(AtomicBool::new(false));
         let w = Arc::clone(&works);
         let strategy = move |_| w.store(true, STORE_ORDERING);
-        let strategy = strategy.into_drop_strategy();
+        let strategy = IntoAdHocMutDropStrategy::into_drop_strategy(strategy);
         crate::install_global_handlers(strategy, PanicDropStrategy::DEFAULT);
         drop(fallible());
         assert!(works.load(LOAD_ORDERING));
@@ -171,7 +171,7 @@ mod tests {
             w.store(true, STORE_ORDERING);
             Ok::<_, crate::Error>(())
         };
-        let strategy = strategy.into_drop_strategy();
+        let strategy = IntoAdHocMutFallibleDropStrategy::into_drop_strategy(strategy);
         crate::install_global_handlers(strategy, PanicDropStrategy::DEFAULT);
         drop(fallible());
         assert!(works.load(LOAD_ORDERING));
