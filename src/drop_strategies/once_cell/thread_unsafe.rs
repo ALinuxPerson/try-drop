@@ -61,9 +61,12 @@ mod tests {
     use crate::test_utils::fallible_given;
     use super::*;
 
-    fn test<M: Mode>() {
+    fn test<M: Mode>()
+    where
+        ThreadUnsafeOnceCellDropStrategy<M>: FallibleTryDropStrategy,
+    {
         let item = Rc::new(OnceCell::new());
-        let strategy = ThreadUnsafeOnceCellDropStrategy::ignore(Rc::clone(&item));
+        let strategy = ThreadUnsafeOnceCellDropStrategy::<M>::new(Rc::clone(&item));
         drop(fallible_given(strategy, PanicDropStrategy::DEFAULT));
         Rc::try_unwrap(item)
             .expect("item still referenced by `errors`")

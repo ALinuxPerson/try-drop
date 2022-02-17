@@ -140,9 +140,12 @@ mod tests {
     use crate::test_utils::{ErrorsOnDrop, Fallible};
     use crate::PureTryDrop;
 
-    fn test<M: Mode>() {
+    fn test<M: Mode>()
+    where
+        OnceCellDropStrategy<M>: FallibleTryDropStrategy,
+    {
         let item = Arc::new(OnceCell::new());
-        let strategy = OnceCellDropStrategy::ignore(Arc::clone(&item));
+        let strategy = OnceCellDropStrategy::<M>::new(Arc::clone(&item));
         let errors =
             ErrorsOnDrop::<Fallible, _>::given(strategy, PanicDropStrategy::DEFAULT).adapt();
         drop(errors);
