@@ -32,3 +32,6 @@ impl TryDropStrategy for ExitDropStrategy {
         process::exit(self.exit_code)
     }
 }
+
+// it is not possible to create tests for this strategy because this exits the program, which can't
+// be caught.

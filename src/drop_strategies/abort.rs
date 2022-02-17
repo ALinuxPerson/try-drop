@@ -13,3 +13,6 @@ impl TryDropStrategy for AbortDropStrategy {
         process::abort()
     }
 }
+
+// it is not possible to create tests for this strategy because this aborts the program, which
+// can't be caught.
