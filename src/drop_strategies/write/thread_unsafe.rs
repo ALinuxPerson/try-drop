@@ -34,13 +34,13 @@ impl<W: Write> ThreadUnsafeWriteDropStrategy<W> {
     }
 
     /// Sets whether or not to append a newline to the end of the message.
-    pub fn new_line(mut self, new_line: bool) -> Self {
+    pub fn new_line(&mut self, new_line: bool) -> &mut Self {
         self.new_line = new_line;
         self
     }
 
     /// Sets the message to add at the beginning of the message.
-    pub fn prelude(mut self, prelude: impl Into<Vec<u8>>) -> Self {
+    pub fn prelude(&mut self, prelude: impl Into<Vec<u8>>) -> &mut Self {
         self.prelude = Some(prelude.into());
         self
     }
@@ -79,3 +79,21 @@ impl<W: Write> FallibleTryDropStrategy for ThreadUnsafeWriteDropStrategy<W> {
         self.writer.borrow_mut().write_all(&message)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::drop_strategies::PanicDropStrategy;
+    use std::io::Cursor;
+    use crate::test_utils::fallible_given;
+
+    #[test]
+    fn test_write_drop_strategy() {
+        let mut writer = Cursor::new(Vec::new());
+        let mut strategy = ThreadUnsafeWriteDropStrategy::new(&mut writer);
+        strategy.prelude("error: ");
+        drop(fallible_given(strategy, PanicDropStrategy::default()));
+        assert_eq!(writer.into_inner(), b"error: this will always fail\n",)
+    }
+}
+
