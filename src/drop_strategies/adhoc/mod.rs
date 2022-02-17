@@ -92,14 +92,74 @@ where
 }
 
 /// Signifies that this type can be converted into an [`AdHocFallibleDropStrategy`].
-pub trait IntoAdHocFallibleDropStrategy:
-    Fn(crate::Error) -> Result<(), Self::Error> + Sized
+pub trait IntoAdHocFallibleDropStrategy<E: Into<anyhow::Error>>:
+    Fn(crate::Error) -> Result<(), E> + Sized
 {
-    /// The error type.
-    type Error: Into<anyhow::Error>;
-
     /// Convert this type into an [`AdHocFallibleDropStrategy`].
-    fn into_drop_strategy(self) -> AdHocFallibleDropStrategy<Self, Self::Error> {
+    fn into_drop_strategy(self) -> AdHocFallibleDropStrategy<Self, E> {
         AdHocFallibleDropStrategy(self)
+    }
+}
+
+impl<T, E> IntoAdHocFallibleDropStrategy<E> for T
+where
+    T: Fn(crate::Error) -> Result<(), E>,
+    E: Into<anyhow::Error>,
+{}
+
+#[cfg(test)]
+mod tests {
+    use std::cell::Cell;
+    use std::rc::Rc;
+    use crate::drop_strategies::PanicDropStrategy;
+    use crate::test_utils::fallible;
+    use super::*;
+
+    #[test]
+    fn test_adhoc_drop_strategy() {
+        let works = Rc::new(Cell::new(false));
+        let w = Rc::clone(&works);
+        let strategy = AdHocDropStrategy(move |_| w.set(true));
+        crate::install_thread_local_handlers(strategy, PanicDropStrategy::DEFAULT);
+        drop(fallible());
+        assert!(works.get(), "the strategy should have worked");
+    }
+
+    #[test]
+    fn test_into_adhoc_drop_strategy() {
+        let works = Rc::new(Cell::new(false));
+        let w = Rc::clone(&works);
+        let strategy = move |_| w.set(true);
+        let strategy = IntoAdHocDropStrategy::into_drop_strategy(strategy);
+        crate::install_thread_local_handlers(strategy, PanicDropStrategy::DEFAULT);
+        drop(fallible());
+        assert!(works.get(), "the strategy should have worked");
+    }
+
+    #[test]
+    fn test_adhoc_fallible_drop_strategy() {
+        let works = Rc::new(Cell::new(false));
+        let w = Rc::clone(&works);
+        let strategy = AdHocFallibleDropStrategy::<_, crate::Error>(move |_| {
+            w.set(true);
+            Ok(())
+        });
+        crate::install_thread_local_handlers(strategy, PanicDropStrategy::DEFAULT);
+        drop(fallible());
+        assert!(works.get(), "the strategy should have worked");
+    }
+
+    #[test]
+    fn test_into_adhoc_fallible_drop_strategy() {
+        let works = Rc::new(Cell::new(false));
+        let w = Rc::clone(&works);
+        let strategy = move |_| {
+            w.set(true);
+            Ok::<_, crate::Error>(())
+        };
+        let strategy = IntoAdHocFallibleDropStrategy::into_drop_strategy(strategy);
+        crate::install_thread_local_handlers(strategy, PanicDropStrategy::DEFAULT);
+        drop(fallible());
+        assert!(works.get(), "the strategy should have worked");
     }
 }

@@ -1,7 +1,7 @@
 #![allow(missing_docs)]
 
 use crate::prelude::*;
-use crate::Infallible as TryDropInfallible;
+use crate::{DropAdapter, Infallible as TryDropInfallible};
 use std::marker::PhantomData;
 use std::println;
 use anyhow::Error;
@@ -44,6 +44,10 @@ pub struct NotGiven;
 
 impl TryDropTypes for NotGiven {}
 impl private::Sealed for NotGiven {}
+
+pub fn fallible() -> DropAdapter<ErrorsOnDrop<Fallible, NotGiven>> {
+    ErrorsOnDrop::<Fallible, _>::not_given().adapt()
+}
 
 pub struct Given<D: FallibleTryDropStrategy, DD: TryDropStrategy> {
     fallible_try_drop_strategy: D,
