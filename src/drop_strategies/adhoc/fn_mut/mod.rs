@@ -98,14 +98,82 @@ where
 }
 
 /// Signifies that this type can be converted into an [`AdHocMutFallibleDropStrategy`].
-pub trait IntoAdHocMutFallibleDropStrategy:
-    FnMut(crate::Error) -> Result<(), Self::Error> + Sized
+pub trait IntoAdHocMutFallibleDropStrategy<E: Into<anyhow::Error>>:
+    FnMut(crate::Error) -> Result<(), E> + Sized
 {
-    /// The error type.
-    type Error: Into<anyhow::Error>;
-
     /// Convert this type into an [`AdHocMutFallibleDropStrategy`].
-    fn into_drop_strategy(self) -> AdHocMutFallibleDropStrategy<Self, Self::Error> {
+    fn into_drop_strategy(self) -> AdHocMutFallibleDropStrategy<Self, E> {
         AdHocMutFallibleDropStrategy::new(self)
+    }
+}
+
+impl<T, E> IntoAdHocMutFallibleDropStrategy<E> for T
+where
+    T: FnMut(crate::Error) -> Result<(), E>,
+    E: Into<anyhow::Error>,
+{}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Arc;
+    use std::sync::atomic::AtomicBool;
+    use crate::drop_strategies::PanicDropStrategy;
+    use crate::{LOAD_ORDERING, STORE_ORDERING};
+    use crate::test_utils::fallible;
+    use super::*;
+
+    // we need this lock otherwise the test results will be inconsistent
+    static LOCK: Mutex<()> = parking_lot::const_mutex(());
+
+    #[test]
+    fn test_adhoc_mut_drop_strategy() {
+        let _lock = LOCK.lock();
+        let works = Arc::new(AtomicBool::new(false));
+        let w = Arc::clone(&works);
+        let strategy = AdHocMutDropStrategy::new(move |_| w.store(true, STORE_ORDERING));
+        crate::install_global_handlers(strategy, PanicDropStrategy::DEFAULT);
+        drop(fallible());
+        assert!(works.load(LOAD_ORDERING));
+    }
+
+    #[test]
+    fn test_into_adhoc_mut_drop_strategy() {
+        let _lock = LOCK.lock();
+        let works = Arc::new(AtomicBool::new(false));
+        let w = Arc::clone(&works);
+        let strategy = move |_| w.store(true, STORE_ORDERING);
+        let strategy = strategy.into_drop_strategy();
+        crate::install_global_handlers(strategy, PanicDropStrategy::DEFAULT);
+        drop(fallible());
+        assert!(works.load(LOAD_ORDERING));
+    }
+
+    #[test]
+    fn test_adhoc_mut_fallible_drop_strategy() {
+        let _lock = LOCK.lock();
+        let works = Arc::new(AtomicBool::new(false));
+        let w = Arc::clone(&works);
+        let strategy = AdHocMutFallibleDropStrategy::<_, crate::Error>::new(move |_| {
+            w.store(true, STORE_ORDERING);
+            Ok(())
+        });
+        crate::install_global_handlers(strategy, PanicDropStrategy::DEFAULT);
+        drop(fallible());
+        assert!(works.load(LOAD_ORDERING));
+    }
+
+    #[test]
+    fn test_into_adhoc_mut_fallible_drop_strategy() {
+        let _lock = LOCK.lock();
+        let works = Arc::new(AtomicBool::new(false));
+        let w = Arc::clone(&works);
+        let strategy = move |_| {
+            w.store(true, STORE_ORDERING);
+            Ok::<_, crate::Error>(())
+        };
+        let strategy = strategy.into_drop_strategy();
+        crate::install_global_handlers(strategy, PanicDropStrategy::DEFAULT);
+        drop(fallible());
+        assert!(works.load(LOAD_ORDERING));
     }
 }
