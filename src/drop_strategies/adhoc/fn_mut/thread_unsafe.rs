@@ -31,6 +31,8 @@ pub trait IntoThreadUnsafeAdHocMutDropStrategy: FnMut(crate::Error) + Sized {
     }
 }
 
+impl<F: FnMut(crate::Error)> IntoThreadUnsafeAdHocMutDropStrategy for F {}
+
 /// A fallible drop strategy which uses a function to handle errors. This is less flexible than its
 /// thread safe counterpart however there is less overhead.
 #[cfg_attr(
@@ -66,14 +68,74 @@ where
 }
 
 /// Turn this type into a [`ThreadUnsafeAdHocMutFallibleDropStrategy`].
-pub trait IntoThreadUnsafeAdHocMutFallibleDropStrategy:
-    FnMut(crate::Error) -> Result<(), Self::Error> + Sized
+pub trait IntoThreadUnsafeAdHocMutFallibleDropStrategy<E: Into<anyhow::Error>>:
+    FnMut(crate::Error) -> Result<(), E> + Sized
 {
-    /// The error type which will be used.
-    type Error: Into<crate::Error>;
-
     /// Turn this type into a [`ThreadUnsafeAdHocMutFallibleDropStrategy`].
-    fn into_drop_strategy(self) -> ThreadUnsafeAdHocMutFallibleDropStrategy<Self, Self::Error> {
+    fn into_drop_strategy(self) -> ThreadUnsafeAdHocMutFallibleDropStrategy<Self, E> {
         ThreadUnsafeAdHocMutFallibleDropStrategy::new(self)
+    }
+}
+
+impl<T, E> IntoThreadUnsafeAdHocMutFallibleDropStrategy<E> for T
+where
+    T: FnMut(crate::Error) -> Result<(), E>,
+    E: Into<crate::Error>,
+{}
+
+#[cfg(test)]
+mod tests {
+    use std::cell::Cell;
+    use std::rc::Rc;
+    use crate::drop_strategies::PanicDropStrategy;
+    use crate::test_utils::fallible;
+    use super::*;
+
+    #[test]
+    fn test_thread_unsafe_adhoc_mut_drop_strategy() {
+        let works = Rc::new(Cell::new(false));
+        let w = Rc::clone(&works);
+        let strategy = ThreadUnsafeAdHocMutDropStrategy::new(move |_| w.set(true));
+        crate::install_thread_local_handlers(strategy, PanicDropStrategy::DEFAULT);
+        drop(fallible());
+        assert!(works.get());
+    }
+
+    #[test]
+    fn test_into_thread_unsafe_adhoc_mut_drop_strategy() {
+        let works = Rc::new(Cell::new(false));
+        let w = Rc::clone(&works);
+        let strategy = move |_| w.set(true);
+        let strategy = IntoThreadUnsafeAdHocMutDropStrategy::into_drop_strategy(strategy);
+        crate::install_thread_local_handlers(strategy, PanicDropStrategy::DEFAULT);
+        drop(fallible());
+        assert!(works.get());
+    }
+
+    #[test]
+    fn test_thread_unsafe_adhoc_mut_fallible_drop_strategy() {
+        let works = Rc::new(Cell::new(false));
+        let w = Rc::clone(&works);
+        let strategy = ThreadUnsafeAdHocMutFallibleDropStrategy::<_, crate::Error>::new(move |_| {
+            w.set(true);
+            Ok(())
+        });
+        crate::install_thread_local_handlers(strategy, PanicDropStrategy::DEFAULT);
+        drop(fallible());
+        assert!(works.get());
+    }
+
+    #[test]
+    fn test_into_thread_unsafe_adhoc_mut_fallible_drop_strategy() {
+        let works = Rc::new(Cell::new(false));
+        let w = Rc::clone(&works);
+        let strategy = move |_| {
+            w.set(true);
+            Ok::<_, crate::Error>(())
+        };
+        let strategy = IntoThreadUnsafeAdHocMutFallibleDropStrategy::into_drop_strategy(strategy);
+        crate::install_thread_local_handlers(strategy, PanicDropStrategy::DEFAULT);
+        drop(fallible());
+        assert!(works.get());
     }
 }
