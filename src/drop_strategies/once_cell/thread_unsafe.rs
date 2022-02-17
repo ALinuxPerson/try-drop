@@ -57,7 +57,6 @@ impl FallibleTryDropStrategy for ThreadUnsafeOnceCellDropStrategy<Error> {
 #[cfg(test)]
 mod tests {
     use crate::drop_strategies::PanicDropStrategy;
-    use crate::PureTryDrop;
     use crate::test_utils::fallible_given;
     use super::*;
 
