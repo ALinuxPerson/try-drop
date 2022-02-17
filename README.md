@@ -117,3 +117,7 @@ where
 
 let sample = Sample::new_with(Strategy, /* other strategy */)
 ```
+
+# License
+
+This project is licensed under the MIT License.
