@@ -102,3 +102,29 @@ impl TryDropStrategy for UnreachableDropStrategy<Unsafe> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::test_utils::fallible;
+    use super::*;
+
+    #[test]
+    #[should_panic(expected = "internal error: entered unreachable code: this error should not happen: this will always fail")]
+    fn test_unreachable_drop_strategy_safe() {
+        let unreachable = UnreachableDropStrategy::safe();
+        crate::install_thread_local_handlers(unreachable, unreachable);
+        drop(fallible());
+    }
+
+    #[test]
+    #[should_panic(expected = "internal error: entered unreachable code: panicking due to `debug_assertions` (debug profile), this error should not happen: this will always fail")]
+    #[cfg(debug_assertions)]
+    fn test_unreachable_drop_strategy_unsafe_debug_assertions() {
+        let unreachable = UnreachableDropStrategy::r#unsafe();
+        crate::install_thread_local_handlers(unreachable, unreachable);
+        drop(fallible());
+    }
+
+    // it is not possible to test the release version of `UnreachableDropStrategy<Unsafe>, as
+    // executing its try drop handler will cause undefined behavior.
+}
