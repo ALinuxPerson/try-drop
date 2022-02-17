@@ -53,3 +53,5 @@ impl Foo {
     }
 }
 ```
+
+With this, if dropping `Foo` fails, it will automatically print the error to standard error.
