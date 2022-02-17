@@ -53,3 +53,31 @@ impl FallibleTryDropStrategy for ThreadUnsafeOnceCellDropStrategy<Error> {
         self.inner.set(error).map_err(AlreadyOccupiedError)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::drop_strategies::PanicDropStrategy;
+    use crate::PureTryDrop;
+    use crate::test_utils::fallible_given;
+    use super::*;
+
+    fn test<M: Mode>() {
+        let item = Rc::new(OnceCell::new());
+        let strategy = ThreadUnsafeOnceCellDropStrategy::ignore(Rc::clone(&item));
+        drop(fallible_given(strategy, PanicDropStrategy::DEFAULT));
+        Rc::try_unwrap(item)
+            .expect("item still referenced by `errors`")
+            .into_inner()
+            .expect("no error occupied in `OnceCellDropStrategy`");
+    }
+
+    #[test]
+    fn test_error() {
+        test::<Error>();
+    }
+
+    #[test]
+    fn test_ignore() {
+        test::<Ignore>();
+    }
+}

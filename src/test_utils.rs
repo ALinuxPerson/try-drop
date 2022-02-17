@@ -49,6 +49,10 @@ pub fn fallible() -> DropAdapter<ErrorsOnDrop<Fallible, NotGiven>> {
     ErrorsOnDrop::<Fallible, _>::not_given().adapt()
 }
 
+pub fn fallible_given<D: FallibleTryDropStrategy, DD: TryDropStrategy>(primary: D, fallback: DD) -> DropAdapter<ErrorsOnDrop<Fallible, Given<D, DD>>> {
+    ErrorsOnDrop::<Fallible, _>::given(primary, fallback).adapt()
+}
+
 pub struct Given<D: FallibleTryDropStrategy, DD: TryDropStrategy> {
     fallible_try_drop_strategy: D,
     double_drop_strategy: DD,
