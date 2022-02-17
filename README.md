@@ -8,3 +8,48 @@
     </a>
     <p>Batteries included error handling mechanisms for drops which can fail</p>
 </div>
+
+# Quick Usage
+Implement `TryDrop` for your type and `adapt` it like so:
+
+```rust
+use try_drop::TryDrop;
+
+pub struct Foo { /* fields */ }
+
+impl TryDrop for Foo {
+    type Error = Error;
+    
+    unsafe fn try_drop(&mut self) -> Result<(), Self::Error> {
+        // do stuff
+        Ok(())
+    }
+}
+
+let foo = Foo.adapt();
+```
+
+...or, if you want to avoid the `adapt` boilerplate:
+
+```rust
+use try_drop::{TryDrop, adapters::DropAdapter};
+
+pub struct FooInner { /* fields */ }
+
+impl TryDrop for FooInner {
+    type Error = Error;
+    
+    unsafe fn try_drop(&mut self) -> Result<(), Self::Error> {
+        // do stuff
+        Ok(())
+    }
+}
+
+pub struct Foo(pub DropAdapter<FooInner>);
+
+impl Foo {
+    pub fn from_inner(inner: FooInner) -> Self {
+        Foo(DropAdapter(inner))
+    }
+}
+```
