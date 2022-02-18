@@ -57,7 +57,9 @@ impl Foo {
 }
 ```
 
-With this, if dropping `Foo` fails, it will automatically print the error to standard error.
+We must adapt it because implementing `TryDrop` doesn't also implement `Drop` with your type. This is due to the orphan 
+rules and the fact that `Drop` can only be implemented for structs, enums, and unions, but not generics.  With this, if
+dropping `Foo` fails, it will automatically print the error to standard error.
 
 ## For Servers
 ...where servers mean how to handle the drop errors (also means drop strategies),
