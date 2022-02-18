@@ -20,3 +20,8 @@ jobs:
       run: cargo build --verbose --features __tests --features ds-unreachable-unsafe
     - name: Run tests
       run: cargo test --verbose --features __tests --features ds-unreachable-unsafe
+    - name: Clippy check
+      uses: actions-rs/clippy-check@v1.0.7
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        args: --features __tests --features ds-unreachable-unsafe
