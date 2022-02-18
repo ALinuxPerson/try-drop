@@ -1,4 +1,4 @@
 # Summary
 
 [Introduction](./Introduction.md)
-[The Basics](./TheBasics.md)
+[The Basics](./the-basics/TheBasics.md)
