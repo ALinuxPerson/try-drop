@@ -1,5 +1,7 @@
 # Summary
 
 [Introduction](./Introduction.md)
-
-- [Chapter 1](./chapter_1.md)
+[The Basics](./the-basics/TheBasics.md)
+  - [TryDrop](./the-basics/TryDrop.md)
+    - [ImpureTryDrop](./the-basics/ImpureTryDrop.md)
+    - [PureTryDrop](./the-basics/PureTryDrop.md)
